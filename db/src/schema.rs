@@ -24,7 +24,7 @@ table! {
     applications (id) {
         id -> Uuid,
         title -> Varchar,
-        sign_key -> Varchar,
+        secret_key -> Varchar,
         url_finish_callback -> Varchar,
         domain -> Varchar,
     }
