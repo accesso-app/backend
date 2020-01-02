@@ -7,3 +7,16 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+actix-rt = "1.0.0-alpha.1"
+actix-web = "2.0.0-alpha.1"
+actix-router = "0.1.5"
+diesel = { version = "1.4.3", features = ["postgres", "r2d2", "chrono", "serde_json"] }
+serde = { version = "1.0.102", features = ["derive"] }
+serde_json = "1.0.41"
+env_logger = "0.7.1"
+futures = "0.3.1"
+authmenow-db = { "path" = "../db" }
+r2d2 = "0.8.6"
+dotenv = "0.15.0"
+actix-http = "0.3.0-alpha.1"
+failure = "0.1.6"
