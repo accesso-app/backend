@@ -25,7 +25,7 @@ table! {
         id -> Uuid,
         title -> Varchar,
         secret_key -> Varchar,
-        url_finish_callback -> Varchar,
+        redirect_uri -> Varchar,
         domain -> Varchar,
     }
 }
