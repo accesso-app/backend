@@ -37,7 +37,7 @@ impl PublicApi {
 
 impl HttpServiceFactory for PublicApi {
     fn register(mut self, config: &mut AppService) {
-        let keys: Vec<String> = self.routes.keys().map(|a| a.clone()).collect();
+        let keys: Vec<String> = self.routes.keys().cloned().collect();
 
         for key in keys.iter() {
             if let Some(resource) = self.routes.remove(key) {
