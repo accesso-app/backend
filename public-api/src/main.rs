@@ -2,8 +2,7 @@
 
 use actix_web::{
     dev::{AppService, Factory, HttpServiceFactory},
-    middleware, web, App, FromRequest, HttpRequest, HttpResponse, HttpServer, Resource, Responder,
-    Route, Scope,
+    middleware, web, App, FromRequest, HttpRequest, HttpServer, Resource, Scope,
 };
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -37,10 +36,15 @@ impl PublicApi {
 }
 
 impl HttpServiceFactory for PublicApi {
-    fn register(self, config: &mut AppService) {
-        for (path, route) in self.routes.iter() {
-            self.scope.service(*route);
+    fn register(mut self, config: &mut AppService) {
+        let keys: Vec<String> = self.routes.keys().map(|a| a.clone()).collect();
+
+        for key in keys.iter() {
+            if let Some(resource) = self.routes.remove(key) {
+                self.scope = self.scope.service(resource);
+            }
         }
+
         self.scope.register(config);
     }
 }
@@ -61,18 +65,12 @@ impl PublicApi {
         T: FromRequest + 'static,
         R: Future<Output = web::Json<SessionGetResponse>> + 'static,
     {
-        // let resource = self
-        //     .routes
-        //     .entry("/session".to_string())
-        //     .or_insert(web::resource("/session"));
-
-        // let value = self.routes.remove(&"/session".to_string());
-        // let resource = match value {
-        //     Some(resource) => resource.route(web::get().to(handler)),
-        //     None => web::resource("/session").route(web::get().to(handler)),
-        // };
-
-        // self.routes.insert("/session".to_string(), resource);
+        take_mut::take(
+            self.routes
+                .entry("/session".to_string())
+                .or_insert_with(|| web::resource("/session")),
+            |resource| resource.route(web::get().to(handler)),
+        );
 
         self
     }
@@ -83,13 +81,12 @@ impl PublicApi {
         T: FromRequest + 'static,
         R: Future<Output = web::Json<Nothing>> + 'static,
     {
-        let value = self.routes.remove(&"/session".to_string());
-        let resource = match value {
-            Some(resource) => resource.route(web::post().to(handler)),
-            None => web::resource("/session").route(web::get().to(handler)),
-        };
-
-        self.routes.insert("/session".to_string(), resource);
+        take_mut::take(
+            self.routes
+                .entry("/session".to_string())
+                .or_insert_with(|| web::resource("/session")),
+            |resource| resource.route(web::post().to(handler)),
+        );
 
         self
     }
