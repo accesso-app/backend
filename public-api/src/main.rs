@@ -22,14 +22,14 @@ async fn not_found(_req: HttpRequest) -> web::Json<AnswerFailure> {
 }
 
 struct PublicApi {
-    scope: Scope,
-    routes: HashMap<String, Resource>,
+    root: Scope,
+    routes: HashMap<String, Scope>,
 }
 
 impl PublicApi {
     pub fn new() -> Self {
         PublicApi {
-            scope: Scope::new("/"),
+            root: Scope::new("/"),
             routes: HashMap::new(),
         }
     }
@@ -41,11 +41,11 @@ impl HttpServiceFactory for PublicApi {
 
         for key in keys.iter() {
             if let Some(resource) = self.routes.remove(key) {
-                self.scope = self.scope.service(resource);
+                self.root = self.root.service(resource);
             }
         }
 
-        self.scope.register(config);
+        self.root.register(config);
     }
 }
 
@@ -68,8 +68,8 @@ impl PublicApi {
         take_mut::take(
             self.routes
                 .entry("/session".to_string())
-                .or_insert_with(|| web::resource("/session")),
-            |resource| resource.route(web::get().to(handler)),
+                .or_insert_with(|| web::scope("/session")),
+            |scope| scope.route("", web::get().to(handler)),
         );
 
         self
@@ -84,8 +84,8 @@ impl PublicApi {
         take_mut::take(
             self.routes
                 .entry("/session".to_string())
-                .or_insert_with(|| web::resource("/session")),
-            |resource| resource.route(web::post().to(handler)),
+                .or_insert_with(|| web::scope("/session")),
+            |scope| scope.route("", web::post().to(handler)),
         );
 
         self
