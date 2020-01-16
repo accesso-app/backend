@@ -2,9 +2,9 @@
 
 use actix_web::{
     dev::{AppService, Factory, HttpServiceFactory},
-    middleware, web, App, FromRequest, HttpRequest, HttpServer, Resource, Scope,
+    middleware, web, App, FromRequest, HttpRequest, HttpServer, Scope,
 };
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 use std::collections::HashMap;
 use std::future::Future;
 
@@ -49,21 +49,48 @@ impl HttpServiceFactory for PublicApi {
     }
 }
 
-#[derive(Serialize, Deserialize)]
-struct UserAuthenticated {
-    id: i32,
-}
-#[derive(Serialize, Deserialize)]
-struct UserAnonymous {}
+pub mod components {
+    pub mod responses {
+        use serde::{Deserialize, Serialize};
 
-type SessionGetResponse = Result<UserAuthenticated, UserAnonymous>;
+        /// User authenticated in Authmenow
+        #[derive(Serialize, Deserialize)]
+        pub struct UserAuthenticated {
+            pub username: Option<String>,
+            #[serde(rename = "displayName")]
+            pub display_name: Option<String>,
+        }
+
+        #[derive(Serialize, Deserialize)]
+        pub struct UserAnonymous {}
+    }
+}
+
+pub mod paths {
+    use super::components;
+    use serde::{Deserialize, Serialize};
+
+    #[derive(Serialize, Deserialize)]
+    #[serde(untagged)]
+    pub enum SessionGetResponse {
+        Ok(components::responses::UserAuthenticated),
+        NotAuthorized(components::responses::UserAnonymous),
+    }
+
+    #[derive(Serialize, Deserialize)]
+    #[serde(untagged)]
+    pub enum SessionCreateResponse {
+        /// Session successfully created
+        Ok,
+    }
+}
 
 impl PublicApi {
     pub fn bind_session_get<F, T, R>(mut self, handler: F) -> Self
     where
-        F: Factory<T, R, web::Json<SessionGetResponse>>,
+        F: Factory<T, R, web::Json<paths::SessionGetResponse>>,
         T: FromRequest + 'static,
-        R: Future<Output = web::Json<SessionGetResponse>> + 'static,
+        R: Future<Output = web::Json<paths::SessionGetResponse>> + 'static,
     {
         take_mut::take(
             self.routes
@@ -77,9 +104,9 @@ impl PublicApi {
 
     pub fn bind_session_create<F, T, R>(mut self, handler: F) -> Self
     where
-        F: Factory<T, R, web::Json<Nothing>>,
+        F: Factory<T, R, web::Json<paths::SessionCreateResponse>>,
         T: FromRequest + 'static,
-        R: Future<Output = web::Json<Nothing>> + 'static,
+        R: Future<Output = web::Json<paths::SessionCreateResponse>> + 'static,
     {
         take_mut::take(
             self.routes
@@ -92,17 +119,17 @@ impl PublicApi {
     }
 }
 
-async fn session_get() -> web::Json<SessionGetResponse> {
-    web::Json(Ok(UserAuthenticated { id: 1 }))
+async fn session_get() -> web::Json<paths::SessionGetResponse> {
+    web::Json(paths::SessionGetResponse::Ok(
+        components::responses::UserAuthenticated {
+            username: Some(String::from("sergeysova")),
+            display_name: Some(String::from("🦉")),
+        },
+    ))
 }
 
-#[derive(Serialize)]
-struct Nothing {
-    i: i32,
-}
-
-async fn session_create() -> web::Json<Nothing> {
-    web::Json(Nothing { i: 12 })
+async fn session_create() -> web::Json<paths::SessionCreateResponse> {
+    web::Json(paths::SessionCreateResponse::Ok)
 }
 
 #[actix_rt::main]
