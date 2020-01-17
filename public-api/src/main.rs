@@ -2,7 +2,8 @@
 
 use actix_web::{
     dev::{AppService, Factory, HttpServiceFactory},
-    middleware, web, App, FromRequest, HttpRequest, HttpServer, Scope,
+    http::StatusCode,
+    middleware, web, App, FromRequest, HttpRequest, HttpServer, Responder, Scope,
 };
 use serde::Serialize;
 use std::collections::HashMap;
@@ -14,11 +15,12 @@ struct AnswerFailure {
     message: String,
 }
 
-async fn not_found(_req: HttpRequest) -> web::Json<AnswerFailure> {
+async fn not_found(_req: HttpRequest) -> impl Responder {
     web::Json(AnswerFailure {
         code: 404,
         message: "Route not found".to_string(),
     })
+    .with_status(StatusCode::NOT_FOUND)
 }
 
 struct PublicApi {
@@ -68,6 +70,9 @@ pub mod components {
 
 pub mod paths {
     use super::components;
+    use actix_http::Response;
+    use actix_web::{http::StatusCode, Error, HttpRequest, Responder};
+    use futures::future::{err, ok, Ready};
     use serde::{Deserialize, Serialize};
 
     #[derive(Serialize, Deserialize)]
@@ -77,20 +82,83 @@ pub mod paths {
         NotAuthorized(components::responses::UserAnonymous),
     }
 
+    impl Responder for SessionGetResponse {
+        type Error = Error;
+        type Future = Ready<Result<Response, Error>>;
+
+        fn respond_to(self, _: &HttpRequest) -> Self::Future {
+            let body = match serde_json::to_string(&self) {
+                Ok(body) => body,
+                Err(e) => return err(e.into()),
+            };
+
+            ok(Response::build(match self {
+                SessionGetResponse::Ok(_) => StatusCode::OK,
+                SessionGetResponse::NotAuthorized(_) => StatusCode::UNAUTHORIZED,
+            })
+            .content_type("application/json")
+            .body(body))
+            // how to set headers from handler?
+        }
+    }
+
     #[derive(Serialize, Deserialize)]
     #[serde(untagged)]
     pub enum SessionCreateResponse {
         /// Session successfully created
         Ok,
     }
+
+    impl Responder for SessionCreateResponse {
+        type Error = Error;
+        type Future = Ready<Result<Response, Error>>;
+
+        fn respond_to(self, _: &HttpRequest) -> Self::Future {
+            let body = match serde_json::to_string(&self) {
+                Ok(body) => body,
+                Err(e) => return err(e.into()),
+            };
+
+            ok(Response::build(match self {
+                SessionCreateResponse::Ok => StatusCode::OK,
+            })
+            .content_type("application/json")
+            .body(body))
+        }
+    }
+
+    #[derive(Serialize, Deserialize)]
+    #[serde(untagged)]
+    pub enum SessionDeleteResponse {
+        /// Session successfully deleted
+        Ok,
+    }
+
+    impl Responder for SessionDeleteResponse {
+        type Error = Error;
+        type Future = Ready<Result<Response, Error>>;
+
+        fn respond_to(self, _: &HttpRequest) -> Self::Future {
+            let body = match serde_json::to_string(&self) {
+                Ok(body) => body,
+                Err(e) => return err(e.into()),
+            };
+
+            ok(Response::build(match self {
+                SessionDeleteResponse::Ok => StatusCode::OK,
+            })
+            .content_type("application/json")
+            .body(body))
+        }
+    }
 }
 
 impl PublicApi {
     pub fn bind_session_get<F, T, R>(mut self, handler: F) -> Self
     where
-        F: Factory<T, R, web::Json<paths::SessionGetResponse>>,
+        F: Factory<T, R, paths::SessionGetResponse>,
         T: FromRequest + 'static,
-        R: Future<Output = web::Json<paths::SessionGetResponse>> + 'static,
+        R: Future<Output = paths::SessionGetResponse> + 'static,
     {
         take_mut::take(
             self.routes
@@ -104,9 +172,9 @@ impl PublicApi {
 
     pub fn bind_session_create<F, T, R>(mut self, handler: F) -> Self
     where
-        F: Factory<T, R, web::Json<paths::SessionCreateResponse>>,
+        F: Factory<T, R, paths::SessionCreateResponse>,
         T: FromRequest + 'static,
-        R: Future<Output = web::Json<paths::SessionCreateResponse>> + 'static,
+        R: Future<Output = paths::SessionCreateResponse> + 'static,
     {
         take_mut::take(
             self.routes
@@ -117,19 +185,37 @@ impl PublicApi {
 
         self
     }
+
+    pub fn bind_session_delete<F, T, R>(mut self, handler: F) -> Self
+    where
+        F: Factory<T, R, paths::SessionDeleteResponse>,
+        T: FromRequest + 'static,
+        R: Future<Output = paths::SessionDeleteResponse> + 'static,
+    {
+        take_mut::take(
+            self.routes
+                .entry("/session".to_string())
+                .or_insert_with(|| web::scope("/session")),
+            |scope| scope.route("", web::delete().to(handler)),
+        );
+
+        self
+    }
 }
 
-async fn session_get() -> web::Json<paths::SessionGetResponse> {
-    web::Json(paths::SessionGetResponse::Ok(
-        components::responses::UserAuthenticated {
-            username: Some(String::from("sergeysova")),
-            display_name: Some(String::from("🦉")),
-        },
-    ))
+async fn session_get() -> paths::SessionGetResponse {
+    paths::SessionGetResponse::Ok(components::responses::UserAuthenticated {
+        username: Some(String::from("sergeysova")),
+        display_name: Some(String::from("🦉")),
+    })
 }
 
-async fn session_create() -> web::Json<paths::SessionCreateResponse> {
-    web::Json(paths::SessionCreateResponse::Ok)
+async fn session_create() -> paths::SessionCreateResponse {
+    paths::SessionCreateResponse::Ok
+}
+
+async fn session_delete() -> paths::SessionDeleteResponse {
+    paths::SessionDeleteResponse::Ok
 }
 
 #[actix_rt::main]
@@ -145,7 +231,8 @@ async fn main() -> std::io::Result<()> {
             .service(
                 PublicApi::new()
                     .bind_session_get(session_get)
-                    .bind_session_create(session_create),
+                    .bind_session_create(session_create)
+                    .bind_session_delete(session_delete),
             )
     })
     .bind("127.0.0.1:9005")?
