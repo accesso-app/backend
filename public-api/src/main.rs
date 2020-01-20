@@ -2,11 +2,12 @@
 
 use actix_web::{
     dev::{AppService, Factory, HttpServiceFactory},
-    http::StatusCode,
+    http::{header::IntoHeaderName, Cookie, HeaderName, HeaderValue, StatusCode},
     middleware, web, App, FromRequest, HttpRequest, HttpServer, Responder, Scope,
 };
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::convert::TryFrom;
 use std::future::Future;
 
 #[derive(Debug, Serialize)]
@@ -65,6 +66,57 @@ pub mod components {
 
         #[derive(Serialize, Deserialize)]
         pub struct UserAnonymous {}
+    }
+}
+
+#[derive(Debug)]
+enum ContentType {
+    Json,
+    FormData,
+}
+
+impl ToString for ContentType {
+    fn to_string(&self) -> String {
+        match self {
+            ContentType::Json => "application/json".to_string(),
+            ContentType::FormData => "multipart/form-data".to_string(),
+        }
+    }
+}
+
+pub struct Answer<'a, T> {
+    response: T,
+    status_code: Option<StatusCode>,
+    cookies: Option<Vec<Cookie<'a>>>,
+    headers: Option<HashMap<String, HeaderValue>>,
+    content_type: Option<ContentType>,
+}
+
+use actix_http::Response;
+use actix_web::Error;
+use futures::future::{err, ok, Ready};
+
+impl<'a, T: Serialize> Responder for Answer<'a, T> {
+    type Error = Error;
+    type Future = Ready<Result<Response, Error>>;
+
+    fn respond_to(self, _: &HttpRequest) -> Self::Future {
+        let body = match serde_json::to_string(&self.response) {
+            Ok(body) => body,
+            Err(e) => return err(e.into()),
+        };
+
+        let mut response = Response::build(self.status_code.unwrap_or(StatusCode::OK));
+
+        if let Some(headers_map) = self.headers {
+            for (name, value) in headers_map {
+                if let Some(header_name) = name.parse::<HeaderName>().ok() {
+                    response = *response.header(header_name, value)
+                }
+            }
+        }
+
+        ok(response.body(body))
     }
 }
 
@@ -200,6 +252,14 @@ impl PublicApi {
         );
 
         self
+    }
+}
+
+impl Default for PublicApi {
+    fn default() -> Self {
+        let api = PublicApi::new();
+        // add default handlers to response 501, if handler not binded
+        api
     }
 }
 
