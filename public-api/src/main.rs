@@ -4,7 +4,7 @@ use actix_web::{
     dev::{AppService, Factory, HttpServiceFactory},
     http::{
         header::{IntoHeaderName, IntoHeaderValue},
-        Cookie, Error as HttpError, HeaderName, HeaderValue, StatusCode,
+        Cookie, Error as HttpError, HeaderName, HeaderValue, Method, StatusCode,
     },
     middleware, web, App, FromRequest, HttpRequest, HttpServer, Responder, Scope,
 };
@@ -231,52 +231,61 @@ pub mod paths {
 }
 
 impl PublicApi {
-    pub fn bind_session_get<'a, F, T, R>(mut self, handler: F) -> Self
+    fn bind<F, T, R, U>(mut self, path: String, method: Method, handler: F) -> Self
+    where
+        F: Factory<T, R, U>,
+        T: FromRequest + 'static,
+        R: Future<Output = U> + 'static,
+        U: Responder + 'static,
+    {
+        take_mut::take(
+            self.routes
+                .entry(path)
+                .or_insert_with(|| web::scope(path.clone().as_ref())),
+            |scope| {
+                scope.route(
+                    "",
+                    match method {
+                        Method::DELETE => web::delete(),
+                        Method::GET => web::get(),
+                        Method::HEAD => web::head(),
+                        Method::PATCH => web::patch(),
+                        Method::POST => web::post(),
+                        Method::PUT => web::put(),
+                    }
+                    .to(handler),
+                )
+            },
+        );
+
+        self
+    }
+
+    pub fn bind_session_get<F, T, R>(self, handler: F) -> Self
     where
         F: Factory<T, R, Answer<'static, paths::SessionGetResponse>>,
         T: FromRequest + 'static,
         R: Future<Output = Answer<'static, paths::SessionGetResponse>> + 'static,
     {
-        take_mut::take(
-            self.routes
-                .entry("/session".to_string())
-                .or_insert_with(|| web::scope("/session")),
-            |scope| scope.route("", web::get().to(handler)),
-        );
-
-        self
+        self.bind("/session".to_owned(), Method::GET, handler)
     }
 
-    pub fn bind_session_create<F, T, R>(mut self, handler: F) -> Self
+    pub fn bind_session_create<F, T, R>(self, handler: F) -> Self
     where
         F: Factory<T, R, Answer<'static, paths::SessionCreateResponse>>,
         T: FromRequest + 'static,
         R: Future<Output = Answer<'static, paths::SessionCreateResponse>> + 'static,
     {
-        take_mut::take(
-            self.routes
-                .entry("/session".to_string())
-                .or_insert_with(|| web::scope("/session")),
-            |scope| scope.route("", web::post().to(handler)),
-        );
-
-        self
+        self.bind("/session".to_owned(), Method::POST, handler)
     }
 
-    pub fn bind_session_delete<F, T, R>(mut self, handler: F) -> Self
+    pub fn bind_session_delete<F, T, R>(self, handler: F) -> Self
     where
         F: Factory<T, R, Answer<'static, paths::SessionDeleteResponse>>,
         T: FromRequest + 'static,
         R: Future<Output = Answer<'static, paths::SessionDeleteResponse>> + 'static,
     {
-        take_mut::take(
-            self.routes
-                .entry("/session".to_string())
-                .or_insert_with(|| web::scope("/session")),
-            |scope| scope.route("", web::delete().to(handler)),
-        );
-
-        self
+        self.bind("/session".to_owned(), Method::DELETE, handler)
     }
 }
 
