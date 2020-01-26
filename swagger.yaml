@@ -1,7 +1,8 @@
 openapi: 3.0.1
 info:
-  title: Authmenow API.
+  title: Authmenow Public API.
   version: 0.1.0
+  description: Public API for frontend and OAuth applications
 servers:
   - url: /api/v0
 paths:
