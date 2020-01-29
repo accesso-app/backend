@@ -238,10 +238,11 @@ impl PublicApi {
         R: Future<Output = U> + 'static,
         U: Responder + 'static,
     {
+        let scope_path = path.clone();
         take_mut::take(
             self.routes
                 .entry(path)
-                .or_insert_with(|| web::scope(path.clone().as_ref())),
+                .or_insert_with(move || web::scope(scope_path.as_ref())),
             |scope| {
                 scope.route(
                     "",
@@ -252,6 +253,7 @@ impl PublicApi {
                         Method::PATCH => web::patch(),
                         Method::POST => web::post(),
                         Method::PUT => web::put(),
+                        _ => unimplemented!(),
                     }
                     .to(handler),
                 )
