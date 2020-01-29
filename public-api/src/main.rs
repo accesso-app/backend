@@ -34,6 +34,7 @@ async fn session_get() -> Answer<'static, generated::paths::SessionGetResponse> 
         display_name: Some(String::from("🦉")),
     })
     .answer()
+    .content_type(crate::actix_swagger::ContentType::FormData)
     .header("x-csrf-token".to_string(), "DEEEEEEEEMO")
     .cookie(
         Cookie::build("CSRF-Token", "HopHey")

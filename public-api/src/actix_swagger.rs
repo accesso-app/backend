@@ -1,8 +1,11 @@
+use actix_http::Response;
 use actix_web::{
     dev::{AppService, Factory, HttpServiceFactory},
-    http::{header::IntoHeaderValue, Cookie, HeaderName, HeaderValue, Method, StatusCode},
-    web, FromRequest, HttpRequest, Responder, Scope,
+    http::header::{self, IntoHeaderValue},
+    http::{Cookie, HeaderName, HeaderValue, Method, StatusCode},
+    web, Error, FromRequest, HttpRequest, Responder, Scope,
 };
+use futures::future::{err, ok, Ready};
 use serde::Serialize;
 use std::collections::HashMap;
 use std::future::Future;
@@ -11,13 +14,15 @@ use std::future::Future;
 pub enum ContentType {
     Json,
     FormData,
+    // TextPlain,
 }
 
 impl ToString for ContentType {
     fn to_string(&self) -> String {
         match self {
             ContentType::Json => "application/json".to_string(),
-            ContentType::FormData => "multipart/form-data".to_string(),
+            // ContentType::TextPlain => "text/plain".to_string(),
+            ContentType::FormData => "application/x-www-form-urlencoded".to_string(),
         }
     }
 }
@@ -31,7 +36,7 @@ pub struct Answer<'a, T> {
     content_type: Option<ContentType>,
 }
 
-impl<'a, T> Answer<'a, T> {
+impl<'a, T: Serialize> Answer<'a, T> {
     pub fn new(response: T) -> Answer<'a, T> {
         Answer {
             response,
@@ -70,24 +75,32 @@ impl<'a, T> Answer<'a, T> {
 
         self
     }
-}
 
-use actix_http::Response;
-use actix_web::Error;
-use futures::future::{err, ok, Ready};
+    pub fn to_string(&self) -> Result<String, Error> {
+        match self.content_type {
+            Some(ContentType::Json) => Ok(serde_json::to_string(&self.response)?),
+            Some(ContentType::FormData) => Ok(serde_urlencoded::to_string(&self.response)?),
+            // Some(ContentType::TextPlain) => Ok(serde_plain::to_string(&self.response)?),
+            None => Ok("".to_owned()),
+        }
+    }
+}
 
 impl<'a, T: Serialize> Responder for Answer<'a, T> {
     type Error = Error;
     type Future = Ready<Result<Response, Error>>;
 
     fn respond_to(self, _: &HttpRequest) -> Self::Future {
-        // parse self.content_type and stringify with it
-        let body = match serde_json::to_string(&self.response) {
+        let body = match self.to_string() {
             Ok(body) => body,
             Err(e) => return err(e.into()),
         };
 
         let mut response = &mut Response::build(self.status_code.unwrap_or(StatusCode::OK));
+
+        if let Some(content_type) = self.content_type {
+            response = response.header(header::CONTENT_TYPE, content_type.to_string());
+        }
 
         for (name, value) in self.headers {
             if let Some(header_name) = name.parse::<HeaderName>().ok() {
