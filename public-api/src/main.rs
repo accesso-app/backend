@@ -1,15 +1,13 @@
 // https://github.com/actix/actix-web/blob/3a5b62b5502d8c2ba5d824599171bb381f6b1b49/examples/basic.rs
 
+use actix_swagger::{Answer, ContentType};
 use actix_web::{
     http::{Cookie, StatusCode},
     middleware, web, App, HttpRequest, HttpServer, Responder,
 };
 use serde::Serialize;
 
-mod actix_swagger;
 mod generated;
-
-use actix_swagger::Answer;
 
 #[derive(Debug, Serialize)]
 struct AnswerFailure {
@@ -34,7 +32,7 @@ async fn session_get() -> Answer<'static, generated::paths::SessionGetResponse> 
         display_name: Some(String::from("🦉")),
     })
     .answer()
-    .content_type(crate::actix_swagger::ContentType::FormData)
+    .content_type(ContentType::FormData)
     .header("x-csrf-token".to_string(), "DEEEEEEEEMO")
     .cookie(
         Cookie::build("CSRF-Token", "HopHey")

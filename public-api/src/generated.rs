@@ -1,5 +1,5 @@
 pub mod api {
-    use crate::actix_swagger::{Answer, Api};
+    use actix_swagger::{Answer, Api};
     use actix_web::{
         dev::{AppService, Factory, HttpServiceFactory},
         http::Method,
@@ -85,7 +85,7 @@ pub mod components {
 
 pub mod paths {
     use super::components;
-    use crate::actix_swagger::{Answer, ContentType};
+    use actix_swagger::{Answer, ContentType};
     use actix_web::http::StatusCode;
     use serde::{Deserialize, Serialize};
 
