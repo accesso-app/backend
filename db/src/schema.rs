@@ -42,9 +42,4 @@ table! {
 joinable!(access_tokens -> applications (application_id));
 joinable!(access_tokens -> users (user_id));
 
-allow_tables_to_appear_in_same_query!(
-    access_tokens,
-    admins,
-    applications,
-    users,
-);
+allow_tables_to_appear_in_same_query!(access_tokens, admins, applications, users,);
