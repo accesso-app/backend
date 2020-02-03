@@ -1,4 +1,6 @@
-use actix_web::{middleware, web, App, Error, HttpResponse, HttpServer};
+use actix_swagger::{Answer, ContentType};
+use actix_web::http::StatusCode;
+use actix_web::{middleware, web, App, Error, HttpRequest, HttpResponse, HttpServer, Responder};
 use diesel::pg::PgConnection;
 use diesel::r2d2::{self, ConnectionManager};
 use serde::{Deserialize, Serialize};
@@ -6,23 +8,50 @@ use uuid::Uuid;
 
 type DbPool = r2d2::Pool<ConnectionManager<PgConnection>>;
 
-#[derive(Serialize)]
-struct Demo {
-    text: String,
-}
-
 #[derive(Deserialize)]
-struct HelloPath {
-    id: Uuid,
+struct SigninPayload {
+    login: String,
+    password: String,
 }
 
-async fn demo(pool: web::Data<DbPool>, name: web::Path<HelloPath>) -> web::Json<Demo> {
-    let name = name.id.to_owned();
-    let _conn = pool.get().expect("could not get connection from pool");
+#[derive(Serialize)]
+#[serde(untagged)]
+enum SigninResponse {
+    Created,
+}
 
-    web::Json(Demo {
-        text: format!("Hello {}", name),
+impl SigninResponse {
+    #[inline]
+    pub fn answer<'a>(self) -> Answer<'a, Self> {
+        let status = match self {
+            Self::Created => StatusCode::CREATED,
+        };
+
+        Answer::new(self)
+            .status(status)
+            .content_type(ContentType::Json)
+    }
+}
+
+async fn user_signin(
+    pool: web::Data<DbPool>,
+    payload: web::Json<SigninPayload>,
+) -> Answer<'static, SigninResponse> {
+    SigninResponse::Created.answer()
+}
+
+#[derive(Debug, Serialize)]
+struct AnswerFailure {
+    code: i32,
+    message: String,
+}
+
+async fn not_found(_req: HttpRequest) -> impl Responder {
+    web::Json(AnswerFailure {
+        code: 404,
+        message: "route_not_found".to_string(),
     })
+    .with_status(StatusCode::NOT_FOUND)
 }
 
 #[actix_rt::main]
@@ -43,8 +72,20 @@ async fn main() -> std::io::Result<()> {
     let server = HttpServer::new(move || {
         App::new()
             .data(pool.clone())
+            .data(web::JsonConfig::default().error_handler(|err, req| {
+                actix_web::error::InternalError::from_response(
+                    err,
+                    HttpResponse::BadRequest().json(AnswerFailure {
+                        code: 400,
+                        message: "invalid_json".to_owned(),
+                    }),
+                )
+                .into()
+            }))
             .wrap(middleware::Logger::default())
-            .service(web::resource("/hello/{id}").route(web::get().to(demo)))
+            .wrap(middleware::Compress::default())
+            .default_service(web::route().to(not_found))
+            .service(web::resource("/user/signin").route(web::post().to(user_signin)))
     })
     .bind(&bind)?;
 
