@@ -23,9 +23,15 @@ async fn not_found(_req: HttpRequest) -> impl Responder {
     .with_status(StatusCode::NOT_FOUND)
 }
 
-async fn session_get() -> Answer<'static, generated::paths::SessionGetResponse> {
+async fn session_get(
+    a: web::Json<generated::paths::SessionGetResponse>,
+    b: HttpRequest,
+) -> Answer<'static, generated::paths::SessionGetResponse> {
     use generated::components::responses::UserAuthenticated;
     use generated::paths::SessionGetResponse;
+
+    println!("{:#?}", a);
+    println!("{:#?}", b.headers());
 
     SessionGetResponse::Ok(UserAuthenticated {
         username: Some(String::from("sergeysova")),

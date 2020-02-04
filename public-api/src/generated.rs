@@ -26,7 +26,12 @@ pub mod api {
     impl AuthmenowPublicApi {
         pub fn bind_session_get<F, T, R>(mut self, handler: F) -> Self
         where
-            F: Factory<T, R, Answer<'static, super::paths::SessionGetResponse>>,
+            F: super::BoundFactory<
+                (actix_web::web::Json<super::paths::SessionGetResponse>,),
+                T,
+                R,
+                Answer<'static, super::paths::SessionGetResponse>,
+            >,
             T: FromRequest + 'static,
             R: Future<Output = Answer<'static, super::paths::SessionGetResponse>> + 'static,
         {
@@ -66,19 +71,91 @@ pub mod api {
     }
 }
 
+pub trait BoundFactory<B, T, R, O>: Clone + 'static
+where
+    R: std::future::Future<Output = O>,
+    O: actix_web::Responder,
+{
+    fn call(&self, bound: B, param: T) -> R;
+}
+
+macro_rules! bound_factory(
+    ( $(<$b:tt, $B:ident>),+ ) => {
+        impl<Func, $($B,)+ R, O> BoundFactory<($($B,)+), (), R, O> for Func
+        where
+            Func: Fn($($B,)+) -> R + Clone + 'static,
+            R: std::future::Future<Output = O>,
+            O: actix_web::Responder,
+        {
+            fn call(&self, bound: ( $($B,)+ ), args: ()) -> R {
+                (self)($(bound.$b,)+)
+            }
+        }
+    };
+
+    ( $(<$b:tt, $B:ident>),+, $([$a:tt, $A:ident]),+ ) => {
+        impl<Func, $($B,)+ $($A,)+ R, O> BoundFactory<($($B,)+), ($($A,)+), R, O> for Func
+        where
+            Func: Fn($($B,)+ $($A,)+) -> R + Clone + 'static,
+            R: std::future::Future<Output = O>,
+            O: actix_web::Responder,
+        {
+            fn call(&self, bound: ( $($B,)+ ), args: ( $($A,)+ )) -> R {
+                (self)($(bound.$b,)+ $(args.$a,)+)
+            }
+        }
+    };
+);
+
+bound_factory!(<0, B0>);
+bound_factory!(<0, B0>, [0, A0]);
+bound_factory!(<0, B0>, [0, A0], [1, A1]);
+bound_factory!(<0, B0>, [0, A0], [1, A1], [2, A2]);
+bound_factory!(<0, B0>, [0, A0], [1, A1], [2, A2], [3, A3]);
+bound_factory!(<0, B0>, [0, A0], [1, A1], [2, A2], [3, A3], [4, A4]);
+bound_factory!(<0, B0>, [0, A0], [1, A1], [2, A2], [3, A3], [4, A4], [5, A5]);
+bound_factory!(<0, B0>, [0, A0], [1, A1], [2, A2], [3, A3], [4, A4], [5, A5], [6, A6]);
+
+bound_factory!(<0, B0>, <1, B1>);
+bound_factory!(<0, B0>, <1, B1>, [0, A0]);
+bound_factory!(<0, B0>, <1, B1>, [0, A0], [1, A1]);
+bound_factory!(<0, B0>, <1, B1>, [0, A0], [1, A1], [2, A2]);
+bound_factory!(<0, B0>, <1, B1>, [0, A0], [1, A1], [2, A2], [3, A3]);
+bound_factory!(<0, B0>, <1, B1>, [0, A0], [1, A1], [2, A2], [3, A3], [4, A4]);
+bound_factory!(<0, B0>, <1, B1>, [0, A0], [1, A1], [2, A2], [3, A3], [4, A4], [5, A5]);
+bound_factory!(<0, B0>, <1, B1>, [0, A0], [1, A1], [2, A2], [3, A3], [4, A4], [5, A5], [6, A6]);
+
+bound_factory!(<0, B0>, <1, B1>, <2, B2>);
+bound_factory!(<0, B0>, <1, B1>, <2, B2>, [0, A0]);
+bound_factory!(<0, B0>, <1, B1>, <2, B2>, [0, A0], [1, A1]);
+bound_factory!(<0, B0>, <1, B1>, <2, B2>, [0, A0], [1, A1], [2, A2]);
+bound_factory!(<0, B0>, <1, B1>, <2, B2>, [0, A0], [1, A1], [2, A2], [3, A3]);
+bound_factory!(<0, B0>, <1, B1>, <2, B2>, [0, A0], [1, A1], [2, A2], [3, A3], [4, A4]);
+bound_factory!(<0, B0>, <1, B1>, <2, B2>, [0, A0], [1, A1], [2, A2], [3, A3], [4, A4], [5, A5]);
+bound_factory!(<0, B0>, <1, B1>, <2, B2>, [0, A0], [1, A1], [2, A2], [3, A3], [4, A4], [5, A5], [6, A6]);
+
+bound_factory!(<0, B0>, <1, B1>, <2, B2>, <3, B3>);
+bound_factory!(<0, B0>, <1, B1>, <2, B2>, <3, B3>, [0, A0]);
+bound_factory!(<0, B0>, <1, B1>, <2, B2>, <3, B3>, [0, A0], [1, A1]);
+bound_factory!(<0, B0>, <1, B1>, <2, B2>, <3, B3>, [0, A0], [1, A1], [2, A2]);
+bound_factory!(<0, B0>, <1, B1>, <2, B2>, <3, B3>, [0, A0], [1, A1], [2, A2], [3, A3]);
+bound_factory!(<0, B0>, <1, B1>, <2, B2>, <3, B3>, [0, A0], [1, A1], [2, A2], [3, A3], [4, A4]);
+bound_factory!(<0, B0>, <1, B1>, <2, B2>, <3, B3>, [0, A0], [1, A1], [2, A2], [3, A3], [4, A4], [5, A5]);
+bound_factory!(<0, B0>, <1, B1>, <2, B2>, <3, B3>, [0, A0], [1, A1], [2, A2], [3, A3], [4, A4], [5, A5], [6, A6]);
+
 pub mod components {
     pub mod responses {
         use serde::{Deserialize, Serialize};
 
         /// User authenticated in Authmenow
-        #[derive(Serialize, Deserialize)]
+        #[derive(Debug, Serialize, Deserialize)]
         pub struct UserAuthenticated {
             pub username: Option<String>,
             #[serde(rename = "displayName")]
             pub display_name: Option<String>,
         }
 
-        #[derive(Serialize, Deserialize)]
+        #[derive(Debug, Serialize, Deserialize)]
         pub struct UserAnonymous {}
     }
 }
@@ -89,7 +166,7 @@ pub mod paths {
     use actix_web::http::StatusCode;
     use serde::{Deserialize, Serialize};
 
-    #[derive(Serialize, Deserialize)]
+    #[derive(Debug, Serialize, Deserialize)]
     #[serde(untagged)]
     pub enum SessionGetResponse {
         Ok(components::responses::UserAuthenticated),
@@ -110,7 +187,7 @@ pub mod paths {
         }
     }
 
-    #[derive(Serialize, Deserialize)]
+    #[derive(Debug, Serialize, Deserialize)]
     #[serde(untagged)]
     pub enum SessionCreateResponse {
         /// Session successfully created
@@ -130,7 +207,7 @@ pub mod paths {
         }
     }
 
-    #[derive(Serialize, Deserialize)]
+    #[derive(Debug, Serialize, Deserialize)]
     #[serde(untagged)]
     pub enum SessionDeleteResponse {
         /// Session successfully deleted
