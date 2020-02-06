@@ -1,5 +1,4 @@
-use actix_swagger::{Answer, ContentType};
-use actix_web::http::StatusCode;
+use actix_swagger::{Answer, ContentType, StatusCode};
 use actix_web::{middleware, web, App, Error, HttpRequest, HttpResponse, HttpServer, Responder};
 use diesel::pg::PgConnection;
 use diesel::r2d2::{self, ConnectionManager};
@@ -17,39 +16,42 @@ struct SigninPayload {
 #[derive(Serialize)]
 #[serde(untagged)]
 enum SigninResponse {
-    Created,
+    Ok,
 }
 
 impl SigninResponse {
     #[inline]
     pub fn answer<'a>(self) -> Answer<'a, Self> {
         let status = match self {
-            Self::Created => StatusCode::CREATED,
+            Self::Ok => StatusCode::OK,
         };
 
-        Answer::new(self)
-            .status(status)
-            .content_type(ContentType::Json)
+        Answer::new(self).status(status).content_type(None)
     }
 }
 
-async fn user_signin(
+async fn admin_signin(
     pool: web::Data<DbPool>,
     payload: web::Json<SigninPayload>,
 ) -> Answer<'static, SigninResponse> {
-    SigninResponse::Created.answer()
+    SigninResponse::Ok.answer()
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+enum FailureCode {
+    InvalidPayload,
+    InvalidRoute,
 }
 
 #[derive(Debug, Serialize)]
 struct AnswerFailure {
-    code: i32,
-    message: String,
+    code: FailureCode,
 }
 
 async fn not_found(_req: HttpRequest) -> impl Responder {
     web::Json(AnswerFailure {
-        code: 404,
-        message: "route_not_found".to_string(),
+        code: FailureCode::InvalidRoute,
     })
     .with_status(StatusCode::NOT_FOUND)
 }
@@ -72,20 +74,25 @@ async fn main() -> std::io::Result<()> {
     let server = HttpServer::new(move || {
         App::new()
             .data(pool.clone())
-            .data(web::JsonConfig::default().error_handler(|err, req| {
+            .wrap(middleware::Logger::default())
+            .wrap(middleware::Compress::default())
+            .app_data(web::JsonConfig::default().error_handler(|err, _| {
                 actix_web::error::InternalError::from_response(
                     err,
                     HttpResponse::BadRequest().json(AnswerFailure {
-                        code: 400,
-                        message: "invalid_json".to_owned(),
+                        code: FailureCode::InvalidPayload,
                     }),
                 )
                 .into()
             }))
-            .wrap(middleware::Logger::default())
-            .wrap(middleware::Compress::default())
+            .wrap(
+                middleware::DefaultHeaders::new()
+                    .header("X-Frame-Options", "deny")
+                    .header("X-Content-Type-Options", "nosniff")
+                    .header("X-XSS-Protection", "1; mode=block"),
+            )
             .default_service(web::route().to(not_found))
-            .service(web::resource("/user/signin").route(web::post().to(user_signin)))
+            .service(web::resource("/admin/signin").route(web::post().to(admin_signin)))
     })
     .bind(&bind)?;
 
