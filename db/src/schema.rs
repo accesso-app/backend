@@ -1,7 +1,6 @@
 table! {
     access_tokens (token) {
-        application_id -> Uuid,
-        blocked -> Bool,
+        client_id -> Uuid,
         created_at -> Timestamp,
         token -> Varchar,
         user_id -> Uuid,
@@ -9,24 +8,23 @@ table! {
 }
 
 table! {
-    admins (id) {
-        id -> Int4,
-        login -> Varchar,
-        password_hash -> Varchar,
+    authorization_codes (code) {
+        client_id -> Uuid,
+        code -> Varchar,
         created_at -> Timestamp,
-        updated_at -> Timestamp,
-        last_login_at -> Nullable<Timestamp>,
-        blocked -> Bool,
+        redirect_uri -> Varchar,
+        scope -> Nullable<Array<Text>>,
+        user_id -> Uuid,
     }
 }
 
 table! {
-    applications (id) {
+    clients (id) {
         id -> Uuid,
-        title -> Varchar,
-        secret_key -> Varchar,
         redirect_uri -> Varchar,
-        domain -> Varchar,
+        secret_key -> Varchar,
+        scopes -> Array<Text>,
+        title -> Varchar,
     }
 }
 
@@ -39,7 +37,9 @@ table! {
     }
 }
 
-joinable!(access_tokens -> applications (application_id));
+joinable!(access_tokens -> clients (client_id));
 joinable!(access_tokens -> users (user_id));
+joinable!(authorization_codes -> clients (client_id));
+joinable!(authorization_codes -> users (user_id));
 
-allow_tables_to_appear_in_same_query!(access_tokens, admins, applications, users,);
+allow_tables_to_appear_in_same_query!(access_tokens, authorization_codes, clients, users,);

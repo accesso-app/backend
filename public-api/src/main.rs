@@ -38,7 +38,6 @@ async fn session_get(
         display_name: Some(String::from("🦉")),
     })
     .answer()
-    .content_type(ContentType::FormData)
     .header("x-csrf-token".to_string(), "DEEEEEEEEMO")
     .cookie(
         Cookie::build("CSRF-Token", "HopHey")

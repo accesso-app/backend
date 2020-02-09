@@ -1,9 +1,10 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-CREATE TABLE "applications" (
+
+CREATE TABLE "clients" (
   "id" uuid DEFAULT uuid_generate_v4(),
-  "title" varchar NOT NULL,
-  "secret_key" varchar NOT NULL,
   "redirect_uri" varchar NOT NULL,
-  "domain" varchar NOT NULL,
+  "secret_key" varchar NOT NULL,
+  "scopes" text[] NOT NULL,
+  "title" varchar NOT NULL,
   PRIMARY KEY ("id")
 );
