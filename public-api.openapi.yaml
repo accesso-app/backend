@@ -5,6 +5,7 @@ info:
   description: Public API for frontend and OAuth applications [Review Github](https://developer.github.com/apps/building-oauth-apps/authorizing-oauth-apps/)
 servers:
   - url: http://localhost:9005/
+  - url: https://dev.authmenow.atomix.team/api/v0
 paths:
   "/oauth/authorize":
     get:
