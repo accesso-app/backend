@@ -2,7 +2,7 @@ openapi: 3.0.1
 info:
   title: Authmenow Public API.
   version: 0.1.0
-  description: Public API for frontend and OAuth applications
+  description: Public API for frontend and OAuth applications [Review Github](https://developer.github.com/apps/building-oauth-apps/authorizing-oauth-apps/)
 servers:
   - url: /api/v0
 paths:
@@ -18,8 +18,8 @@ paths:
         - $ref: "#/components/parameters/OAuthScope"
         - $ref: "#/components/parameters/OAuthState"
       responses:
-        200:
-          $ref: "#/components/responses/OAuthAuthorizeOk"
+        303:
+          $ref: "#/components/responses/OAuthAuthorizeRequestDone"
 
   "/oauth/token":
     post:
@@ -34,8 +34,14 @@ paths:
 
 components:
   responses:
-    OAuthAuthorizeOk:
-      description: Authorization request success
+    OAuthAuthorizeRequestDone:
+      description: User redirected to `redirect_uri` with `error` or `code`
+      headers:
+        Location:
+          schema:
+            type: string
+            format: uri
+            example: "https://example-app.com/oauth/callback?code=6a10d91379714605acb6c4b3f26a85aa"
 
     OAuthAccessTokenCreated:
       description:
