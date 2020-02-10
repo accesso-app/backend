@@ -47,11 +47,13 @@ enum FailureCode {
 #[derive(Debug, Serialize)]
 struct AnswerFailure {
     code: FailureCode,
+    message: Option<String>,
 }
 
 async fn not_found(_req: HttpRequest) -> impl Responder {
     web::Json(AnswerFailure {
         code: FailureCode::InvalidRoute,
+        message: None,
     })
     .with_status(StatusCode::NOT_FOUND)
 }
@@ -81,6 +83,7 @@ async fn main() -> std::io::Result<()> {
                     err,
                     HttpResponse::BadRequest().json(AnswerFailure {
                         code: FailureCode::InvalidPayload,
+                        message: None,
                     }),
                 )
                 .into()
