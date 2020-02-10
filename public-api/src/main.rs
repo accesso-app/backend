@@ -56,6 +56,13 @@ async fn session_delete() -> Answer<'static, generated::paths::SessionDeleteResp
     generated::paths::SessionDeleteResponse::Ok.answer()
 }
 
+use generated::paths::oauth_authorize_request as authreq;
+async fn oauth_authorize_request(query: authreq::Query) -> Answer<'static, authreq::Response> {
+    authreq::Response::SeeOther
+        .answer()
+        .header("Location".to_owned(), query.redirect_uri.to_owned())
+}
+
 #[actix_rt::main]
 async fn main() -> std::io::Result<()> {
     std::env::set_var("RUST_LOG", "actix_server=info,actix_web=info");
@@ -70,7 +77,8 @@ async fn main() -> std::io::Result<()> {
                 generated::api::AuthmenowPublicApi::new()
                     .bind_session_get(session_get)
                     .bind_session_create(session_create)
-                    .bind_session_delete(session_delete),
+                    .bind_session_delete(session_delete)
+                    .bind_oauth_authorize_request(oauth_authorize_request),
             )
     })
     .bind("127.0.0.1:9005")?

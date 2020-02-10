@@ -24,6 +24,19 @@ pub mod api {
     }
 
     impl AuthmenowPublicApi {
+        pub fn bind_oauth_authorize_request<F, T, R>(mut self, handler: F) -> Self
+        where
+            F: Factory<T, R, Answer<'static, super::paths::oauth_authorize_request::Response>>,
+            T: FromRequest + 'static,
+            R: Future<Output = Answer<'static, super::paths::oauth_authorize_request::Response>>
+                + 'static,
+        {
+            self.api = self
+                .api
+                .bind("/oauth/authorize".to_owned(), Method::GET, handler);
+            self
+        }
+
         pub fn bind_session_get<F, T, R>(mut self, handler: F) -> Self
         where
             F: Factory<T, R, Answer<'static, super::paths::SessionGetResponse>>,
@@ -66,15 +79,40 @@ pub mod api {
     }
 }
 
-pub trait BoundFactory<B, T, R, O>: Clone + 'static
-where
-    R: std::future::Future<Output = O>,
-    O: actix_web::Responder,
-{
-    fn call(&self, bound: B, param: T) -> R;
-}
-
 pub mod components {
+    pub mod parameters {
+        use serde::{Deserialize, Serialize};
+
+        /// response_type is set to code indicating that you want an authorization code as the response.
+        #[derive(Debug, Serialize, Deserialize)]
+        pub enum OAuthResponseType {
+            #[serde(rename = "code")]
+            Code,
+        }
+
+        /// The client_id is the identifier for your app.
+        /// You will have received a client_id when first registering your app with the service.
+        pub type OAuthClientId = String;
+
+        /// The redirect_uri may be optional depending on the API, but is highly recommended.
+        /// This is the URL to which you want the user to be redirected after the authorization is complete.
+        /// This must match the redirect URL that you have previously registered with the service.
+        pub type OAuthRedirectUri = String;
+
+        /// Include one or more scope values (space-separated) to request additional levels of access.
+        /// The values will depend on the particular service.
+        pub type OAuthScope = String;
+
+        /// The state parameter serves two functions.
+        /// When the user is redirected back to your app, whatever value you include as the state will also be included in the redirect.
+        /// This gives your app a chance to persist data between the user being directed to the authorization server and back again,
+        /// such as using the state parameter as a session key. This may be used to indicate what action in the app to perform after authorization is complete,
+        /// for example, indicating which of your app’s pages to redirect to after authorization. This also serves as a CSRF protection mechanism.
+        /// When the user is redirected back to your app, double check that the state value matches what you set it to originally.
+        /// This will ensure an attacker can’t intercept the authorization flow.
+        pub type OAuthState = String;
+    }
+
     pub mod responses {
         use serde::{Deserialize, Serialize};
 
@@ -156,5 +194,51 @@ pub mod paths {
                 .status(status)
                 .content_type(Some(ContentType::Json))
         }
+    }
+
+    pub mod oauth_authorize_request {
+        use super::components::parameters;
+        use actix_swagger::Answer;
+        use actix_web::http::StatusCode;
+        use serde::{Deserialize, Serialize};
+
+        #[derive(Debug, Serialize, Deserialize)]
+        #[serde(untagged)]
+        pub enum Response {
+            /// User redirected to `redirect_uri` with `error` or `code`
+            ///
+            /// ### Possible errors:
+            /// - If the user denies the authorization request, the server will redirect the user back to the redirect URL with error=`access_denied` in the query string, and no code will be present. It is up to the app to decide what to display to the user at this point.
+            /// - `invalid_request` — The request is missing a required parameter, includes an invalid parameter value, or is otherwise malformed.
+            /// - `unsupported_response_type` — The authorization server does not support obtaining an authorization code using this method.
+            /// - `invalid_scope` — The requested scope is invalid, unknown, or malformed.
+            /// - `server_error` — The authorization server encountered an unexpected condition which prevented it from fulfilling the request.
+            /// - `temporarily_unavailable` — The authorization server is currently unable to handle the request due to a temporary overloading or maintenance of the server.
+            ///
+            /// [OAuth2 Possible Errors](https://www.oauth.com/oauth2-servers/server-side-apps/possible-errors/)
+            SeeOther,
+        }
+
+        impl Response {
+            #[inline]
+            pub fn answer<'a>(self) -> Answer<'a, Self> {
+                let status = match self {
+                    Self::SeeOther => StatusCode::SEE_OTHER,
+                };
+
+                Answer::new(self).status(status)
+            }
+        }
+
+        #[derive(Debug, Serialize, Deserialize)]
+        pub struct QueryStruct {
+            pub response_type: parameters::OAuthResponseType,
+            pub client_id: parameters::OAuthClientId,
+            pub redirect_uri: parameters::OAuthRedirectUri,
+            pub scope: Option<parameters::OAuthScope>,
+            pub state: Option<parameters::OAuthState>,
+        }
+
+        pub type Query = actix_web::web::Query<QueryStruct>;
     }
 }
