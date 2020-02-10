@@ -40,7 +40,7 @@ components:
         User redirected to `redirect_uri` with `error` or `code` <br/>
         Possible errors: <br/>
         If the user denies the authorization request, the server will redirect the user back to the redirect URL with error=`access_denied` in the query string, and no code will be present. It is up to the app to decide what to display to the user at this point.<br/>
-        invalid_request` — The request is missing a required parameter, includes an invalid parameter value, or is otherwise malformed.<br/>
+        `invalid_request` — The request is missing a required parameter, includes an invalid parameter value, or is otherwise malformed.<br/>
         `unsupported_response_type` — The authorization server does not support obtaining an authorization code using this method.<br/>
         `invalid_scope` — The requested scope is invalid, unknown, or malformed.<br/>
         `server_error` — The authorization server encountered an unexpected condition which prevented it from fulfilling the request.<br/>

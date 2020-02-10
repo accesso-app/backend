@@ -92,7 +92,7 @@ pub mod components {
 
         /// The client_id is the identifier for your app.
         /// You will have received a client_id when first registering your app with the service.
-        pub type OAuthClientId = String;
+        pub type OAuthClientId = uuid::Uuid;
 
         /// The redirect_uri may be optional depending on the API, but is highly recommended.
         /// This is the URL to which you want the user to be redirected after the authorization is complete.

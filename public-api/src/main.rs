@@ -1,36 +1,23 @@
 // https://github.com/actix/actix-web/blob/3a5b62b5502d8c2ba5d824599171bb381f6b1b49/examples/basic.rs
 
-use actix_swagger::{Answer, ContentType};
+use actix_swagger::Answer;
 use actix_web::{
     http::{Cookie, StatusCode},
-    middleware, web, App, HttpRequest, HttpServer, Responder,
+    middleware, web, App, HttpRequest, HttpResponse, HttpServer, Responder,
 };
-use serde::Serialize;
+
+use authmenow_db::diesel::pg::PgConnection;
+use authmenow_db::diesel::r2d2::{self, ConnectionManager};
+use serde::{Deserialize, Serialize};
+
+type DbPool = r2d2::Pool<ConnectionManager<PgConnection>>;
 
 mod generated;
 
-#[derive(Debug, Serialize)]
-struct AnswerFailure {
-    code: i32,
-    message: String,
-}
-
-async fn not_found(_req: HttpRequest) -> impl Responder {
-    web::Json(AnswerFailure {
-        code: 404,
-        message: "Route not found".to_string(),
-    })
-    .with_status(StatusCode::NOT_FOUND)
-}
-
-async fn session_get(
-    a: web::Json<generated::paths::SessionGetResponse>,
-    b: HttpRequest,
-) -> Answer<'static, generated::paths::SessionGetResponse> {
+async fn session_get(b: HttpRequest) -> Answer<'static, generated::paths::SessionGetResponse> {
     use generated::components::responses::UserAuthenticated;
     use generated::paths::SessionGetResponse;
 
-    println!("{:#?}", a);
     println!("{:#?}", b.headers());
 
     SessionGetResponse::Ok(UserAuthenticated {
@@ -56,22 +43,117 @@ async fn session_delete() -> Answer<'static, generated::paths::SessionDeleteResp
     generated::paths::SessionDeleteResponse::Ok.answer()
 }
 
+mod models {
+    use authmenow_db::diesel::prelude::*;
+    use authmenow_db::diesel::{Insertable, Queryable};
+    use authmenow_db::schema::clients;
+
+    use serde::{Deserialize, Serialize};
+    #[derive(Debug, Clone, Serialize, Deserialize, Queryable, Insertable)]
+    pub struct Client {
+        pub id: uuid::Uuid,
+        pub redirect_uri: Vec<String>,
+        pub scopes: Option<Vec<String>>,
+        pub title: String,
+    }
+}
+
+fn clients_find_by_id(
+    uid: uuid::Uuid,
+    conn: &PgConnection,
+) -> Result<Option<models::Client>, authmenow_db::diesel::result::Error> {
+    use authmenow_db::schema::authorization_codes::dsl::*;
+
+    let client = clients
+        .filter(id.eq(uid))
+        .first::<models::Client>(conn)
+        .optional()?;
+
+    Ok(client)
+}
+
 use generated::paths::oauth_authorize_request as authreq;
-async fn oauth_authorize_request(query: authreq::Query) -> Answer<'static, authreq::Response> {
+async fn oauth_authorize_request(
+    query: authreq::Query,
+    pool: web::Data<DbPool>,
+) -> Answer<'static, authreq::Response> {
+    use authmenow_db::schema::authorization_codes::dsl::*;
+
     authreq::Response::SeeOther
         .answer()
         .header("Location".to_owned(), query.redirect_uri.to_owned())
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+enum FailureCode {
+    InvalidPayload,
+    InvalidRoute,
+    InvalidQueryParams,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct AnswerFailure {
+    code: FailureCode,
+    message: Option<String>,
+}
+
+async fn not_found(_req: HttpRequest) -> impl Responder {
+    web::Json(AnswerFailure {
+        code: FailureCode::InvalidRoute,
+        message: None,
+    })
+    .with_status(StatusCode::NOT_FOUND)
 }
 
 #[actix_rt::main]
 async fn main() -> std::io::Result<()> {
     std::env::set_var("RUST_LOG", "actix_server=info,actix_web=info");
     env_logger::init();
+    dotenv::dotenv().ok();
 
-    HttpServer::new(|| {
+    let listen_port = std::env::var("LISTEN_PORT").expect("LISTEN_PORT");
+    let connection_url = std::env::var("DATABASE_URL").expect("DATABASE_URL");
+    let manager = ConnectionManager::<PgConnection>::new(connection_url);
+    let pool = r2d2::Pool::builder()
+        .build(manager)
+        .expect("Failed to create pool");
+
+    let bind = format!("127.0.0.1:{}", listen_port);
+
+    HttpServer::new(move || {
         App::new()
+            .data(pool.clone())
             .wrap(middleware::Compress::default())
             .wrap(middleware::Logger::default())
+            .app_data(web::JsonConfig::default().error_handler(|err, _| {
+                let error_message = format!("{}", err);
+                actix_web::error::InternalError::from_response(
+                    err,
+                    HttpResponse::BadRequest().json(AnswerFailure {
+                        code: FailureCode::InvalidPayload,
+                        message: Some(error_message),
+                    }),
+                )
+                .into()
+            }))
+            .app_data(web::QueryConfig::default().error_handler(|err, _| {
+                let error_message = format!("{}", err);
+                actix_web::error::InternalError::from_response(
+                    err,
+                    HttpResponse::BadRequest().json(AnswerFailure {
+                        code: FailureCode::InvalidQueryParams,
+                        message: Some(error_message),
+                    }),
+                )
+                .into()
+            }))
+            .wrap(
+                middleware::DefaultHeaders::new()
+                    // .header("X-Frame-Options", "deny")
+                    .header("X-Content-Type-Options", "nosniff")
+                    .header("X-XSS-Protection", "1; mode=block"),
+            )
             .default_service(web::route().to(not_found))
             .service(
                 generated::api::AuthmenowPublicApi::new()
@@ -81,8 +163,7 @@ async fn main() -> std::io::Result<()> {
                     .bind_oauth_authorize_request(oauth_authorize_request),
             )
     })
-    .bind("127.0.0.1:9005")?
-    .workers(1)
+    .bind(bind)?
     .run()
     .await
 }
