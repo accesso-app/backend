@@ -21,7 +21,7 @@ table! {
 table! {
     clients (id) {
         id -> Uuid,
-        redirect_uri -> Varchar,
+        redirect_uri -> Array<Text>,
         secret_key -> Varchar,
         scopes -> Array<Text>,
         title -> Varchar,
@@ -42,4 +42,9 @@ joinable!(access_tokens -> users (user_id));
 joinable!(authorization_codes -> clients (client_id));
 joinable!(authorization_codes -> users (user_id));
 
-allow_tables_to_appear_in_same_query!(access_tokens, authorization_codes, clients, users,);
+allow_tables_to_appear_in_same_query!(
+    access_tokens,
+    authorization_codes,
+    clients,
+    users,
+);
