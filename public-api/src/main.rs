@@ -6,8 +6,8 @@ use actix_web::{
     middleware, web, App, HttpRequest, HttpResponse, HttpServer, Responder,
 };
 
-use authmenow_db::diesel::pg::PgConnection;
-use authmenow_db::diesel::r2d2::{self, ConnectionManager};
+use diesel::pg::PgConnection;
+use diesel::r2d2::{self, ConnectionManager};
 use serde::{Deserialize, Serialize};
 
 type DbPool = r2d2::Pool<ConnectionManager<PgConnection>>;
@@ -44,9 +44,9 @@ async fn session_delete() -> Answer<'static, generated::paths::SessionDeleteResp
 }
 
 mod models {
-    use authmenow_db::diesel::prelude::*;
-    use authmenow_db::diesel::{Insertable, Queryable};
     use authmenow_db::schema::clients;
+    use diesel::prelude::*;
+    use diesel::{Insertable, Queryable};
 
     use serde::{Deserialize, Serialize};
     #[derive(Debug, Clone, Serialize, Deserialize, Queryable, Insertable)]
@@ -61,8 +61,8 @@ mod models {
 fn clients_find_by_id(
     uid: uuid::Uuid,
     conn: &PgConnection,
-) -> Result<Option<models::Client>, authmenow_db::diesel::result::Error> {
-    use authmenow_db::schema::authorization_codes::dsl::*;
+) -> Result<Option<models::Client>, diesel::result::Error> {
+    use authmenow_db::schema::clients::dsl::*;
 
     let client = clients
         .filter(id.eq(uid))
