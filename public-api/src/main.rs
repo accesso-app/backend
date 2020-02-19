@@ -1,5 +1,8 @@
 // https://github.com/actix/actix-web/blob/3a5b62b5502d8c2ba5d824599171bb381f6b1b49/examples/basic.rs
 
+#[macro_use]
+extern crate diesel;
+
 use actix_swagger::Answer;
 use actix_web::{
     http::{Cookie, StatusCode},
@@ -46,14 +49,14 @@ async fn session_delete() -> Answer<'static, generated::paths::SessionDeleteResp
 mod models {
     use authmenow_db::schema::clients;
     use diesel::prelude::*;
-    use diesel::{Insertable, Queryable};
 
     use serde::{Deserialize, Serialize};
     #[derive(Debug, Clone, Serialize, Deserialize, Queryable, Insertable)]
     pub struct Client {
         pub id: uuid::Uuid,
         pub redirect_uri: Vec<String>,
-        pub scopes: Option<Vec<String>>,
+        pub secret_key: String,
+        pub scopes: Vec<String>,
         pub title: String,
     }
 }
@@ -63,6 +66,7 @@ fn clients_find_by_id(
     conn: &PgConnection,
 ) -> Result<Option<models::Client>, diesel::result::Error> {
     use authmenow_db::schema::clients::dsl::*;
+    use diesel::prelude::*;
 
     let client = clients
         .filter(id.eq(uid))
@@ -77,8 +81,6 @@ async fn oauth_authorize_request(
     query: authreq::Query,
     pool: web::Data<DbPool>,
 ) -> Answer<'static, authreq::Response> {
-    use authmenow_db::schema::authorization_codes::dsl::*;
-
     authreq::Response::SeeOther
         .answer()
         .header("Location".to_owned(), query.redirect_uri.to_owned())
