@@ -217,6 +217,10 @@ pub mod paths {
             ///
             /// [OAuth2 Possible Errors](https://www.oauth.com/oauth2-servers/server-side-apps/possible-errors/)
             SeeOther,
+
+            NotFound,
+
+            InternalServerError,
         }
 
         impl Response {
@@ -224,6 +228,8 @@ pub mod paths {
             pub fn answer<'a>(self) -> Answer<'a, Self> {
                 let status = match self {
                     Self::SeeOther => StatusCode::SEE_OTHER,
+                    Self::NotFound => StatusCode::NOT_FOUND,
+                    Self::InternalServerError => StatusCode::INTERNAL_SERVER_ERROR,
                 };
 
                 Answer::new(self).status(status)

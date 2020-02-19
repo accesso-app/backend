@@ -48,7 +48,6 @@ async fn session_delete() -> Answer<'static, generated::paths::SessionDeleteResp
 
 mod models {
     use authmenow_db::schema::clients;
-    use diesel::prelude::*;
 
     use serde::{Deserialize, Serialize};
     #[derive(Debug, Clone, Serialize, Deserialize, Queryable, Insertable)]
@@ -81,9 +80,34 @@ async fn oauth_authorize_request(
     query: authreq::Query,
     pool: web::Data<DbPool>,
 ) -> Answer<'static, authreq::Response> {
-    authreq::Response::SeeOther
-        .answer()
-        .header("Location".to_owned(), query.redirect_uri.to_owned())
+    match handle_authorize(query.client_id, pool) {
+        Err(AuthorizeError::ClientNotFound) => authreq::Response::NotFound.answer(),
+        Err(AuthorizeError::UnexpectedError) => authreq::Response::InternalServerError.answer(),
+        Ok(_) => authreq::Response::SeeOther
+            .answer()
+            .header("Location".to_owned(), "https://google.com"),
+    }
+}
+
+enum AuthorizeError {
+    ClientNotFound,
+    UnexpectedError,
+}
+
+impl From<diesel::result::Error> for AuthorizeError {
+    fn from(error: diesel::result::Error) -> AuthorizeError {
+        use diesel::result::Error;
+        match error {
+            Error::NotFound => AuthorizeError::ClientNotFound,
+            _ => AuthorizeError::UnexpectedError,
+        }
+    }
+}
+
+fn handle_authorize(client_id: uuid::Uuid, pool: web::Data<DbPool>) -> Result<(), AuthorizeError> {
+    clients_find_by_id(client_id, &pool.get().unwrap())?;
+
+    Ok(())
 }
 
 #[derive(Debug, Serialize, Deserialize)]
