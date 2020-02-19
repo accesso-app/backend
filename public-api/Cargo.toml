@@ -6,7 +6,7 @@ edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [dependencies]
-actix-http = "1.0.1"
+actix-http = { version = "1.0.1", features = ["failure"] }
 actix-router = "0.2.4"
 actix-rt = "1.0.0"
 actix-swagger = "0.1.1"
@@ -22,4 +22,4 @@ r2d2 = "0.8.6"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 serde_plain = "0.3.0"
-uuid = { version = "0.8.1", features = ["serde", "v4"] }
+uuid = { version = "0.6.5", features = ["serde", "v4"] }
