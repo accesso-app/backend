@@ -13,9 +13,11 @@ use diesel::pg::PgConnection;
 use diesel::r2d2::{self, ConnectionManager};
 use serde::{Deserialize, Serialize};
 
-type DbPool = r2d2::Pool<ConnectionManager<PgConnection>>;
+pub type DbPool = r2d2::Pool<ConnectionManager<PgConnection>>;
 
 mod generated;
+mod models;
+mod routes;
 
 async fn session_get(b: HttpRequest) -> Answer<'static, generated::paths::SessionGetResponse> {
     use generated::components::responses::UserAuthenticated;
@@ -46,70 +48,6 @@ async fn session_delete() -> Answer<'static, generated::paths::SessionDeleteResp
     generated::paths::SessionDeleteResponse::Ok.answer()
 }
 
-mod models {
-    use authmenow_db::schema::clients;
-
-    use serde::{Deserialize, Serialize};
-    #[derive(Debug, Clone, Serialize, Deserialize, Queryable, Insertable)]
-    pub struct Client {
-        pub id: uuid::Uuid,
-        pub redirect_uri: Vec<String>,
-        pub secret_key: String,
-        pub scopes: Vec<String>,
-        pub title: String,
-    }
-}
-
-fn clients_find_by_id(
-    uid: uuid::Uuid,
-    conn: &PgConnection,
-) -> Result<Option<models::Client>, diesel::result::Error> {
-    use authmenow_db::schema::clients::dsl::*;
-    use diesel::prelude::*;
-
-    let client = clients
-        .filter(id.eq(uid))
-        .first::<models::Client>(conn)
-        .optional()?;
-
-    Ok(client)
-}
-
-use generated::paths::oauth_authorize_request as authreq;
-async fn oauth_authorize_request(
-    query: authreq::Query,
-    pool: web::Data<DbPool>,
-) -> Answer<'static, authreq::Response> {
-    match handle_authorize(query.client_id, pool) {
-        Err(AuthorizeError::ClientNotFound) => authreq::Response::NotFound.answer(),
-        Err(AuthorizeError::UnexpectedError) => authreq::Response::InternalServerError.answer(),
-        Ok(_) => authreq::Response::SeeOther
-            .answer()
-            .header("Location".to_owned(), "https://google.com"),
-    }
-}
-
-enum AuthorizeError {
-    ClientNotFound,
-    UnexpectedError,
-}
-
-impl From<diesel::result::Error> for AuthorizeError {
-    fn from(error: diesel::result::Error) -> AuthorizeError {
-        use diesel::result::Error;
-        match error {
-            Error::NotFound => AuthorizeError::ClientNotFound,
-            _ => AuthorizeError::UnexpectedError,
-        }
-    }
-}
-
-fn handle_authorize(client_id: uuid::Uuid, pool: web::Data<DbPool>) -> Result<(), AuthorizeError> {
-    clients_find_by_id(client_id, &pool.get().unwrap())?;
-
-    Ok(())
-}
-
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 enum FailureCode {
@@ -134,7 +72,7 @@ async fn not_found(_req: HttpRequest) -> impl Responder {
 
 #[actix_rt::main]
 async fn main() -> std::io::Result<()> {
-    std::env::set_var("RUST_LOG", "actix_server=info,actix_web=info");
+    std::env::set_var("RUST_LOG", "actix_server=info,actix_web=info,diesel=info");
     env_logger::init();
     dotenv::dotenv().ok();
 
@@ -186,7 +124,7 @@ async fn main() -> std::io::Result<()> {
                     .bind_session_get(session_get)
                     .bind_session_create(session_create)
                     .bind_session_delete(session_delete)
-                    .bind_oauth_authorize_request(oauth_authorize_request),
+                    .bind_oauth_authorize_request(routes::oauth::authorize_request),
             )
     })
     .bind(bind)?
