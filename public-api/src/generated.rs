@@ -218,6 +218,8 @@ pub mod paths {
             /// [OAuth2 Possible Errors](https://www.oauth.com/oauth2-servers/server-side-apps/possible-errors/)
             SeeOther,
 
+            BadRequest,
+
             NotFound,
 
             InternalServerError,
@@ -229,6 +231,7 @@ pub mod paths {
                 let status = match self {
                     Self::SeeOther => StatusCode::SEE_OTHER,
                     Self::NotFound => StatusCode::NOT_FOUND,
+                    Self::BadRequest => StatusCode::BAD_REQUEST,
                     Self::InternalServerError => StatusCode::INTERNAL_SERVER_ERROR,
                 };
 
