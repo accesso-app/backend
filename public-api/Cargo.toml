@@ -13,7 +13,13 @@ actix-swagger = "0.1.1"
 actix-web = "2.0.0"
 authmenow-db = { "path" = "../db" }
 chrono = { version = "0.4.10", features = ["serde"] }
-diesel = { version = "1.4.3", features = ["postgres", "uuidv07", "chrono"] }
+diesel = { version = "1.4.3", features = [
+  "postgres",
+  "uuidv07",
+  "chrono",
+  "r2d2",
+  "serde_json"
+] }
 dotenv = "0.15.0"
 env_logger = "0.7.1"
 failure = "0.1.6"
