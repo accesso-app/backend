@@ -1,8 +1,8 @@
 use crate::generated::paths::oauth_authorize_request as authorize;
-use crate::models::Client;
+use crate::models::{Client, User};
 use crate::DbPool;
 use actix_swagger::Answer;
-use actix_web::web;
+use actix_web::{dev, web, FromRequest, HttpMessage};
 
 enum AuthorizeError {
     ClientNotFound,
@@ -12,6 +12,28 @@ enum AuthorizeError {
 }
 
 use diesel::result::Error as DieselError;
+
+struct Auth {
+    id: Option<uuid::Uuid>,
+}
+
+impl FromRequest for Auth {
+    type Config = ();
+    type Error = actix_web::Error;
+    type Future = futures::future::Ready<Result<Self, Self::Error>>;
+
+    #[inline]
+    fn from_request(req: &actix_web::HttpRequest, _: &mut dev::Payload) -> Self::Future {
+        if let Some(cookie) = req.cookie("session-token") {
+            if let Some(pool) = req.app_data::<web::Data<DbPool>>() {
+                let conn = pool.get().unwrap();
+                let result = User::find_by_token(&conn, cookie.value());
+            };
+        }
+
+        futures::future::ok(Auth { id: None })
+    }
+}
 
 impl From<DieselError> for AuthorizeError {
     fn from(error: DieselError) -> AuthorizeError {
