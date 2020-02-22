@@ -102,10 +102,17 @@ pub struct User {
 
 impl User {
     pub fn find_by_token(conn: &PgConnection, token: &str) -> Result<Self, diesel::result::Error> {
-        users::table
+        let query = users::table
             .inner_join(session_tokens::table)
             .select(users::all_columns)
             .filter(session_tokens::token.eq(token))
-            .first(conn)
+            .filter(session_tokens::expires_at.gt(chrono::Utc::now().naive_utc()));
+
+        println!(
+            "{:?}",
+            diesel::debug_query::<diesel::pg::Pg, _>(&query).to_string()
+        );
+
+        query.first(conn)
     }
 }

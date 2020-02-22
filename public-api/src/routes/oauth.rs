@@ -13,11 +13,22 @@ enum AuthorizeError {
 
 use diesel::result::Error as DieselError;
 
-struct Auth {
-    id: Option<uuid::Uuid>,
+#[derive(Debug)]
+pub struct AuthPrefer {
+    user: Option<User>,
 }
 
-impl FromRequest for Auth {
+impl AuthPrefer {
+    fn from_user(user: User) -> Self {
+        Self { user: Some(user) }
+    }
+
+    fn new() -> Self {
+        Self { user: None }
+    }
+}
+
+impl FromRequest for AuthPrefer {
     type Config = ();
     type Error = actix_web::Error;
     type Future = futures::future::Ready<Result<Self, Self::Error>>;
@@ -28,10 +39,16 @@ impl FromRequest for Auth {
             if let Some(pool) = req.app_data::<web::Data<DbPool>>() {
                 let conn = pool.get().unwrap();
                 let result = User::find_by_token(&conn, cookie.value());
+
+                return match result {
+                    Ok(user) => futures::future::ok(AuthPrefer::from_user(user)),
+                    // Do not throw an error if session is invalid
+                    Err(_) => futures::future::ok(AuthPrefer::new()),
+                };
             };
         }
 
-        futures::future::ok(Auth { id: None })
+        futures::future::ok(AuthPrefer::new())
     }
 }
 
@@ -70,9 +87,12 @@ fn handle_authorize(
 pub async fn authorize_request(
     query: authorize::Query,
     pool: web::Data<DbPool>,
+    auth: AuthPrefer,
 ) -> Answer<'static, authorize::Response> {
     let input_redirect_uri = query.redirect_uri.clone();
     let state = query.state.clone();
+
+    println!("{:#?}", auth);
 
     match handle_authorize(query, pool) {
         Err(AuthorizeError::ClientNotFound) => authorize::Response::NotFound.answer(),
