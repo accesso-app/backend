@@ -38,7 +38,7 @@ impl FromRequest for AuthPrefer {
         if let Some(cookie) = req.cookie("session-token") {
             if let Some(pool) = req.app_data::<web::Data<DbPool>>() {
                 let conn = pool.get().unwrap();
-                let result = User::find_by_token(&conn, cookie.value());
+                let result = User::find_by_token_actual(&conn, cookie.value());
 
                 return match result {
                     Ok(user) => futures::future::ok(AuthPrefer::from_user(user)),

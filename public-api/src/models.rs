@@ -1,6 +1,4 @@
-use authmenow_db::schema::clients;
-use authmenow_db::schema::session_tokens;
-use authmenow_db::schema::users;
+use authmenow_db::schema::*;
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
@@ -51,6 +49,7 @@ impl Client {
     }
 }
 
+/// Token that handles session of a user
 #[derive(
     Associations,
     Clone,
@@ -101,18 +100,50 @@ pub struct User {
 }
 
 impl User {
-    pub fn find_by_token(conn: &PgConnection, token: &str) -> Result<Self, diesel::result::Error> {
-        let query = users::table
+    /// If token already expired, not found should be returned
+    pub fn find_by_token_actual(
+        conn: &PgConnection,
+        token: &str,
+    ) -> Result<Self, diesel::result::Error> {
+        users::table
             .inner_join(session_tokens::table)
             .select(users::all_columns)
             .filter(session_tokens::token.eq(token))
-            .filter(session_tokens::expires_at.gt(chrono::Utc::now().naive_utc()));
+            .filter(session_tokens::expires_at.gt(chrono::Utc::now().naive_utc()))
+            .first(conn)
+    }
+}
 
-        println!(
-            "{:?}",
-            diesel::debug_query::<diesel::pg::Pg, _>(&query).to_string()
-        );
+#[derive(Clone, Debug, Deserialize, Serialize, Identifiable, Insertable, PartialEq, Queryable)]
+#[primary_key(confirmation_code)]
+pub struct RegistrationRequest {
+    pub confirmation_code: String,
+    pub email: String,
+    pub expires_at: chrono::NaiveDateTime,
+}
 
-        query.first(conn)
+impl RegistrationRequest {
+    /// Creates registration request with default expiring timeout
+    /// Default timeout: 1 day
+    pub fn new<E>(email: E) -> Self
+    where
+        E: ToString,
+    {
+        Self {
+            email: email.to_string(),
+            confirmation_code: uuid::Uuid::new_v4().to_string(),
+            expires_at: chrono::Utc::now().naive_utc() + chrono::Duration::days(1),
+        }
+    }
+
+    /// Find request by code and check expires
+    pub fn find_by_code_actual(
+        conn: &PgConnection,
+        code: &str,
+    ) -> Result<Self, diesel::result::Error> {
+        registration_requests::table
+            .filter(registration_requests::confirmation_code.eq(code))
+            .filter(registration_requests::expires_at.gt(chrono::Utc::now().naive_utc()))
+            .first(conn)
     }
 }
