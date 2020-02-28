@@ -5,4 +5,3 @@ CREATE TABLE "registration_requests" (
   PRIMARY KEY("confirmation_code")
 );
 
-CREATE UNIQUE INDEX "registration_requests_email" ON "registration_requests" USING BTREE ("email");
