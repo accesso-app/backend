@@ -112,6 +112,16 @@ impl User {
             .filter(session_tokens::expires_at.gt(chrono::Utc::now().naive_utc()))
             .first(conn)
     }
+
+    /// Return `true` if email is already registered
+    pub fn has_with_email(conn: &PgConnection, email: &str) -> bool {
+        users::table
+            .filter(users::email.eq(email))
+            .count()
+            .get_result::<i64>(conn)
+            .unwrap_or(0)
+            > 0
+    }
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, Identifiable, Insertable, PartialEq, Queryable)]
@@ -124,7 +134,7 @@ pub struct RegistrationRequest {
 
 impl RegistrationRequest {
     /// Creates registration request with default expiring timeout
-    /// Default timeout: 1 day
+    /// Default timeout: 1 day from today
     pub fn new<E>(email: E) -> Self
     where
         E: ToString,
@@ -145,5 +155,11 @@ impl RegistrationRequest {
             .filter(registration_requests::confirmation_code.eq(code))
             .filter(registration_requests::expires_at.gt(chrono::Utc::now().naive_utc()))
             .first(conn)
+    }
+
+    pub fn create(self, conn: &PgConnection) -> Result<Self, diesel::result::Error> {
+        diesel::insert_into(registration_requests::table)
+            .values(&self)
+            .get_result(conn)
     }
 }

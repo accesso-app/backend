@@ -37,6 +37,16 @@ pub mod api {
             self
         }
 
+        pub fn bind_register<F, T, R>(mut self, handler: F) -> Self
+        where
+            F: Factory<T, R, Answer<'static, super::paths::register::Response>>,
+            T: FromRequest + 'static,
+            R: Future<Output = Answer<'static, super::paths::register::Response>> + 'static,
+        {
+            self.api = self.api.bind("/register".to_owned(), Method::POST, handler);
+            self
+        }
+
         pub fn bind_session_get<F, T, R>(mut self, handler: F) -> Self
         where
             F: Factory<T, R, Answer<'static, super::paths::SessionGetResponse>>,
@@ -126,6 +136,27 @@ pub mod components {
 
         #[derive(Debug, Serialize, Deserialize)]
         pub struct UserAnonymous {}
+
+        /// Registration link sent to email, now user can find out when the link expires
+        #[derive(Debug, Serialize, Deserialize)]
+        pub struct RegistrationRequestCreated {
+            /// UTC Unix TimeStamp when the link expires
+            pub expires_at: i64,
+        }
+
+        #[derive(Debug, Serialize, Deserialize)]
+        pub struct RegistrationFailed {
+            pub error: String,
+        }
+    }
+
+    pub mod request_bodies {
+        use serde::{Deserialize, Serialize};
+
+        #[derive(Debug, Serialize, Deserialize)]
+        pub struct Register {
+            pub email: String,
+        }
     }
 }
 
@@ -193,6 +224,39 @@ pub mod paths {
             Answer::new(self)
                 .status(status)
                 .content_type(Some(ContentType::Json))
+        }
+    }
+
+    pub mod register {
+        use super::components::responses;
+        use actix_swagger::{Answer, ContentType};
+        use actix_web::http::StatusCode;
+        use serde::Serialize;
+
+        #[derive(Debug, Serialize)]
+        #[serde(untagged)]
+        pub enum Response {
+            Created(responses::RegistrationRequestCreated),
+            BadRequest(responses::RegistrationFailed),
+            Unexpected,
+        }
+
+        impl Response {
+            #[inline]
+            pub fn answer<'a>(self) -> Answer<'a, Self> {
+                let status = match self {
+                    Self::Created(_) => StatusCode::CREATED,
+                    Self::BadRequest(_) => StatusCode::BAD_REQUEST,
+                    Self::Unexpected => StatusCode::INTERNAL_SERVER_ERROR,
+                };
+
+                let content_type = match self {
+                    Self::Unexpected => None,
+                    _ => Some(ContentType::Json),
+                };
+
+                Answer::new(self).status(status).content_type(content_type)
+            }
         }
     }
 
