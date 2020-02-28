@@ -1,7 +1,7 @@
 table! {
     access_tokens (token) {
         client_id -> Uuid,
-        created_at -> Timestamp,
+        created_at -> Timestamptz,
         token -> Varchar,
         user_id -> Uuid,
     }
@@ -11,7 +11,7 @@ table! {
     authorization_codes (code) {
         client_id -> Uuid,
         code -> Varchar,
-        created_at -> Timestamp,
+        created_at -> Timestamptz,
         redirect_uri -> Varchar,
         scope -> Nullable<Array<Text>>,
         user_id -> Uuid,
@@ -29,10 +29,18 @@ table! {
 }
 
 table! {
+    registration_requests (confirmation_code) {
+        confirmation_code -> Varchar,
+        email -> Varchar,
+        expires_at -> Timestamptz,
+    }
+}
+
+table! {
     session_tokens (token) {
         user_id -> Uuid,
         token -> Varchar,
-        expires_at -> Timestamp,
+        expires_at -> Timestamptz,
     }
 }
 
@@ -55,6 +63,7 @@ allow_tables_to_appear_in_same_query!(
     access_tokens,
     authorization_codes,
     clients,
+    registration_requests,
     session_tokens,
     users,
 );
