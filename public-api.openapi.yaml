@@ -33,6 +33,17 @@ paths:
         201:
           $ref: "#/components/responses/OAuthAccessTokenCreated"
 
+  "/register":
+    post:
+      operationId: register
+      tags: [Register]
+      description: Send registration link to email
+      requestBody:
+        $ref: "#/components/requestBodies/Register"
+      responses:
+        201:
+          $ref: "#/components/responses/RegistrationRequestCreated"
+
 components:
   responses:
     OAuthAuthorizeRequestDone:
@@ -74,6 +85,32 @@ components:
                 type: integer
                 format: int32
                 description: UTC Unix TimeStamp when the access token expires
+
+    RegistrationRequestCreated:
+      description: Registration link sent to email, now user can find out when the link expires
+      content:
+        application/json:
+          schema:
+            required:
+              - expires_at
+            properties:
+              expires_at:
+                type: integer
+                format: int32
+                description: UTC Unix TimeStamp when the link expires
+
+    RegistrationFailed:
+      description: Please, login or recover password
+      content:
+        application/json:
+          schema:
+            required:
+              - error
+            properties:
+              error:
+                type: string
+                enum:
+                  - "email_already_registered"
 
   parameters:
     OAuthResponseType:
@@ -166,4 +203,15 @@ components:
               client_id:
                 type: string
               client_secret:
+                type: string
+
+    Register:
+      required: true
+      content:
+        application/json:
+          schema:
+            required:
+              - email
+            properties:
+              email:
                 type: string
