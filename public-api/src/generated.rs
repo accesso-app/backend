@@ -37,13 +37,15 @@ pub mod api {
             self
         }
 
-        pub fn bind_register<F, T, R>(mut self, handler: F) -> Self
+        pub fn bind_register_request<F, T, R>(mut self, handler: F) -> Self
         where
             F: Factory<T, R, Answer<'static, super::paths::register::Response>>,
             T: FromRequest + 'static,
             R: Future<Output = Answer<'static, super::paths::register::Response>> + 'static,
         {
-            self.api = self.api.bind("/register".to_owned(), Method::POST, handler);
+            self.api = self
+                .api
+                .bind("/register/request".to_owned(), Method::POST, handler);
             self
         }
 

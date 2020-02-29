@@ -33,9 +33,9 @@ paths:
         201:
           $ref: "#/components/responses/OAuthAccessTokenCreated"
 
-  "/register":
+  "/register/request":
     post:
-      operationId: register
+      operationId: registerRequest
       tags: [Register]
       description: Send registration link to email
       requestBody:

@@ -33,7 +33,7 @@ fn handle_register_request(
     }
 }
 
-pub async fn register_request(
+pub async fn request(
     body: web::Json<request_bodies::Register>,
     pool: web::Data<DbPool>,
 ) -> Answer<'static, register::Response> {
