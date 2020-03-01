@@ -24,6 +24,6 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
           snapshot: true
           registry: docker.pkg.github.com
-          buildargs: CRATE_NAME=public-api
+          dockerfile: builder.Dockerfile
           tags: "1.41"
   
