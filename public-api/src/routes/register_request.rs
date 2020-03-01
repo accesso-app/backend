@@ -1,5 +1,5 @@
 use crate::generated::components::{request_bodies, responses};
-use crate::generated::paths::register;
+use crate::generated::paths::register_request;
 use crate::models::{RegistrationRequest, User};
 use crate::DbPool;
 use actix_swagger::Answer;
@@ -36,7 +36,7 @@ fn handle(
 pub async fn route(
     body: web::Json<request_bodies::Register>,
     pool: web::Data<DbPool>,
-) -> Answer<'static, register::Response> {
+) -> Answer<'static, register_request::Response> {
     match handle(body.0, pool) {
         Ok(request) => {
             log::trace!(
@@ -44,17 +44,17 @@ pub async fn route(
                 email = request.email,
                 code = request.confirmation_code
             );
-            register::Response::Created(responses::RegistrationRequestCreated {
+            register_request::Response::Created(responses::RegistrationRequestCreated {
                 expires_at: request.expires_at.timestamp_millis(),
             })
             .answer()
         }
         Err(RegisterRequestError::EmailAlreadyRegistered) => {
-            register::Response::BadRequest(responses::RegisterFailed {
+            register_request::Response::BadRequest(responses::RegisterFailed {
                 error: responses::RegisterFailedError::EmailAlreadyRegistered,
             })
             .answer()
         }
-        Err(RegisterRequestError::UnexpectedError) => register::Response::Unexpected.answer(),
+        Err(RegisterRequestError::UnexpectedError) => register_request::Response::Unexpected.answer(),
     }
 }

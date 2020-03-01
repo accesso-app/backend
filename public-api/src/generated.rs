@@ -39,9 +39,9 @@ pub mod api {
 
         pub fn bind_register_request<F, T, R>(mut self, handler: F) -> Self
         where
-            F: Factory<T, R, Answer<'static, super::paths::register::Response>>,
+            F: Factory<T, R, Answer<'static, super::paths::register_request::Response>>,
             T: FromRequest + 'static,
-            R: Future<Output = Answer<'static, super::paths::register::Response>> + 'static,
+            R: Future<Output = Answer<'static, super::paths::register_request::Response>> + 'static,
         {
             self.api = self
                 .api
@@ -236,7 +236,7 @@ pub mod paths {
         }
     }
 
-    pub mod register {
+    pub mod register_request {
         use super::components::responses;
         use actix_swagger::{Answer, ContentType};
         use actix_web::http::StatusCode;
