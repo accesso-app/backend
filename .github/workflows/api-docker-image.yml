@@ -9,6 +9,7 @@ on:
       - "public-api/*"
       - "db/*"
       - ".github/workflows/api-docker-image.yml"
+      - "Dockerfile"
 
 jobs:
   public-api:
