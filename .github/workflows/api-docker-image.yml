@@ -1,10 +1,14 @@
-name: Docker Image CI
+name: API Docker Image CI
 
 on:
   push:
     branches:
       - master
       - dev
+    paths:
+      - "public-api/*"
+      - "db/*"
+      - ".github/workflows/api-docker-image.yml"
 
 jobs:
   public-api:
@@ -20,8 +24,6 @@ jobs:
           username: sergeysova
           password: ${{ secrets.GITHUB_TOKEN }}
           snapshot: true
-          tagging: ${{contains(github.ref, 'refs/tags/v')}}
           registry: docker.pkg.github.com
           buildargs: CRATE_NAME=public-api
-
-  
+          
