@@ -10,6 +10,7 @@ on:
       - "db/*"
       - ".github/workflows/api-docker-image.yml"
       - "Dockerfile"
+      - "docker-entrypoint.sh"
 
 jobs:
   public-api:
