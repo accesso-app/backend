@@ -43,6 +43,11 @@ paths:
       responses:
         201:
           $ref: "#/components/responses/RegistrationRequestCreated"
+        400:
+          $ref: "#/components/responses/RegisterFailed"
+        500:
+          description: Something goes wrong
+
 
 components:
   responses:
@@ -99,7 +104,7 @@ components:
                 format: int32
                 description: UTC Unix TimeStamp when the link expires
 
-    RegistrationFailed:
+    RegisterFailed:
       description: Please, login or recover password
       content:
         application/json:

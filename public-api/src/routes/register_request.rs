@@ -50,7 +50,7 @@ pub async fn route(
             .answer()
         }
         Err(RegisterRequestError::EmailAlreadyRegistered) => {
-            register::Response::BadRequest(responses::RegistrationFailed {
+            register::Response::BadRequest(responses::RegisterFailed {
                 error: "email_already_registered".to_string(),
             })
             .answer()

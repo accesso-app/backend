@@ -148,7 +148,7 @@ pub mod components {
         }
 
         #[derive(Debug, Serialize, Deserialize)]
-        pub struct RegistrationFailed {
+        pub struct RegisterFailed {
             pub error: String,
         }
     }
@@ -240,7 +240,7 @@ pub mod paths {
         #[serde(untagged)]
         pub enum Response {
             Created(responses::RegistrationRequestCreated),
-            BadRequest(responses::RegistrationFailed),
+            BadRequest(responses::RegisterFailed),
             Unexpected,
         }
 
