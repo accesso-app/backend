@@ -1,0 +1,29 @@
+name: Builder Image CI
+
+on:
+  push:
+    branches:
+      - master
+      - dev
+    paths:
+      - "builder.Dockerfile"
+      - ".github/workflows/builder-image.yml"
+
+jobs:
+  image:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Publish Docker
+        uses: elgohr/Publish-Docker-Github-Action@2.12
+        with:
+          name: authmenow/backend/builder
+          username: sergeysova
+          password: ${{ secrets.GITHUB_TOKEN }}
+          snapshot: true
+          registry: docker.pkg.github.com
+          buildargs: CRATE_NAME=public-api
+          tags: "1.41"
+  
