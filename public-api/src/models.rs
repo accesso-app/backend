@@ -183,7 +183,7 @@ impl RegistrationRequest {
     {
         Self {
             email: email.to_string(),
-            confirmation_code: uuid::Uuid::new_v4().to_string(),
+            confirmation_code: crate::secure::create_words_password(4, "-"),
             expires_at: chrono::Utc::now().naive_utc() + chrono::Duration::days(1),
         }
     }

@@ -37,6 +37,7 @@ paths:
     post:
       operationId: registerRequest
       tags: [Register]
+      # TODO: Add rate limit and CSRF protection
       description: Send registration link to email
       requestBody:
         $ref: "#/components/requestBodies/Register"
@@ -48,10 +49,14 @@ paths:
         500:
           description: Something goes wrong
 
+  # Maybe add method to check code before fill form?
+  # Can improve a user experience
+
   "/register/confirmation":
     post:
       operationId: registerConfirmation
       tags: [Register]
+      # TODO: Add rate limit and CSRF protection
       description: Confirm email, fill profile required fields and create user
       requestBody:
         $ref: "#/components/requestBodies/RegisterConfirmation"

@@ -18,6 +18,7 @@ pub type DbPool = r2d2::Pool<ConnectionManager<PgConnection>>;
 mod generated;
 mod models;
 mod routes;
+mod secure;
 
 async fn session_get(b: HttpRequest) -> Answer<'static, generated::paths::SessionGetResponse> {
     use generated::components::responses::UserAuthenticated;
