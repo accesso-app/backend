@@ -3,7 +3,8 @@ FROM docker.pkg.github.com/authmenow/backend/builder:1.41 as build
 ENV USER="root"
 WORKDIR /app
 
-COPY ./Cargo.lock ./Cargo.toml ./
+# COPY ./Cargo.lock ./Cargo.toml ./
+COPY ./Cargo.toml ./
 RUN cargo new public-api --bin --name authmenow-public-api && \
   cargo new db --lib --name authmenow-db
 
