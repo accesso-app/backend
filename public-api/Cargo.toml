@@ -1,5 +1,5 @@
 [package]
-name = "public-api"
+name = "authmenow-public-api"
 version = "0.1.0"
 authors = ["Sergey Sova <mail@sergeysova.com>"]
 edition = "2018"
