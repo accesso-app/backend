@@ -23,6 +23,8 @@ fn handle(
     } else {
         let request = RegistrationRequest::new(&body.email);
 
+        log::warn!("Email confirmation not sent. Because not implemented");
+
         match request.create(&conn) {
             Err(Error::DatabaseError(DatabaseErrorKind::UniqueViolation, _)) => {
                 Err(RegisterRequestError::EmailAlreadyRegistered)
@@ -55,6 +57,8 @@ pub async fn route(
             })
             .answer()
         }
-        Err(RegisterRequestError::UnexpectedError) => register_request::Response::Unexpected.answer(),
+        Err(RegisterRequestError::UnexpectedError) => {
+            register_request::Response::Unexpected.answer()
+        }
     }
 }

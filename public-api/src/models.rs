@@ -100,6 +100,48 @@ pub struct User {
 }
 
 impl User {
+    /// Just creates empty user with generated uuid
+    pub fn new() -> Self {
+        Self {
+            id: uuid::Uuid::new_v4(),
+            email: String::new(),
+            username: None,
+            password_hash: String::new(),
+        }
+    }
+
+    pub fn password_set(mut self, password: &str) -> Self {
+        log::warn!("PASSWORD NOT HASHED, BECAUSE NOT IMPLEMENTED. SAVED AS IS");
+        self.password_hash = password.to_owned();
+        self
+    }
+
+    pub fn password_compare(&mut self, password: &str) -> bool {
+        log::warn!("PASSWORD NOT HASHED, BECAUSE NOT IMPLEMENTED. COMPARED AS IS");
+        self.password_hash == password
+    }
+
+    pub fn email_set(mut self, email: &str) -> Self {
+        self.email = email.to_owned();
+        self
+    }
+
+    pub fn username_set(mut self, username: &str) -> Self {
+        self.username = Some(username.to_owned());
+        self
+    }
+
+    pub fn username_unset(mut self) -> Self {
+        self.username = None;
+        self
+    }
+
+    pub fn create(&self, conn: &PgConnection) -> Result<Self, diesel::result::Error> {
+        diesel::insert_into(users::table)
+            .values(self)
+            .get_result(conn)
+    }
+
     /// If token already expired, not found should be returned
     pub fn find_by_token_actual(
         conn: &PgConnection,
@@ -161,5 +203,14 @@ impl RegistrationRequest {
         diesel::insert_into(registration_requests::table)
             .values(&self)
             .get_result(conn)
+    }
+
+    pub fn delete_all_for_email(
+        conn: &PgConnection,
+        email: &str,
+    ) -> Result<usize, diesel::result::Error> {
+        diesel::delete(registration_requests::table)
+            .filter(registration_requests::email.eq(email))
+            .execute(conn)
     }
 }

@@ -173,6 +173,9 @@ pub mod components {
 
         #[derive(Debug, Serialize, Deserialize)]
         pub enum RegisterConfirmationFailedError {
+            #[serde(rename = "code_invalid_or_expired")]
+            CodeInvalidOrExpired,
+
             #[serde(rename = "email_already_activated")]
             EmailAlreadyActivated,
         }

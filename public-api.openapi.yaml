@@ -142,6 +142,7 @@ components:
               error:
                 type: string
                 enum:
+                  - "code_invalid_or_expired"
                   - "email_already_activated"
 
   parameters:
