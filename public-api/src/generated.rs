@@ -143,6 +143,7 @@ pub mod components {
         #[derive(Debug, Serialize, Deserialize)]
         pub struct RegistrationRequestCreated {
             /// UTC Unix TimeStamp when the link expires
+            #[serde(rename = "expiresAt")]
             pub expires_at: i64,
         }
 

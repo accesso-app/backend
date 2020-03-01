@@ -92,9 +92,9 @@ components:
         application/json:
           schema:
             required:
-              - expires_at
+              - expiresAt
             properties:
-              expires_at:
+              expiresAt:
                 type: integer
                 format: int32
                 description: UTC Unix TimeStamp when the link expires
