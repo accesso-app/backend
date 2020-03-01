@@ -38,10 +38,17 @@ pub async fn request(
     pool: web::Data<DbPool>,
 ) -> Answer<'static, register::Response> {
     match handle_register_request(body.0, pool) {
-        Ok(request) => register::Response::Created(responses::RegistrationRequestCreated {
-            expires_at: request.expires_at.timestamp_millis(),
-        })
-        .answer(),
+        Ok(request) => {
+            log::trace!(
+                "Registered request: {email} — {code}",
+                email = request.email,
+                code = request.confirmation_code
+            );
+            register::Response::Created(responses::RegistrationRequestCreated {
+                expires_at: request.expires_at.timestamp_millis(),
+            })
+            .answer()
+        }
         Err(RegisterRequestError::EmailAlreadyRegistered) => {
             register::Response::BadRequest(responses::RegistrationFailed {
                 error: "email_already_registered".to_string(),
