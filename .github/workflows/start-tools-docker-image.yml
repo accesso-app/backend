@@ -1,0 +1,29 @@
+name: StartTools Docker Image CI
+
+on:
+  push:
+    branches:
+      - master
+      - dev
+    paths:
+      - "start-tools.Dockerfile"
+      - ".github/workflows/start-tools-docker-image.yml"
+
+jobs:
+  image:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Publish Docker
+        uses: elgohr/Publish-Docker-Github-Action@2.12
+        with:
+          name: authmenow/backend/start-tools
+          username: sergeysova
+          password: ${{ secrets.GITHUB_TOKEN }}
+          snapshot: true
+          registry: docker.pkg.github.com
+          dockerfile: start-tools.Dockerfile
+          tags: "1.0"
+  
