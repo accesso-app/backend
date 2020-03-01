@@ -1,5 +1,16 @@
 # Readme
 
+## Local installation
+
+1. Install stable rust (`curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`)
+2. Install PostgreSQL (`brew install postgresql`)
+3. Install diesel_cli (`cargo install diesel_cli --no-default-features --features postgres`)
+4. Create database, role and grant all privileges (https://howtocards.io/open/26)
+5. Create UUID extension at authmenow database (`create extension "uuid-ossp";`)
+6. Copy `.env.sample` to `.env` (`cp .env.sample .env`)
+7. Migrate database (`diesel migration run`)
+8. Run (example: `cd public-api && cargo run`)
+
 ## Flows
 
 ## Glossary
