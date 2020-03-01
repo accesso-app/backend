@@ -72,9 +72,8 @@ async fn not_found(_req: HttpRequest) -> impl Responder {
 
 #[actix_rt::main]
 async fn main() -> std::io::Result<()> {
-    std::env::set_var("RUST_LOG", "actix_server=info,actix_web=info,diesel=info");
-    env_logger::init();
     dotenv::dotenv().ok();
+    env_logger::init();
 
     let listen_port = std::env::var("LISTEN_PORT").expect("LISTEN_PORT");
     let connection_url = std::env::var("DATABASE_URL").expect("DATABASE_URL");
