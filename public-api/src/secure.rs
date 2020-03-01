@@ -18,3 +18,21 @@ pub fn create_words_password(length: i8, separator: &str) -> String {
 
     words.join(separator)
 }
+
+pub fn password_hash(original_password: &str, salt: &str) -> String {
+    use sha2::{Digest, Sha256};
+
+    let string = format!("{}:{}", original_password, salt);
+
+    format!("{:x}", Sha256::digest(string.as_bytes()))
+}
+
+mod tests {
+    #[test]
+    fn password_hash_is_correct_sha256() {
+        assert_eq!(
+            "bc705a6e854fd4d7911a032a1678a0e06150d4bb5205bb6926b3342e71264f9d",
+            super::password_hash("123456789", "SALT")
+        );
+    }
+}

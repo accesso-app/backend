@@ -99,6 +99,8 @@ pub struct User {
     pub password_hash: String,
 }
 
+static HARDCODED_SALT: &'static str = "AUTHMENOW_SALT";
+
 impl User {
     /// Just creates empty user with generated uuid
     pub fn new() -> Self {
@@ -111,14 +113,20 @@ impl User {
     }
 
     pub fn password_set(mut self, password: &str) -> Self {
-        log::warn!("PASSWORD NOT HASHED, BECAUSE NOT IMPLEMENTED. SAVED AS IS");
-        self.password_hash = password.to_owned();
+        log::warn!(
+            "Password hashed with HARDCODED_SALT. Salt should be passed throught env params"
+        );
+        let hashed = crate::secure::password_hash(password, HARDCODED_SALT);
+        self.password_hash = hashed;
         self
     }
 
     pub fn password_compare(&mut self, password: &str) -> bool {
-        log::warn!("PASSWORD NOT HASHED, BECAUSE NOT IMPLEMENTED. COMPARED AS IS");
-        self.password_hash == password
+        log::warn!(
+            "Password hashed with HARDCODED_SALT. Salt should be passed throught env params"
+        );
+        let hashed = crate::secure::password_hash(password, HARDCODED_SALT);
+        self.password_hash == hashed
     }
 
     pub fn email_set(mut self, email: &str) -> Self {
