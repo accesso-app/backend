@@ -204,6 +204,12 @@ pub mod components {
 
             pub password: String,
         }
+
+        #[derive(Debug, Serialize, Deserialize)]
+        pub struct SessionCreate {
+            pub email: String,
+            pub password: String,
+        }
     }
 }
 

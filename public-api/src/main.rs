@@ -50,7 +50,7 @@ async fn session_delete() -> Answer<'static, generated::paths::SessionDeleteResp
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+#[serde(rename_all = "snake_case")]
 enum FailureCode {
     InvalidPayload,
     InvalidRoute,
@@ -59,13 +59,13 @@ enum FailureCode {
 
 #[derive(Debug, Serialize, Deserialize)]
 struct AnswerFailure {
-    code: FailureCode,
+    error: FailureCode,
     message: Option<String>,
 }
 
 async fn not_found(_req: HttpRequest) -> impl Responder {
     web::Json(AnswerFailure {
-        code: FailureCode::InvalidRoute,
+        error: FailureCode::InvalidRoute,
         message: None,
     })
     .with_status(StatusCode::NOT_FOUND)
@@ -95,7 +95,7 @@ async fn main() -> std::io::Result<()> {
                 actix_web::error::InternalError::from_response(
                     err,
                     HttpResponse::BadRequest().json(AnswerFailure {
-                        code: FailureCode::InvalidPayload,
+                        error: FailureCode::InvalidPayload,
                         message: Some(error_message),
                     }),
                 )
@@ -106,7 +106,7 @@ async fn main() -> std::io::Result<()> {
                 actix_web::error::InternalError::from_response(
                     err,
                     HttpResponse::BadRequest().json(AnswerFailure {
-                        code: FailureCode::InvalidQueryParams,
+                        error: FailureCode::InvalidQueryParams,
                         message: Some(error_message),
                     }),
                 )
