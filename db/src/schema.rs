@@ -48,8 +48,9 @@ table! {
     users (id) {
         id -> Uuid,
         email -> Varchar,
-        username -> Nullable<Varchar>,
+        first_name -> Varchar,
         password_hash -> Varchar,
+        last_name -> Varchar,
     }
 }
 

@@ -32,8 +32,12 @@ fn handle(
             Err(HandleError::Unexpected)
         }
         Ok(request) => {
+            log::warn!(
+                "Registration confirmation should be validated for probably empty first and last names"
+            );
             let user = User::new()
                 .email_set(&request.email)
+                .name_set(&body.first_name, &body.last_name)
                 .password_set(&body.password);
 
             match user.create(&conn) {

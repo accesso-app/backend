@@ -95,8 +95,9 @@ impl SessionToken {
 pub struct User {
     pub id: uuid::Uuid,
     pub email: String,
-    pub username: Option<String>,
+    pub first_name: String,
     pub password_hash: String,
+    pub last_name: String,
 }
 
 static HARDCODED_SALT: &'static str = "AUTHMENOW_SALT";
@@ -107,7 +108,8 @@ impl User {
         Self {
             id: uuid::Uuid::new_v4(),
             email: String::new(),
-            username: None,
+            first_name: String::new(),
+            last_name: String::new(),
             password_hash: String::new(),
         }
     }
@@ -134,13 +136,9 @@ impl User {
         self
     }
 
-    pub fn username_set(mut self, username: &str) -> Self {
-        self.username = Some(username.to_owned());
-        self
-    }
-
-    pub fn username_unset(mut self) -> Self {
-        self.username = None;
+    pub fn name_set(mut self, first: &str, last: &str) -> Self {
+        self.first_name = first.to_owned();
+        self.last_name = last.to_owned();
         self
     }
 
