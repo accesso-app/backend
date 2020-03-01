@@ -49,7 +49,14 @@ fn handle(
                         "Email 'register complete' do not sent to {} because not implemented",
                         user.email
                     );
-                    let _ = RegistrationRequest::delete_all_for_email(&conn, &request.email);
+                    if let Err(failed) =
+                        RegistrationRequest::delete_all_for_email(&conn, &request.email)
+                    {
+                        log::warn!(
+                            "Failed to delete all registration requests after registration {:?}",
+                            failed
+                        );
+                    }
                     Ok(())
                 }
             }
