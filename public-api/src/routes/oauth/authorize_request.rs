@@ -84,7 +84,7 @@ fn handle_authorize(
     Ok(())
 }
 
-pub async fn authorize_request(
+pub async fn route(
     query: authorize::Query,
     pool: web::Data<DbPool>,
     auth: AuthPrefer,

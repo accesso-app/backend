@@ -123,8 +123,8 @@ async fn main() -> std::io::Result<()> {
                     .bind_session_get(session_get)
                     .bind_session_create(session_create)
                     .bind_session_delete(session_delete)
-                    .bind_oauth_authorize_request(routes::oauth::authorize_request)
-                    .bind_register_request(routes::register::request),
+                    .bind_oauth_authorize_request(routes::oauth::authorize_request::route)
+                    .bind_register_request(routes::register_request::route),
             )
     })
     .bind(bind)?

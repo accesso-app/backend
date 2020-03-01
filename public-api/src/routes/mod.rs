@@ -1,2 +1,2 @@
 pub mod oauth;
-pub mod register;
+pub mod register_request;

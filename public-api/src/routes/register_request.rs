@@ -11,7 +11,7 @@ enum RegisterRequestError {
     UnexpectedError,
 }
 
-fn handle_register_request(
+fn handle(
     body: request_bodies::Register,
     pool: web::Data<DbPool>,
 ) -> Result<RegistrationRequest, RegisterRequestError> {
@@ -33,11 +33,11 @@ fn handle_register_request(
     }
 }
 
-pub async fn request(
+pub async fn route(
     body: web::Json<request_bodies::Register>,
     pool: web::Data<DbPool>,
 ) -> Answer<'static, register::Response> {
-    match handle_register_request(body.0, pool) {
+    match handle(body.0, pool) {
         Ok(request) => {
             log::trace!(
                 "Registered request: {email} — {code}",
