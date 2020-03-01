@@ -148,8 +148,14 @@ pub mod components {
         }
 
         #[derive(Debug, Serialize, Deserialize)]
+        pub enum RegisterFailedError {
+            #[serde(rename = "email_already_registered")]
+            EmailAlreadyRegistered,
+        }
+
+        #[derive(Debug, Serialize, Deserialize)]
         pub struct RegisterFailed {
-            pub error: String,
+            pub error: RegisterFailedError,
         }
     }
 
