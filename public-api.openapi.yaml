@@ -48,6 +48,20 @@ paths:
         500:
           description: Something goes wrong
 
+  "/register/confirmation":
+    post:
+      operationId: registerConfirmation
+      tags: [Register]
+      description: Confirm email, fill profile required fields and create user
+      requestBody:
+        $ref: "#/components/requestBodies/RegisterConfirmation"
+      responses:
+        201:
+          description: Okay, user created
+        400:
+          $ref: "#/components/responses/RegisterConfirmationFailed"
+        500:
+          description: Something goes wrong
 
 components:
   responses:
@@ -116,6 +130,19 @@ components:
                 type: string
                 enum:
                   - "email_already_registered"
+
+    RegisterConfirmationFailed:
+      description: Please, login or recover password
+      content:
+        application/json:
+          schema:
+            required:
+              - error
+            properties:
+              error:
+                type: string
+                enum:
+                  - "email_already_activated"
 
   parameters:
     OAuthResponseType:
@@ -219,4 +246,21 @@ components:
               - email
             properties:
               email:
+                type: string
+
+    RegisterConfirmation:
+      required: true
+      content:
+        application/json:
+          schema:
+            required:
+              - confirmationCode
+              - displayName
+              - password
+            properties:
+              confirmationCode:
+                type: string
+              displayName:
+                type: string
+              password:
                 type: string

@@ -49,6 +49,19 @@ pub mod api {
             self
         }
 
+        pub fn bind_register_confirmation<F, T, R>(mut self, handler: F) -> Self
+        where
+            F: Factory<T, R, Answer<'static, super::paths::register_confirmation::Response>>,
+            T: FromRequest + 'static,
+            R: Future<Output = Answer<'static, super::paths::register_confirmation::Response>>
+                + 'static,
+        {
+            self.api = self
+                .api
+                .bind("/register/confirmation".to_owned(), Method::POST, handler);
+            self
+        }
+
         pub fn bind_session_get<F, T, R>(mut self, handler: F) -> Self
         where
             F: Factory<T, R, Answer<'static, super::paths::SessionGetResponse>>,
@@ -157,6 +170,17 @@ pub mod components {
         pub struct RegisterFailed {
             pub error: RegisterFailedError,
         }
+
+        #[derive(Debug, Serialize, Deserialize)]
+        pub enum RegisterConfirmationFailedError {
+            #[serde(rename = "email_already_activated")]
+            EmailAlreadyActivated,
+        }
+
+        #[derive(Debug, Serialize, Deserialize)]
+        pub struct RegisterConfirmationFailed {
+            pub error: RegisterConfirmationFailedError,
+        }
     }
 
     pub mod request_bodies {
@@ -165,6 +189,17 @@ pub mod components {
         #[derive(Debug, Serialize, Deserialize)]
         pub struct Register {
             pub email: String,
+        }
+
+        #[derive(Debug, Serialize, Deserialize)]
+        pub struct RegisterConfirmation {
+            #[serde(rename = "confirmationCode")]
+            pub confirmation_code: String,
+
+            #[serde(rename = "displayName")]
+            pub display_name: String,
+
+            pub password: String,
         }
     }
 }
@@ -255,6 +290,39 @@ pub mod paths {
             pub fn answer<'a>(self) -> Answer<'a, Self> {
                 let status = match self {
                     Self::Created(_) => StatusCode::CREATED,
+                    Self::BadRequest(_) => StatusCode::BAD_REQUEST,
+                    Self::Unexpected => StatusCode::INTERNAL_SERVER_ERROR,
+                };
+
+                let content_type = match self {
+                    Self::Unexpected => None,
+                    _ => Some(ContentType::Json),
+                };
+
+                Answer::new(self).status(status).content_type(content_type)
+            }
+        }
+    }
+
+    pub mod register_confirmation {
+        use super::components::responses;
+        use actix_swagger::{Answer, ContentType};
+        use actix_web::http::StatusCode;
+        use serde::Serialize;
+
+        #[derive(Debug, Serialize)]
+        #[serde(untagged)]
+        pub enum Response {
+            Created,
+            BadRequest(responses::RegisterConfirmationFailed),
+            Unexpected,
+        }
+
+        impl Response {
+            #[inline]
+            pub fn answer<'a>(self) -> Answer<'a, Self> {
+                let status = match self {
+                    Self::Created => StatusCode::CREATED,
                     Self::BadRequest(_) => StatusCode::BAD_REQUEST,
                     Self::Unexpected => StatusCode::INTERNAL_SERVER_ERROR,
                 };
