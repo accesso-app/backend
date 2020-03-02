@@ -3,6 +3,9 @@ FROM docker.pkg.github.com/authmenow/backend/builder:1.41 as build
 ENV USER="root"
 WORKDIR /app
 
+COPY ./resources ./resources
+COPY ./diesel.toml ./diesel.toml
+
 COPY ./Cargo.lock ./Cargo.toml ./
 RUN cargo new public-api --bin --name authmenow-public-api && \
   cargo new db --lib --name authmenow-db
@@ -13,7 +16,6 @@ RUN cargo build --release
 
 RUN find ./target -type f -name *authmenow* | xargs rm -rf
 
-COPY ./diesel.toml ./diesel.toml
 COPY ./migrations ./migrations
 COPY ./db ./db
 COPY ./public-api ./public-api
