@@ -6,11 +6,13 @@ on:
       - master
       - dev
     paths:
-      - "public-api/*"
-      - "db/*"
       - ".github/workflows/api-docker-image.yml"
-      - "Dockerfile"
+      - "db/*"
+      - "public-api/*"
+      - "migrations/*"
       - "docker-entrypoint.sh"
+      - "Dockerfile"
+      - "Cargo.lock"
 
 jobs:
   public-api:
@@ -28,4 +30,3 @@ jobs:
           snapshot: true
           registry: docker.pkg.github.com
           buildargs: CRATE_NAME=public-api
-          
