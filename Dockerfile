@@ -7,18 +7,10 @@ COPY ./resources ./resources
 COPY ./diesel.toml ./diesel.toml
 
 COPY ./Cargo.lock ./Cargo.toml ./
-RUN cargo new public-api --bin --name authmenow-public-api && \
-  cargo new db --lib --name authmenow-db
-
-COPY ./public-api/Cargo.toml ./public-api/Cargo.toml
-COPY ./db/Cargo.toml ./db/Cargo.toml
-RUN cargo build --release
-
-RUN find ./target -type f -name *authmenow* | xargs rm -rf
-
 COPY ./migrations ./migrations
 COPY ./db ./db
 COPY ./public-api ./public-api
+COPY ./public-app ./public-app
 
 ARG CRATE_NAME
 
