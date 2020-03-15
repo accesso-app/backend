@@ -25,5 +25,4 @@ jobs:
           snapshot: true
           registry: docker.pkg.github.com
           dockerfile: builder.Dockerfile
-          tags: "1.41"
-  
+          tags: "1.42"
