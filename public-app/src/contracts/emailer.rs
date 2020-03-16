@@ -1,10 +1,16 @@
-pub trait Emailer {
-    fn send(&self, email: String, content: String) -> bool;
+use serde::Serialize;
+
+pub trait EmailNotification {
+    fn send(&self, email: String, content: EmailMessage) -> bool;
 }
 
-pub trait RegisterEmailer: Emailer {
-    fn confirmation_code(&self, email: String, code: String) -> bool {
-        let content = format!("Enter this code {}", code);
-        self.send(email, content)
-    }
+#[derive(Debug, Serialize)]
+pub enum EmailMessage {
+    RegisterConfirmation {
+        code: String,
+    },
+    RegisterFinished {
+        first_name: String,
+        last_name: String,
+    },
 }

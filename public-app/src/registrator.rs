@@ -1,6 +1,6 @@
 use crate::contracts::{
-    RegisterEmailer, RegisterUserError, RequestsRepo, SaveRegisterRequestError, SecureGenerator,
-    UnexpectedDatabaseError, UserRegisterForm, UserRepo,
+    EmailMessage, EmailNotification, RegisterUserError, RequestsRepo, SaveRegisterRequestError,
+    SecureGenerator, UnexpectedDatabaseError, UserRegisterForm, UserRepo,
 };
 use crate::models::RegisterRequest;
 use crate::App;
@@ -61,7 +61,7 @@ impl<DB, E, G> Registrator for App<DB, E, G>
 where
     DB: UserRepo + RequestsRepo,
     G: SecureGenerator,
-    E: RegisterEmailer,
+    E: EmailNotification,
 {
     fn create_register_request(
         &self,
@@ -93,7 +93,12 @@ where
                 break result;
             }?;
 
-            self.emailer.confirmation_code(form.email, request.code);
+            self.emailer.send(
+                form.email,
+                EmailMessage::RegisterConfirmation {
+                    code: request.code.clone(),
+                },
+            );
 
             Ok(RequestCreated {
                 expires_at: request.expires_at,
@@ -116,6 +121,14 @@ where
                 first_name: form.first_name,
                 last_name: form.last_name,
             })?;
+
+            self.emailer.send(
+                created_user.email.clone(),
+                EmailMessage::RegisterFinished {
+                    first_name: created_user.first_name,
+                    last_name: created_user.last_name,
+                },
+            );
 
             self.db
                 .register_requests_delete_all_for_email(created_user.email)?;
@@ -148,17 +161,17 @@ impl From<RegisterUserError> for RegisterConfirmError {
     }
 }
 
+impl From<validator::ValidationErrors> for RegisterConfirmError {
+    fn from(_: validator::ValidationErrors) -> Self {
+        Self::InvalidForm
+    }
+}
+
 impl From<SaveRegisterRequestError> for RegisterRequestError {
     fn from(_: SaveRegisterRequestError) -> Self {
         // Now all errors from request errors converted to Unexpected
         // Because CodeAlreadyExists is handled at create_register_request impl
         Self::Unexpected
-    }
-}
-
-impl From<validator::ValidationErrors> for RegisterConfirmError {
-    fn from(_: validator::ValidationErrors) -> Self {
-        Self::InvalidForm
     }
 }
 

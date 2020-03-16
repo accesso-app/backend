@@ -1,4 +1,4 @@
-use authmenow_public_app::contracts::{Emailer, RegisterEmailer};
+use authmenow_public_app::contracts::{EmailMessage, EmailNotification};
 
 #[derive(Clone)]
 pub struct Email {}
@@ -9,11 +9,9 @@ impl Email {
     }
 }
 
-impl Emailer for Email {
-    fn send(&self, email: String, content: String) -> bool {
-        println!("EMAIL: send {} to {}", content, email);
+impl EmailNotification for Email {
+    fn send(&self, email: String, message: EmailMessage) -> bool {
+        println!("EMAIL: send {:?} to {}", message, email);
         true
     }
 }
-
-impl RegisterEmailer for Email {}

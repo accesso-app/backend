@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 pub mod api {
     use actix_swagger::{Answer, Api};
     use actix_web::{
