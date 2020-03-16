@@ -14,3 +14,12 @@ impl RegisterRequest {
         }
     }
 }
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct CreatedUser {
+    pub id: uuid::Uuid,
+    pub email: String,
+    pub first_name: String,
+    pub last_name: String,
+    pub password_hash: String,
+}

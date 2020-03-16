@@ -3,4 +3,6 @@ pub trait SecureGenerator {
     fn confirmation_code(&self) -> String {
         self.secure_words(4)
     }
+
+    fn password_hash(&self, password: String) -> String;
 }

@@ -164,6 +164,9 @@ pub mod components {
         pub enum RegisterFailedError {
             #[serde(rename = "email_already_registered")]
             EmailAlreadyRegistered,
+
+            #[serde(rename = "invalid_form")]
+            InvalidForm,
         }
 
         #[derive(Debug, Serialize, Deserialize)]
@@ -178,6 +181,9 @@ pub mod components {
 
             #[serde(rename = "email_already_activated")]
             EmailAlreadyActivated,
+
+            #[serde(rename = "invalid_form")]
+            InvalidForm,
         }
 
         #[derive(Debug, Serialize, Deserialize)]

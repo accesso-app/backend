@@ -1,6 +1,9 @@
 use authmenow_db::schema::*;
 use authmenow_public_app::{
-    contracts::{RequestsRepo, SaveRegisterRequestError, UnexpectedDatabaseError, UserRepo},
+    contracts::{
+        RegisterUserError, RequestsRepo, SaveRegisterRequestError, UnexpectedDatabaseError,
+        UserRegisterForm, UserRepo,
+    },
     models,
 };
 use diesel::pg::PgConnection;
@@ -38,7 +41,7 @@ impl Clone for Database {
 }
 
 impl UserRepo for Database {
-    fn has_user_with_email(&self, email: String) -> Result<bool, UnexpectedDatabaseError> {
+    fn user_has_with_email(&self, email: String) -> Result<bool, UnexpectedDatabaseError> {
         let conn = self.conn();
 
         Ok(users::table
@@ -48,10 +51,31 @@ impl UserRepo for Database {
             .map_err(|_| UnexpectedDatabaseError)?
             > 0)
     }
+
+    fn register_user(
+        &self,
+        form: UserRegisterForm,
+    ) -> Result<models::CreatedUser, RegisterUserError> {
+        let conn = self.conn();
+
+        let user = NewUser {
+            id: uuid::Uuid::new_v4(),
+            email: form.email,
+            first_name: form.first_name,
+            last_name: form.last_name,
+            password_hash: form.password_hash,
+        };
+
+        diesel::insert_into(users::table)
+            .values(user)
+            .get_result::<NewUser>(&conn)
+            .map(Into::into)
+            .map_err(diesel_error_to_register_user_error)
+    }
 }
 
 impl RequestsRepo for Database {
-    fn save_register_request(
+    fn register_request_save(
         &self,
         request: models::RegisterRequest,
     ) -> Result<models::RegisterRequest, SaveRegisterRequestError> {
@@ -63,6 +87,33 @@ impl RequestsRepo for Database {
             .map(Into::into)
             .map_err(diesel_error_to_save_register_error)
     }
+
+    fn register_request_get_by_code(
+        &self,
+        code: String,
+    ) -> Result<Option<models::RegisterRequest>, UnexpectedDatabaseError> {
+        let conn = self.conn();
+
+        registration_requests::table
+            .filter(registration_requests::confirmation_code.eq(code))
+            .filter(registration_requests::expires_at.gt(chrono::Utc::now().naive_utc()))
+            .get_result::<RegistrationRequest>(&conn)
+            .map(Into::into)
+            .optional()
+            .map_err(|_| UnexpectedDatabaseError)
+    }
+
+    fn register_requests_delete_all_for_email(
+        &self,
+        email: String,
+    ) -> Result<usize, UnexpectedDatabaseError> {
+        let conn = self.conn();
+
+        diesel::delete(registration_requests::table)
+            .filter(registration_requests::email.eq(email))
+            .execute(&conn)
+            .map_err(|_| UnexpectedDatabaseError)
+    }
 }
 
 #[derive(Identifiable, Insertable, PartialEq, Queryable)]
@@ -71,6 +122,16 @@ struct RegistrationRequest {
     confirmation_code: String,
     email: String,
     expires_at: chrono::NaiveDateTime,
+}
+
+#[derive(Identifiable, Insertable, Queryable)]
+#[table_name = "users"]
+pub struct NewUser {
+    pub id: uuid::Uuid,
+    pub email: String,
+    pub first_name: String,
+    pub password_hash: String,
+    pub last_name: String,
 }
 
 impl From<models::RegisterRequest> for RegistrationRequest {
@@ -93,6 +154,29 @@ impl Into<models::RegisterRequest> for RegistrationRequest {
     }
 }
 
+impl Into<models::CreatedUser> for NewUser {
+    fn into(self) -> models::CreatedUser {
+        models::CreatedUser {
+            id: self.id,
+            email: self.email,
+            first_name: self.first_name,
+            last_name: self.last_name,
+            password_hash: self.password_hash,
+        }
+    }
+}
+
 fn diesel_error_to_save_register_error(_: diesel::result::Error) -> SaveRegisterRequestError {
-    SaveRegisterRequestError::UnexpectedError
+    SaveRegisterRequestError::Unexpected
+}
+
+fn diesel_error_to_register_user_error(err: diesel::result::Error) -> RegisterUserError {
+    use diesel::result::{DatabaseErrorKind, Error as DieselError};
+
+    match err {
+        DieselError::DatabaseError(DatabaseErrorKind::UniqueViolation, _) => {
+            RegisterUserError::EmailAlreadyExists
+        }
+        _ => RegisterUserError::Unexpected,
+    }
 }

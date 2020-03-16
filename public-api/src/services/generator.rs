@@ -10,6 +10,8 @@ lazy_static::lazy_static! {
 #[derive(Clone)]
 pub struct Generator {}
 
+static HARDCODED_SALT: &'static str = "AUTHMENOW_SALT";
+
 impl Generator {
     pub fn new() -> Self {
         Self {}
@@ -19,6 +21,10 @@ impl Generator {
 impl SecureGenerator for Generator {
     fn secure_words(&self, length: u8) -> String {
         create_words_password(length, "-")
+    }
+
+    fn password_hash(&self, password: String) -> String {
+        password_hash(&password, &HARDCODED_SALT)
     }
 }
 

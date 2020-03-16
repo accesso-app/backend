@@ -1,86 +1,40 @@
 use crate::generated::components::request_bodies;
 use crate::generated::components::responses::{
-    RegisterConfirmationFailed as ConfirmFailed, RegisterConfirmationFailedError as ErrorCode,
+    RegisterConfirmationFailed, RegisterConfirmationFailedError,
 };
 use crate::generated::paths::register_confirmation as confirm;
-use crate::models::{RegistrationRequest, User};
-use crate::DbPool;
 use actix_swagger::Answer;
 use actix_web::web;
-use diesel::result::{DatabaseErrorKind, Error as DieselError};
-
-enum HandleError {
-    CodeNotFound,
-    AlreadyActivated,
-    Unexpected,
-}
-
-fn handle(
-    body: request_bodies::RegisterConfirmation,
-    pool: web::Data<DbPool>,
-) -> Result<(), HandleError> {
-    let conn = &pool.get().unwrap();
-
-    match RegistrationRequest::find_by_code_actual(&conn, &body.confirmation_code) {
-        Err(DieselError::NotFound) => Err(HandleError::CodeNotFound),
-        Err(error) => {
-            log::trace!(
-                "Failed to find registration request by code {}: {:?}",
-                body.confirmation_code,
-                error
-            );
-            Err(HandleError::Unexpected)
-        }
-        Ok(request) => {
-            log::warn!(
-                "Registration confirmation should be validated for probably empty first and last names"
-            );
-            let user = User::new()
-                .email_set(&request.email)
-                .name_set(&body.first_name, &body.last_name)
-                .password_set(&body.password);
-
-            match user.create(&conn) {
-                Err(DieselError::DatabaseError(DatabaseErrorKind::UniqueViolation, _)) => {
-                    Err(HandleError::AlreadyActivated)
-                }
-                Err(error) => {
-                    log::trace!("Failed to create user {:?}: {:?}", user, error);
-                    Err(HandleError::Unexpected)
-                }
-                Ok(user) => {
-                    log::warn!(
-                        "Email 'register complete' do not sent to {} because not implemented",
-                        user.email
-                    );
-                    if let Err(failed) =
-                        RegistrationRequest::delete_all_for_email(&conn, &request.email)
-                    {
-                        log::warn!(
-                            "Failed to delete all registration requests after registration {:?}",
-                            failed
-                        );
-                    }
-                    Ok(())
-                }
-            }
-        }
-    }
-}
 
 pub async fn route(
     body: web::Json<request_bodies::RegisterConfirmation>,
-    pool: web::Data<DbPool>,
+    app: web::Data<crate::App>,
 ) -> Answer<'static, confirm::Response> {
-    match handle(body.0, pool) {
-        Ok(()) => confirm::Response::Created,
-        Err(HandleError::CodeNotFound) => confirm::Response::BadRequest(ConfirmFailed {
-            error: ErrorCode::CodeInvalidOrExpired,
+    use authmenow_public_app::registrator::{
+        RegisterConfirmError::{AlreadyActivated, CodeNotFound, InvalidForm, Unexpected},
+        RegisterForm, Registrator,
+    };
+    use confirm::Response;
+
+    let form = RegisterForm {
+        confirmation_code: body.confirmation_code.clone(),
+        first_name: body.first_name.clone(),
+        last_name: body.last_name.clone(),
+        password: body.password.clone(),
+    };
+
+    match app.confirm_registration(form) {
+        Err(Unexpected) => Response::Unexpected,
+        Err(CodeNotFound) => Response::BadRequest(RegisterConfirmationFailed {
+            error: RegisterConfirmationFailedError::CodeInvalidOrExpired,
         }),
-        Err(HandleError::AlreadyActivated) => confirm::Response::BadRequest(ConfirmFailed {
-            error: ErrorCode::EmailAlreadyActivated,
+        Err(AlreadyActivated) => Response::BadRequest(RegisterConfirmationFailed {
+            error: RegisterConfirmationFailedError::EmailAlreadyActivated,
         }),
-        Err(HandleError::Unexpected) => confirm::Response::Unexpected,
+        Err(InvalidForm) => Response::BadRequest(RegisterConfirmationFailed {
+            error: RegisterConfirmationFailedError::InvalidForm,
+        }),
+        Ok(()) => Response::Created,
     }
     .answer()
 }

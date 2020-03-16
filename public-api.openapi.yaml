@@ -135,6 +135,7 @@ components:
                 type: string
                 enum:
                   - "email_already_registered"
+                  - "invalid_form"
 
     RegisterConfirmationFailed:
       description: Please, login or recover password
@@ -149,6 +150,7 @@ components:
                 enum:
                   - "code_invalid_or_expired"
                   - "email_already_activated"
+                  - "invalid_form"
 
   parameters:
     OAuthResponseType:
