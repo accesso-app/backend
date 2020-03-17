@@ -48,7 +48,7 @@ impl UserRepo for Database {
             .filter(users::email.eq(email))
             .count()
             .get_result::<i64>(&conn)
-            .map_err(|_| UnexpectedDatabaseError)?
+            .map_err(diesel_error_to_unexpected)?
             > 0)
     }
 
@@ -100,7 +100,7 @@ impl RequestsRepo for Database {
             .get_result::<RegistrationRequest>(&conn)
             .map(Into::into)
             .optional()
-            .map_err(|_| UnexpectedDatabaseError)
+            .map_err(diesel_error_to_unexpected)
     }
 
     fn register_requests_delete_all_for_email(
@@ -112,7 +112,7 @@ impl RequestsRepo for Database {
         diesel::delete(registration_requests::table)
             .filter(registration_requests::email.eq(email))
             .execute(&conn)
-            .map_err(|_| UnexpectedDatabaseError)
+            .map_err(diesel_error_to_unexpected)
     }
 }
 
@@ -166,7 +166,13 @@ impl Into<models::CreatedUser> for NewUser {
     }
 }
 
-fn diesel_error_to_save_register_error(_: diesel::result::Error) -> SaveRegisterRequestError {
+fn diesel_error_to_unexpected(error: diesel::result::Error) -> UnexpectedDatabaseError {
+    log::error!(target: "services/database", "UNEXPECTED {:?}", error);
+    UnexpectedDatabaseError
+}
+
+fn diesel_error_to_save_register_error(error: diesel::result::Error) -> SaveRegisterRequestError {
+    log::error!(target: "services/database", "UNEXPECTED {:?}", error);
     SaveRegisterRequestError::Unexpected
 }
 
@@ -177,6 +183,9 @@ fn diesel_error_to_register_user_error(err: diesel::result::Error) -> RegisterUs
         DieselError::DatabaseError(DatabaseErrorKind::UniqueViolation, _) => {
             RegisterUserError::EmailAlreadyExists
         }
-        _ => RegisterUserError::Unexpected,
+        error => {
+            log::error!(target: "services/database", "UNEXPECTED {:?}", error);
+            RegisterUserError::Unexpected
+        }
     }
 }
