@@ -1,0 +1,83 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug executable 'authmenow-public-api'",
+      "cargo": {
+        "args": [
+          "build",
+          "--bin=authmenow-public-api",
+          "--package=authmenow-public-api"
+        ],
+        "filter": {
+          "name": "authmenow-public-api",
+          "kind": "bin"
+        }
+      },
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug unit tests in executable 'authmenow-public-api'",
+      "cargo": {
+        "args": [
+          "test",
+          "--no-run",
+          "--bin=authmenow-public-api",
+          "--package=authmenow-public-api"
+        ],
+        "filter": {
+          "name": "authmenow-public-api",
+          "kind": "bin"
+        }
+      },
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug unit tests in library 'authmenow-db'",
+      "cargo": {
+        "args": [
+          "test",
+          "--no-run",
+          "--lib",
+          "--package=authmenow-db"
+        ],
+        "filter": {
+          "name": "authmenow-db",
+          "kind": "lib"
+        }
+      },
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug unit tests in library 'authmenow-public-app'",
+      "cargo": {
+        "args": [
+          "test",
+          "--no-run",
+          "--lib",
+          "--package=authmenow-public-app"
+        ],
+        "filter": {
+          "name": "authmenow-public-app",
+          "kind": "lib"
+        }
+      },
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    }
+  ]
+}
