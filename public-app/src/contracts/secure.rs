@@ -4,5 +4,7 @@ pub trait SecureGenerator {
         self.secure_words(4)
     }
 
+    fn generate_token(&self) -> String;
+
     fn password_hash(&self, password: String) -> String;
 }

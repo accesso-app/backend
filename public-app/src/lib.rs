@@ -4,6 +4,7 @@ extern crate validator_derive;
 pub mod contracts;
 pub mod models;
 pub mod registrator;
+pub mod session;
 
 #[derive(Clone)]
 pub struct App<DB = (), E = (), G = ()> {

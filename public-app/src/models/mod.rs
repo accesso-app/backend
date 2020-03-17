@@ -16,10 +16,17 @@ impl RegisterRequest {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct CreatedUser {
+pub struct User {
     pub id: uuid::Uuid,
     pub email: String,
     pub first_name: String,
     pub last_name: String,
     pub password_hash: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct SessionToken {
+    pub user_id: uuid::Uuid,
+    pub token: String,
+    pub expires_at: chrono::NaiveDateTime,
 }

@@ -84,10 +84,9 @@ where
                 let result = self.db.register_request_save(request.clone());
 
                 if let Err(SaveRegisterRequestError::CodeAlreadyExists) = result {
-                    if generate_count > MAX_CODE_INSERT_ATTEMPTS {
-                        break result;
+                    if generate_count <= MAX_CODE_INSERT_ATTEMPTS {
+                        continue;
                     }
-                    continue;
                 }
 
                 break result;
@@ -114,7 +113,7 @@ where
         if let Some(request) = self.db.register_request_get_by_code(code)? {
             let password_hash = self.generator.password_hash(form.password);
 
-            let created_user = self.db.register_user(UserRegisterForm {
+            let created_user = self.db.user_regiser(UserRegisterForm {
                 id: uuid::Uuid::new_v4(),
                 email: request.email,
                 password_hash,
