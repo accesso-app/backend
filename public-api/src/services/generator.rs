@@ -11,6 +11,7 @@ lazy_static::lazy_static! {
 pub struct Generator {}
 
 static HARDCODED_SALT: &'static str = "AUTHMENOW_SALT";
+const TOKEN_LENGTH: u8 = 28;
 
 impl Generator {
     pub fn new() -> Self {
@@ -25,6 +26,10 @@ impl SecureGenerator for Generator {
 
     fn password_hash(&self, password: String) -> String {
         password_hash(&password, &HARDCODED_SALT)
+    }
+
+    fn generate_token(&self) -> String {
+        random_string(TOKEN_LENGTH as usize)
     }
 }
 
@@ -48,6 +53,16 @@ fn password_hash(original_password: &str, salt: &str) -> String {
     let string = format!("{}:{}", original_password, salt);
 
     format!("{:x}", Sha256::digest(string.as_bytes()))
+}
+
+fn random_string(length: usize) -> String {
+    use rand::distributions::Alphanumeric;
+    use rand::{thread_rng, Rng};
+
+    thread_rng()
+        .sample_iter(&Alphanumeric)
+        .take(length)
+        .collect()
 }
 
 mod tests {

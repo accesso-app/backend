@@ -2,7 +2,7 @@ use authmenow_db::schema::*;
 use authmenow_public_app::{
     contracts::{
         RegisterUserError, RequestsRepo, SaveRegisterRequestError, UnexpectedDatabaseError,
-        UserRegisterForm, UserRepo,
+        UserCredentials, UserRegisterForm, UserRepo,
     },
     models,
 };
@@ -52,10 +52,7 @@ impl UserRepo for Database {
             > 0)
     }
 
-    fn register_user(
-        &self,
-        form: UserRegisterForm,
-    ) -> Result<models::CreatedUser, RegisterUserError> {
+    fn user_register(&self, form: UserRegisterForm) -> Result<models::User, RegisterUserError> {
         let conn = self.conn();
 
         let user = NewUser {
@@ -71,6 +68,13 @@ impl UserRepo for Database {
             .get_result::<NewUser>(&conn)
             .map(Into::into)
             .map_err(diesel_error_to_register_user_error)
+    }
+
+    fn user_find_by_credentials(
+        &self,
+        creds: UserCredentials,
+    ) -> Result<Option<models::User>, UnexpectedDatabaseError> {
+        unimplemented!()
     }
 }
 
@@ -154,9 +158,9 @@ impl Into<models::RegisterRequest> for RegistrationRequest {
     }
 }
 
-impl Into<models::CreatedUser> for NewUser {
-    fn into(self) -> models::CreatedUser {
-        models::CreatedUser {
+impl Into<models::User> for NewUser {
+    fn into(self) -> models::User {
+        models::User {
             id: self.id,
             email: self.email,
             first_name: self.first_name,

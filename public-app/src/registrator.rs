@@ -113,7 +113,7 @@ where
         if let Some(request) = self.db.register_request_get_by_code(code)? {
             let password_hash = self.generator.password_hash(form.password);
 
-            let created_user = self.db.user_regiser(UserRegisterForm {
+            let created_user = self.db.user_register(UserRegisterForm {
                 id: uuid::Uuid::new_v4(),
                 email: request.email,
                 password_hash,

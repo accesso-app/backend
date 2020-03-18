@@ -5,7 +5,7 @@ pub struct UnexpectedDatabaseError;
 
 pub trait UserRepo {
     fn user_has_with_email(&self, email: String) -> Result<bool, UnexpectedDatabaseError>;
-    fn user_regiser(&self, form: UserRegisterForm) -> Result<User, RegisterUserError>;
+    fn user_register(&self, form: UserRegisterForm) -> Result<User, RegisterUserError>;
     fn user_find_by_credentials(
         &self,
         creds: UserCredentials,
