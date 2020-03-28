@@ -68,6 +68,22 @@ paths:
         500:
           description: Something goes wrong
 
+  "/session/create":
+    post:
+      operationId: sessionCreate
+      tags: [Session]
+      # TODO: Add rate limit and CSRF protection
+      description: Login and create new session tokens
+      requestBody:
+        $ref: "#/components/requestBodies/SessionCreate"
+      responses:
+        201:
+          $ref: "#/components/responses/SessionCreateSucceeded"
+        400:
+          $ref: "#/components/responses/SessionCreateFailed"
+        500:
+          description: Something went wrong
+
 components:
   responses:
     OAuthAuthorizeRequestDone:
@@ -151,6 +167,35 @@ components:
                 enum:
                   - "code_invalid_or_expired"
                   - "email_already_activated"
+                  - "invalid_form"
+                  - "invalid_payload"
+
+    SessionCreateSucceeded:
+      description: Session created, token wrote to cookies
+      content:
+        application/json:
+          schema:
+            required:
+              - firstName
+              - lastName
+            properties:
+              firstName:
+                type: string
+              lastName:
+                type: string
+
+    SessionCreateFailed:
+      description: Login failed
+      content:
+        application/json:
+          schema:
+            required:
+              - error
+            properties:
+              error:
+                type: string
+                enum:
+                  - "invalid_credentials"
                   - "invalid_form"
                   - "invalid_payload"
 
@@ -275,5 +320,20 @@ components:
                 type: string
               lastName:
                 type: string
+              password:
+                type: string
+
+    SessionCreate:
+      required: true
+      content:
+        application/json:
+          schema:
+            required:
+              - email
+              - password
+            properties:
+              email:
+                type: string
+                format: email
               password:
                 type: string
