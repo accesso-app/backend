@@ -274,6 +274,8 @@ pub mod paths {
         #[derive(Debug, Serialize)]
         #[serde(untagged)]
         pub enum Response {
+            Created(responses::SessionCreateSucceeded),
+            BadRequest(responses::SessionCreateFailed),
             Unexpected,
         }
 
@@ -281,10 +283,14 @@ pub mod paths {
             #[inline]
             pub fn answer<'a>(self) -> Answer<'a, Self> {
                 let status = match self {
+                    Self::Created(_) => StatusCode::CREATED,
+                    Self::BadRequest(_) => StatusCode::BAD_REQUEST,
                     Self::Unexpected => StatusCode::INTERNAL_SERVER_ERROR,
                 };
 
                 let content_type = match self {
+                    Self::Created(_) => Some(ContentType::Json),
+                    Self::BadRequest(_) => Some(ContentType::Json),
                     Self::Unexpected => None,
                 };
 

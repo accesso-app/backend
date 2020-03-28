@@ -68,7 +68,8 @@ async fn main() -> std::io::Result<()> {
             .service(
                 generated::api::AuthmenowPublicApi::new()
                     .bind_register_request(routes::register_request::route)
-                    .bind_register_confirmation(routes::register_confirmation::route),
+                    .bind_register_confirmation(routes::register_confirmation::route)
+                    .bind_session_create(routes::session_create::route),
             )
     })
     .bind(bind_address)?

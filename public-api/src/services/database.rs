@@ -1,10 +1,12 @@
 use authmenow_db::schema::*;
 use authmenow_public_app::{
     contracts::{
-        RegisterUserError, RequestsRepo, SaveRegisterRequestError, UnexpectedDatabaseError,
-        UserCredentials, UserRegisterForm, UserRepo,
+        GetUserBySessionError, RegisterUserError, RequestsRepo, SaveRegisterRequestError,
+        SessionCreateError, SessionRepo, UnexpectedDatabaseError, UserCredentials,
+        UserRegisterForm, UserRepo,
     },
     models,
+    session::SessionCreateForm,
 };
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
@@ -120,6 +122,37 @@ impl RequestsRepo for Database {
     }
 }
 
+impl SessionRepo for Database {
+    fn get_user_by_session_token(
+        &self,
+        token: String,
+    ) -> Result<models::User, GetUserBySessionError> {
+        let conn = self.conn();
+
+        users::table
+            .inner_join(session_tokens::table)
+            .select(users::all_columns)
+            .filter(session_tokens::token.eq(token))
+            .filter(session_tokens::expires_at.gt(chrono::Utc::now().naive_utc()))
+            .first::<NewUser>(&conn)
+            .map(Into::into)
+            .map_err(diesel_error_to_get_user_by_session_error)
+    }
+
+    fn session_create(
+        &self,
+        session: models::SessionToken,
+    ) -> Result<models::SessionToken, SessionCreateError> {
+        let conn = self.conn();
+
+        diesel::insert_into(session_tokens::table)
+            .values(SessionToken::from(session))
+            .get_result::<SessionToken>(&conn)
+            .map(Into::into)
+            .map_err(diesel_error_to_session_create_error)
+    }
+}
+
 #[derive(Identifiable, Insertable, PartialEq, Queryable)]
 #[primary_key(confirmation_code)]
 struct RegistrationRequest {
@@ -136,6 +169,14 @@ pub struct NewUser {
     pub first_name: String,
     pub password_hash: String,
     pub last_name: String,
+}
+
+#[derive(Identifiable, Insertable, Queryable)]
+#[primary_key(token)]
+pub struct SessionToken {
+    pub user_id: uuid::Uuid,
+    pub token: String,
+    pub expires_at: chrono::NaiveDateTime,
 }
 
 impl From<models::RegisterRequest> for RegistrationRequest {
@@ -170,6 +211,26 @@ impl Into<models::User> for NewUser {
     }
 }
 
+impl From<models::SessionToken> for SessionToken {
+    fn from(session: models::SessionToken) -> Self {
+        Self {
+            user_id: session.user_id,
+            token: session.token,
+            expires_at: session.expires_at,
+        }
+    }
+}
+
+impl Into<models::SessionToken> for SessionToken {
+    fn into(self) -> models::SessionToken {
+        models::SessionToken {
+            user_id: self.user_id,
+            token: self.token,
+            expires_at: self.expires_at,
+        }
+    }
+}
+
 fn diesel_error_to_unexpected(error: diesel::result::Error) -> UnexpectedDatabaseError {
     log::error!(target: "services/database", "UNEXPECTED {:?}", error);
     UnexpectedDatabaseError
@@ -190,6 +251,32 @@ fn diesel_error_to_register_user_error(err: diesel::result::Error) -> RegisterUs
         error => {
             log::error!(target: "services/database", "UNEXPECTED {:?}", error);
             RegisterUserError::Unexpected
+        }
+    }
+}
+
+fn diesel_error_to_get_user_by_session_error(err: diesel::result::Error) -> GetUserBySessionError {
+    use diesel::result::Error;
+
+    match err {
+        Error::NotFound => GetUserBySessionError::NotFound,
+        error => {
+            log::error!(target: "services/database", "UNEXPECTED {:?}", error);
+            GetUserBySessionError::Unexpected
+        }
+    }
+}
+
+fn diesel_error_to_session_create_error(err: diesel::result::Error) -> SessionCreateError {
+    use diesel::result::{DatabaseErrorKind, Error as DieselError};
+
+    match err {
+        DieselError::DatabaseError(DatabaseErrorKind::UniqueViolation, _) => {
+            SessionCreateError::TokenAlreadyExists
+        }
+        error => {
+            log::error!(target: "services/database", "UNEXPECTED {:?}", error);
+            SessionCreateError::Unexpected
         }
     }
 }

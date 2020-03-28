@@ -9,7 +9,10 @@ use validator::Validate;
 
 pub trait Session {
     fn session_resolve(&self, cookie: String) -> Result<Option<User>, SessionResolveError>;
-    fn session_create(&self, form: SessionCreateForm) -> Result<SessionToken, SessionCreateError>;
+    fn session_create(
+        &self,
+        form: SessionCreateForm,
+    ) -> Result<(SessionToken, User), SessionCreateError>;
 }
 
 #[derive(Debug, PartialEq, Eq, Hash)]
@@ -50,7 +53,10 @@ where
         }
     }
 
-    fn session_create(&self, form: SessionCreateForm) -> Result<SessionToken, SessionCreateError> {
+    fn session_create(
+        &self,
+        form: SessionCreateForm,
+    ) -> Result<(SessionToken, User), SessionCreateError> {
         form.validate()?;
 
         let hashed_input_password = self.generator.password_hash(form.password.clone());
@@ -83,7 +89,7 @@ where
                 break result;
             }?;
 
-            Ok(session)
+            Ok((session, user))
         } else {
             Err(SessionCreateError::InvalidCredentials)
         }
