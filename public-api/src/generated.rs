@@ -1,10 +1,9 @@
 #![allow(dead_code)]
 
 pub mod api {
-    use actix_swagger::{Answer, Api};
+    use actix_swagger::{Answer, Api, Method};
     use actix_web::{
         dev::{AppService, Factory, HttpServiceFactory},
-        http::Method,
         FromRequest,
     };
     use std::future::Future;

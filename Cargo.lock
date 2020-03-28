@@ -140,7 +140,7 @@ dependencies = [
 
 [[package]]
 name = "actix-swagger"
-version = "0.1.1"
+version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "actix-http 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -313,7 +313,7 @@ dependencies = [
  "actix-http 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "actix-router 0.2.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "actix-rt 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "actix-swagger 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "actix-swagger 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "actix-web 2.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "authmenow-db 0.1.0",
  "authmenow-public-app 0.1.0",
@@ -1738,7 +1738,7 @@ dependencies = [
 "checksum actix-rt 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)" = "3f6a0a55507046441a496b2f0d26a84a65e67c8cafffe279072412f624b5fb6d"
 "checksum actix-server 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)" = "51d3455eaac03ca3e49d7b822eb35c884b861f715627254ccbe4309d08f1841a"
 "checksum actix-service 1.0.5 (registry+https://github.com/rust-lang/crates.io-index)" = "d3e4fc95dfa7e24171b2d0bb46b85f8ab0e8499e4e3caec691fc4ea65c287564"
-"checksum actix-swagger 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)" = "7a383958e8cb6793ce1548099ee0a3e12167df2d5bb7441c25e5581cef64da58"
+"checksum actix-swagger 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)" = "3816ca8734842d85bc3fb1d335496551e3a234ecadf45a2e1dce77c65b3b5903"
 "checksum actix-testing 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)" = "48494745b72d0ea8ff0cf874aaf9b622a3ee03d7081ee0c04edea4f26d32c911"
 "checksum actix-threadpool 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)" = "cf4082192601de5f303013709ff84d81ca6a1bc4af7fb24f367a500a23c6e84e"
 "checksum actix-tls 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)" = "a4e5b4faaf105e9a6d389c606c298dcdb033061b00d532af9df56ff3a54995a8"

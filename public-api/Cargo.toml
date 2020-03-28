@@ -9,7 +9,7 @@ edition = "2018"
 actix-http = { version = "1.0.1", features = ["failure"] }
 actix-router = "0.2.4"
 actix-rt = "1.0.0"
-actix-swagger = "0.1.1"
+actix-swagger = "0.2.0"
 actix-web = "2.0.0"
 authmenow-db = { "path" = "../db" }
 authmenow-public-app = { "path" = "../public-app" }
