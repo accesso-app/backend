@@ -7,12 +7,12 @@ use crate::App;
 use validator::Validate;
 
 pub trait Registrator {
-    fn create_register_request(
+    fn registrator_create_request(
         &self,
         form: CreateRegisterRequest,
     ) -> Result<RequestCreated, RegisterRequestError>;
 
-    fn confirm_registration(&self, form: RegisterForm) -> Result<(), RegisterConfirmError>;
+    fn registrator_confirm(&self, form: RegisterForm) -> Result<(), RegisterConfirmError>;
 }
 
 #[derive(Debug, Clone, Validate, PartialEq, Eq, Hash)]
@@ -63,7 +63,7 @@ where
     G: SecureGenerator,
     E: EmailNotification,
 {
-    fn create_register_request(
+    fn registrator_create_request(
         &self,
         form: CreateRegisterRequest,
     ) -> Result<RequestCreated, RegisterRequestError> {
@@ -105,7 +105,7 @@ where
         }
     }
 
-    fn confirm_registration(&self, form: RegisterForm) -> Result<(), RegisterConfirmError> {
+    fn registrator_confirm(&self, form: RegisterForm) -> Result<(), RegisterConfirmError> {
         form.validate()?;
 
         let code = form.confirmation_code.clone();
