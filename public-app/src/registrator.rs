@@ -8,11 +8,11 @@ use validator::Validate;
 
 pub trait Registrator {
     fn registrator_create_request(
-        &self,
+        &mut self,
         form: CreateRegisterRequest,
     ) -> Result<RequestCreated, RegisterRequestError>;
 
-    fn registrator_confirm(&self, form: RegisterForm) -> Result<(), RegisterConfirmError>;
+    fn registrator_confirm(&mut self, form: RegisterForm) -> Result<(), RegisterConfirmError>;
 }
 
 #[derive(Debug, Clone, Validate, PartialEq, Eq, Hash)]
@@ -64,7 +64,7 @@ where
     E: EmailNotification,
 {
     fn registrator_create_request(
-        &self,
+        &mut self,
         form: CreateRegisterRequest,
     ) -> Result<RequestCreated, RegisterRequestError> {
         form.validate()?;
@@ -105,7 +105,7 @@ where
         }
     }
 
-    fn registrator_confirm(&self, form: RegisterForm) -> Result<(), RegisterConfirmError> {
+    fn registrator_confirm(&mut self, form: RegisterForm) -> Result<(), RegisterConfirmError> {
         form.validate()?;
 
         let code = form.confirmation_code.clone();

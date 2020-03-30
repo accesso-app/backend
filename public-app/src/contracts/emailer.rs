@@ -1,7 +1,7 @@
 use serde::Serialize;
 
 pub trait EmailNotification {
-    fn send(&self, email: String, content: EmailMessage) -> bool;
+    fn send(&mut self, email: String, content: EmailMessage) -> bool;
 }
 
 #[derive(Debug, Serialize)]

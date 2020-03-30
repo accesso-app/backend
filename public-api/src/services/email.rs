@@ -10,7 +10,7 @@ impl Email {
 }
 
 impl EmailNotification for Email {
-    fn send(&self, email: String, message: EmailMessage) -> bool {
+    fn send(&mut self, email: String, message: EmailMessage) -> bool {
         println!("EMAIL: send {:?} to {}", message, email);
         true
     }
