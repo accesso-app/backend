@@ -1,3 +1,7 @@
+#[cfg(test)]
+use mockall::*;
+
+#[cfg_attr(test, automock)]
 pub trait SecureGenerator {
     fn secure_words(&self, length: u8) -> String;
     fn confirmation_code(&self) -> String {

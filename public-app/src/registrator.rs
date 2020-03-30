@@ -36,7 +36,7 @@ pub struct RegisterForm {
     pub password: String,
 }
 
-#[derive(PartialEq, Eq, Hash)]
+#[derive(Debug, PartialEq, Eq, Hash)]
 pub struct RequestCreated {
     pub expires_at: chrono::NaiveDateTime,
 }
@@ -192,4 +192,63 @@ impl CreateRegisterRequest {
 }
 
 #[cfg(test)]
-mod tests {}
+mod tests {
+    use super::*;
+    use crate::contracts::*;
+    use crate::models::*;
+    use insta::assert_snapshot;
+
+    fn mock_app() -> crate::App<MockDb, MockEmailNotification, MockSecureGenerator> {
+        crate::App {
+            db: MockDb::new(),
+            emailer: MockEmailNotification::new(),
+            generator: MockSecureGenerator::new(),
+        }
+    }
+
+    #[test]
+    fn create_request_invalid_form() {
+        let mut app = mock_app();
+        let form = CreateRegisterRequest {
+            email: "demo".to_owned(),
+        };
+
+        let result = app.registrator_create_request(form);
+
+        assert_eq!(result, Err(RegisterRequestError::InvalidForm));
+    }
+
+    #[test]
+    fn create_request_user_exists() {
+        let mut app = mock_app();
+        app.db
+            .users
+            .expect_user_has_with_email()
+            .returning(|_| Ok(true));
+
+        let form = CreateRegisterRequest {
+            email: "demo@domain.com".to_owned(),
+        };
+
+        let result = app.registrator_create_request(form);
+
+        assert_eq!(result, Err(RegisterRequestError::EmailAlreadyRegistered));
+    }
+
+    #[test]
+    fn create_request_user_exists() {
+        let mut app = mock_app();
+        app.db
+            .users
+            .expect_user_has_with_email()
+            .returning(|_| Ok(true));
+
+        let form = CreateRegisterRequest {
+            email: "demo@domain.com".to_owned(),
+        };
+
+        let result = app.registrator_create_request(form);
+
+        assert_eq!(result, Err(RegisterRequestError::EmailAlreadyRegistered));
+    }
+}

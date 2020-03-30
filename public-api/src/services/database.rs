@@ -54,7 +54,7 @@ impl UserRepo for Database {
             > 0)
     }
 
-    fn user_register(&self, form: UserRegisterForm) -> Result<models::User, RegisterUserError> {
+    fn user_register(&mut self, form: UserRegisterForm) -> Result<models::User, RegisterUserError> {
         let conn = self.conn();
 
         let user = User {
@@ -88,7 +88,7 @@ impl UserRepo for Database {
 
 impl RequestsRepo for Database {
     fn register_request_save(
-        &self,
+        &mut self,
         request: models::RegisterRequest,
     ) -> Result<models::RegisterRequest, SaveRegisterRequestError> {
         let conn = self.conn();
@@ -116,7 +116,7 @@ impl RequestsRepo for Database {
     }
 
     fn register_requests_delete_all_for_email(
-        &self,
+        &mut self,
         email: String,
     ) -> Result<usize, UnexpectedDatabaseError> {
         let conn = self.conn();
