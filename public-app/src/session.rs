@@ -10,7 +10,7 @@ use validator::Validate;
 pub trait Session {
     fn session_resolve(&self, cookie: String) -> Result<Option<User>, SessionResolveError>;
     fn session_create(
-        &self,
+        &mut self,
         form: SessionCreateForm,
     ) -> Result<(SessionToken, User), SessionCreateError>;
 }
@@ -54,7 +54,7 @@ where
     }
 
     fn session_create(
-        &self,
+        &mut self,
         form: SessionCreateForm,
     ) -> Result<(SessionToken, User), SessionCreateError> {
         form.validate()?;

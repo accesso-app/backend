@@ -14,6 +14,8 @@ pub async fn route(
     };
     use register_request::Response;
 
+    let mut app = app.write().unwrap();
+
     match app.registrator_create_request(CreateRegisterRequest::from_email(&body.email)) {
         Err(EmailAlreadyRegistered) => Response::BadRequest(responses::RegisterFailed {
             error: responses::RegisterFailedError::EmailAlreadyRegistered,

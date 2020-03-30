@@ -19,6 +19,8 @@ pub async fn route(
         password: body.password.clone(),
     };
 
+    let mut app = app.write().unwrap();
+
     match app.session_create(form) {
         Err(Unexpected) => Response::Unexpected.answer(),
         Err(InvalidForm) => Response::BadRequest(responses::SessionCreateFailed {

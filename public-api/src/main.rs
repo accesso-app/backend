@@ -3,8 +3,10 @@ extern crate diesel;
 
 use actix_web::{middleware, web, HttpResponse, HttpServer};
 use handler::{not_found, AnswerFailure, FailureCode};
+use std::sync::RwLock;
 
-pub type App = authmenow_public_app::App<services::Database, services::Email, services::Generator>;
+pub type App =
+    RwLock<authmenow_public_app::App<services::Database, services::Email, services::Generator>>;
 
 mod cookie;
 mod generated;
@@ -33,15 +35,18 @@ async fn main() -> std::io::Result<()> {
         path: "/".to_owned(),
     };
 
-    let app = authmenow_public_app::App {
+    let mut app = authmenow_public_app::App {
         db,
         emailer,
         generator,
     };
 
+    let app_lock = std::sync::RwLock::new(app);
+    let app_data = web::Data::new(app_lock);
+
     HttpServer::new(move || {
         actix_web::App::new()
-            .data(app.clone())
+            .app_data(app_data.clone())
             .data(session_cookie_config.clone())
             .wrap(middleware::Compress::default())
             .wrap(middleware::Logger::default())
@@ -76,8 +81,8 @@ async fn main() -> std::io::Result<()> {
             .default_service(web::route().to(not_found))
             .service(
                 generated::api::AuthmenowPublicApi::new()
-                    .bind_register_request(routes::register_request::route)
-                    .bind_register_confirmation(routes::register_confirmation::route)
+                    // .bind_register_request(routes::register_request::route)
+                    // .bind_register_confirmation(routes::register_confirmation::route)
                     .bind_session_create(routes::session_create::route),
             )
     })

@@ -146,7 +146,7 @@ impl SessionRepo for Database {
     }
 
     fn session_create(
-        &self,
+        &mut self,
         session: models::SessionToken,
     ) -> Result<models::SessionToken, SessionCreateError> {
         let conn = self.conn();

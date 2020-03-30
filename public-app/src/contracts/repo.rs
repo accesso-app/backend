@@ -14,7 +14,8 @@ pub trait UserRepo {
 
 pub trait SessionRepo {
     fn get_user_by_session_token(&self, token: String) -> Result<User, GetUserBySessionError>;
-    fn session_create(&self, session: SessionToken) -> Result<SessionToken, SessionCreateError>;
+    fn session_create(&mut self, session: SessionToken)
+        -> Result<SessionToken, SessionCreateError>;
 }
 
 pub trait RequestsRepo {

@@ -23,6 +23,8 @@ pub async fn route(
         password: body.password.clone(),
     };
 
+    let mut app = app.write().unwrap();
+
     match app.registrator_confirm(form) {
         Err(Unexpected) => Response::Unexpected,
         Err(CodeNotFound) => Response::BadRequest(RegisterConfirmationFailed {
