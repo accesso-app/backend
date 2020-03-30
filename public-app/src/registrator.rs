@@ -234,21 +234,4 @@ mod tests {
 
         assert_eq!(result, Err(RegisterRequestError::EmailAlreadyRegistered));
     }
-
-    #[test]
-    fn create_request_user_exists() {
-        let mut app = mock_app();
-        app.db
-            .users
-            .expect_user_has_with_email()
-            .returning(|_| Ok(true));
-
-        let form = CreateRegisterRequest {
-            email: "demo@domain.com".to_owned(),
-        };
-
-        let result = app.registrator_create_request(form);
-
-        assert_eq!(result, Err(RegisterRequestError::EmailAlreadyRegistered));
-    }
 }

@@ -14,7 +14,7 @@ COPY ./public-app ./public-app
 
 ARG CRATE_NAME
 
-# RUN cargo test --release --verbose --package authmenow-$CRATE_NAME
+RUN cargo test --release --verbose --package authmenow-$CRATE_NAME
 
 RUN cargo build --release --package authmenow-$CRATE_NAME
 
