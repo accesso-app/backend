@@ -256,8 +256,9 @@ pub mod paths {
                 };
 
                 let content_type = match self {
+                    Self::Created(_) => Some(ContentType::Json),
+                    Self::BadRequest(_) => Some(ContentType::Json),
                     Self::Unexpected => None,
-                    _ => Some(ContentType::Json),
                 };
 
                 Answer::new(self).status(status).content_type(content_type)
@@ -323,8 +324,9 @@ pub mod paths {
                 };
 
                 let content_type = match self {
+                    Self::Created => None,
+                    Self::BadRequest(_) => Some(ContentType::Json),
                     Self::Unexpected => None,
-                    _ => Some(ContentType::Json),
                 };
 
                 Answer::new(self).status(status).content_type(content_type)
@@ -371,7 +373,14 @@ pub mod paths {
                     Self::InternalServerError => StatusCode::INTERNAL_SERVER_ERROR,
                 };
 
-                Answer::new(self).status(status)
+                let content_type = match self {
+                    Self::SeeOther => None,
+                    Self::BadRequest => None,
+                    Self::NotFound => None,
+                    Self::InternalServerError => None,
+                };
+
+                Answer::new(self).content_type(content_type).status(status)
             }
         }
 

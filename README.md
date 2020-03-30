@@ -11,6 +11,10 @@
 7. Migrate database (`diesel migration run`)
 8. Run (example: `cd public-api && cargo run`)
 
+## ENVs
+
+- `DEV` (`"true"` sets true, otherwise false) - sets cookies secure=false,httpOnly=false
+
 ## Flows
 
 ## Glossary

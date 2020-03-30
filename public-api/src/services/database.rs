@@ -57,7 +57,7 @@ impl UserRepo for Database {
     fn user_register(&self, form: UserRegisterForm) -> Result<models::User, RegisterUserError> {
         let conn = self.conn();
 
-        let user = NewUser {
+        let user = User {
             id: uuid::Uuid::new_v4(),
             email: form.email,
             first_name: form.first_name,
@@ -67,7 +67,7 @@ impl UserRepo for Database {
 
         diesel::insert_into(users::table)
             .values(user)
-            .get_result::<NewUser>(&conn)
+            .get_result::<User>(&conn)
             .map(Into::into)
             .map_err(diesel_error_to_register_user_error)
     }
@@ -76,7 +76,13 @@ impl UserRepo for Database {
         &self,
         creds: UserCredentials,
     ) -> Result<Option<models::User>, UnexpectedDatabaseError> {
-        unimplemented!()
+        users::table
+            .filter(users::email.eq(creds.email))
+            .filter(users::password_hash.eq(creds.password_hash))
+            .get_result::<User>(&self.conn())
+            .map(Into::into)
+            .optional()
+            .map_err(diesel_error_to_unexpected)
     }
 }
 
@@ -134,7 +140,7 @@ impl SessionRepo for Database {
             .select(users::all_columns)
             .filter(session_tokens::token.eq(token))
             .filter(session_tokens::expires_at.gt(chrono::Utc::now().naive_utc()))
-            .first::<NewUser>(&conn)
+            .first::<User>(&conn)
             .map(Into::into)
             .map_err(diesel_error_to_get_user_by_session_error)
     }
@@ -161,24 +167,6 @@ struct RegistrationRequest {
     expires_at: chrono::NaiveDateTime,
 }
 
-#[derive(Identifiable, Insertable, Queryable)]
-#[table_name = "users"]
-pub struct NewUser {
-    pub id: uuid::Uuid,
-    pub email: String,
-    pub first_name: String,
-    pub password_hash: String,
-    pub last_name: String,
-}
-
-#[derive(Identifiable, Insertable, Queryable)]
-#[primary_key(token)]
-pub struct SessionToken {
-    pub user_id: uuid::Uuid,
-    pub token: String,
-    pub expires_at: chrono::NaiveDateTime,
-}
-
 impl From<models::RegisterRequest> for RegistrationRequest {
     fn from(model: models::RegisterRequest) -> Self {
         Self {
@@ -199,7 +187,16 @@ impl Into<models::RegisterRequest> for RegistrationRequest {
     }
 }
 
-impl Into<models::User> for NewUser {
+#[derive(Identifiable, Insertable, Queryable)]
+struct User {
+    pub id: uuid::Uuid,
+    pub email: String,
+    pub first_name: String,
+    pub password_hash: String,
+    pub last_name: String,
+}
+
+impl Into<models::User> for User {
     fn into(self) -> models::User {
         models::User {
             id: self.id,
@@ -209,6 +206,14 @@ impl Into<models::User> for NewUser {
             password_hash: self.password_hash,
         }
     }
+}
+
+#[derive(Identifiable, Insertable, Queryable)]
+#[primary_key(token)]
+pub struct SessionToken {
+    pub user_id: uuid::Uuid,
+    pub token: String,
+    pub expires_at: chrono::NaiveDateTime,
 }
 
 impl From<models::SessionToken> for SessionToken {

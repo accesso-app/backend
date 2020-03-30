@@ -5,6 +5,7 @@ use actix_web::{cookie::CookieBuilder, web};
 
 pub async fn route(
     body: web::Json<request_bodies::SessionCreate>,
+    session_config: web::Data<crate::cookie::SessionCookieConfig>,
     app: web::Data<crate::App>,
 ) -> Answer<'static, Response> {
     use authmenow_public_app::session::{
@@ -28,15 +29,21 @@ pub async fn route(
             error: responses::SessionCreateFailedError::InvalidCredentials,
         })
         .answer(),
-        Ok((session_token, user)) => Response::Created(responses::SessionCreateSucceeded {
-            first_name: user.first_name,
-            last_name: user.last_name,
-        })
-        .answer()
-        .cookie(
-            CookieBuilder::new("session_token", session_token.token)
-                // .expires(session_token.expires_at.into())
-                .finish(),
-        ),
+        Ok((session_token, user)) => {
+            log::trace!("generated session_token: {}", session_token.token);
+            Response::Created(responses::SessionCreateSucceeded {
+                first_name: user.first_name,
+                last_name: user.last_name,
+            })
+            .answer()
+            .cookie(
+                CookieBuilder::new("session_token", session_token.token)
+                    // .expires(session_token.expires_at.into())
+                    .path(session_config.path.clone())
+                    .secure(session_config.secure)
+                    .http_only(session_config.http_only)
+                    .finish(),
+            )
+        }
     }
 }

@@ -6,6 +6,7 @@ use handler::{not_found, AnswerFailure, FailureCode};
 
 pub type App = authmenow_public_app::App<services::Database, services::Email, services::Generator>;
 
+mod cookie;
 mod generated;
 mod handler;
 mod routes;
@@ -18,12 +19,19 @@ async fn main() -> std::io::Result<()> {
 
     let listen_port = std::env::var("LISTEN_PORT").expect("LISTEN_PORT");
     let connection_url = std::env::var("DATABASE_URL").expect("DATABASE_URL");
+    let is_dev = std::env::var("DEV").map(|d| d != "false").unwrap_or(false);
 
     let bind_address = format!("127.0.0.1:{port}", port = listen_port);
 
     let db = services::Database::new(connection_url).expect("Failed to create database");
     let generator = services::Generator::new();
     let emailer = services::Email::new();
+
+    let session_cookie_config = cookie::SessionCookieConfig {
+        http_only: !is_dev,
+        secure: !is_dev,
+        path: "/".to_owned(),
+    };
 
     let app = authmenow_public_app::App {
         db,
@@ -34,6 +42,7 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(move || {
         actix_web::App::new()
             .data(app.clone())
+            .data(session_cookie_config.clone())
             .wrap(middleware::Compress::default())
             .wrap(middleware::Logger::default())
             .app_data(web::JsonConfig::default().error_handler(|err, _| {
