@@ -73,7 +73,7 @@ paths:
       operationId: sessionCreate
       tags: [Session]
       # TODO: Add rate limit and CSRF protection
-      description: Login and create new session tokens
+      description: Login and create new session token
       requestBody:
         $ref: "#/components/requestBodies/SessionCreate"
       responses:
@@ -81,6 +81,21 @@ paths:
           $ref: "#/components/responses/SessionCreateSucceeded"
         400:
           $ref: "#/components/responses/SessionCreateFailed"
+        500:
+          description: Something went wrong
+
+  "/session/get":
+    post:
+      operationId: sessionGet
+      tags: [Session]
+      # TODO: Add rate limit and CSRF protection
+      description: Read session token and show current session.
+        Authenticated checked by session-token cookie
+      responses:
+        200:
+          $ref: "#/components/responses/SessionGetSuccess"
+        401:
+          description: User not authorized
         500:
           description: Something went wrong
 
@@ -198,6 +213,17 @@ components:
                   - "invalid_credentials"
                   - "invalid_form"
                   - "invalid_payload"
+
+    SessionGetSuccess:
+      description: Session exists
+      content:
+        application/json:
+          schema:
+            required:
+              - user
+            properties:
+              user:
+                $ref: "#/components/schemas/SessionUser"
 
   parameters:
     OAuthResponseType:
@@ -337,3 +363,16 @@ components:
                 format: email
               password:
                 type: string
+
+  schemas:
+    SessionUser:
+      description: Current user in a session
+      type: object
+      required:
+        - firstName
+        - lastName
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string

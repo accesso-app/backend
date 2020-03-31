@@ -35,7 +35,7 @@ async fn main() -> std::io::Result<()> {
         path: "/".to_owned(),
     };
 
-    let mut app = authmenow_public_logic::App {
+    let app = authmenow_public_logic::App {
         db,
         emailer,
         generator,
@@ -81,8 +81,8 @@ async fn main() -> std::io::Result<()> {
             .default_service(web::route().to(not_found))
             .service(
                 generated::api::AuthmenowPublicApi::new()
-                    // .bind_register_request(routes::register_request::route)
-                    // .bind_register_confirmation(routes::register_confirmation::route)
+                    .bind_register_request(routes::register_request::route)
+                    .bind_register_confirmation(routes::register_confirmation::route)
                     .bind_session_create(routes::session_create::route),
             )
     })
