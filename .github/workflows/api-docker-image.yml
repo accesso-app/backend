@@ -26,8 +26,9 @@ jobs:
         uses: elgohr/Publish-Docker-Github-Action@2.8
         with:
           name: authmenow/backend/public-api
+          registry: docker.pkg.github.com
           username: sergeysova
           password: ${{ secrets.GITHUB_TOKEN }}
-          snapshot: true
-          registry: docker.pkg.github.com
           buildargs: CRATE_NAME=public-api
+          snapshot: true
+          tag_semver: true
