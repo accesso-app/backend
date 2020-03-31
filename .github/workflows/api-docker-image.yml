@@ -9,7 +9,7 @@ on:
       - ".github/workflows/api-docker-image.yml"
       - "db/*"
       - "public-api/*"
-      - "public-app/*"
+      - "public-logic/*"
       - "migrations/*"
       - "docker-entrypoint.sh"
       - "Dockerfile"

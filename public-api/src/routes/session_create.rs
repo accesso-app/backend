@@ -8,7 +8,7 @@ pub async fn route(
     session_config: web::Data<crate::cookie::SessionCookieConfig>,
     app: web::Data<crate::App>,
 ) -> Answer<'static, Response> {
-    use authmenow_public_app::session::{
+    use authmenow_public_logic::session::{
         Session,
         SessionCreateError::{InvalidCredentials, InvalidForm, Unexpected},
         SessionCreateForm,

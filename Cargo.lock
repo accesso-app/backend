@@ -316,7 +316,7 @@ dependencies = [
  "actix-swagger 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "actix-web 2.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "authmenow-db 0.1.0",
- "authmenow-public-app 0.1.0",
+ "authmenow-public-logic 0.1.0",
  "chrono 0.4.10 (registry+https://github.com/rust-lang/crates.io-index)",
  "diesel 1.4.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "dotenv 0.15.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -335,7 +335,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "authmenow-public-app"
+name = "authmenow-public-logic"
 version = "0.1.0"
 dependencies = [
  "chrono 0.4.10 (registry+https://github.com/rust-lang/crates.io-index)",

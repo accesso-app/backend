@@ -1,5 +1,5 @@
 use authmenow_db::schema::*;
-use authmenow_public_app::{
+use authmenow_public_logic::{
     contracts::{
         GetUserBySessionError, RegisterUserError, RequestsRepo, SaveRegisterRequestError,
         SessionCreateError, SessionRepo, UnexpectedDatabaseError, UserCredentials,

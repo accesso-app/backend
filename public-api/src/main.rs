@@ -6,7 +6,7 @@ use handler::{not_found, AnswerFailure, FailureCode};
 use std::sync::RwLock;
 
 pub type App =
-    RwLock<authmenow_public_app::App<services::Database, services::Email, services::Generator>>;
+    RwLock<authmenow_public_logic::App<services::Database, services::Email, services::Generator>>;
 
 mod cookie;
 mod generated;
@@ -35,7 +35,7 @@ async fn main() -> std::io::Result<()> {
         path: "/".to_owned(),
     };
 
-    let mut app = authmenow_public_app::App {
+    let mut app = authmenow_public_logic::App {
         db,
         emailer,
         generator,

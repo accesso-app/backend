@@ -12,7 +12,7 @@ actix-rt = "1.0.0"
 actix-swagger = "0.2.0"
 actix-web = "2.0.0"
 authmenow-db = { "path" = "../db" }
-authmenow-public-app = { "path" = "../public-app" }
+authmenow-public-logic = { "path" = "../public-logic" }
 chrono = { version = "0.4.10", features = ["serde"] }
 diesel = { version = "1.4.3", features = [
   "postgres",

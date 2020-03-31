@@ -1,4 +1,4 @@
-use authmenow_public_app::contracts::{EmailMessage, EmailNotification};
+use authmenow_public_logic::contracts::{EmailMessage, EmailNotification};
 
 #[derive(Clone)]
 pub struct Email {}

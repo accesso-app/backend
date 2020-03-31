@@ -2,6 +2,6 @@
 members = [
   # "admin-api",
   "public-api",
-  "public-app",
+  "public-logic",
   "db"
 ]

@@ -1,4 +1,4 @@
-use authmenow_public_app::contracts::SecureGenerator;
+use authmenow_public_logic::contracts::SecureGenerator;
 
 lazy_static::lazy_static! {
     static ref WORDS: Vec<&'static str> = {
