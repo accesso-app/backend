@@ -39,7 +39,7 @@ pub async fn route(
             })
             .answer()
             .cookie(
-                CookieBuilder::new("session_token", session_token.token)
+                CookieBuilder::new(session_config.name.clone(), session_token.token)
                     // .expires(session_token.expires_at.into())
                     .path(session_config.path.clone())
                     .secure(session_config.secure)

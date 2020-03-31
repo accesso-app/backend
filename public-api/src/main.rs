@@ -33,6 +33,7 @@ async fn main() -> std::io::Result<()> {
         http_only: !is_dev,
         secure: !is_dev,
         path: "/".to_owned(),
+        name: "session-token".to_owned(),
     };
 
     let app = authmenow_public_logic::App {
@@ -83,7 +84,8 @@ async fn main() -> std::io::Result<()> {
                 generated::api::AuthmenowPublicApi::new()
                     .bind_register_request(routes::register_request::route)
                     .bind_register_confirmation(routes::register_confirmation::route)
-                    .bind_session_create(routes::session_create::route),
+                    .bind_session_create(routes::session_create::route)
+                    .bind_session_get(routes::session_get::route),
             )
     })
     .bind(bind_address)?
