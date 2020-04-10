@@ -190,6 +190,7 @@ components:
       content:
         application/json:
           schema:
+            # TODO: Use SessionUser here
             required:
               - firstName
               - lastName
