@@ -1,7 +1,7 @@
 #[macro_use]
 extern crate diesel;
 
-use actix_web::{middleware, web, HttpResponse, HttpServer};
+use actix_web::{dev, middleware, web, HttpResponse, HttpServer};
 use handler::{not_found, AnswerFailure, FailureCode};
 use std::sync::RwLock;
 
@@ -11,6 +11,7 @@ pub type App =
 mod cookie;
 mod generated;
 mod handler;
+mod health;
 mod routes;
 mod services;
 
@@ -79,6 +80,7 @@ async fn main() -> std::io::Result<()> {
                     .header("X-Content-Type-Options", "nosniff")
                     .header("X-XSS-Protection", "1; mode=block"),
             )
+            .service(health::service())
             .default_service(web::route().to(not_found))
             .service(
                 generated::api::AuthmenowPublicApi::new()

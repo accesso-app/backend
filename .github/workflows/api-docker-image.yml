@@ -32,11 +32,11 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
           buildargs: CRATE_NAME=public-api
-          snapshot: true
+          snapshot: "true"
           tag_semver: skip
-          tag_separator: '@'
-          semver_higher: true
-      
+          tag_separator: "@"
+          semver_higher: "true"
+
       - name: Trigger deploy to Dev
         uses: peter-evans/repository-dispatch@v1
         with:
