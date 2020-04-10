@@ -7,10 +7,10 @@ on:
       - dev
     paths:
       - ".github/workflows/api-docker-image.yml"
-      - "db/*"
-      - "public-api/*"
-      - "public-logic/*"
-      - "migrations/*"
+      - "db/**"
+      - "public-api/**"
+      - "public-logic/**"
+      - "migrations/**"
       - "docker-entrypoint.sh"
       - "Dockerfile"
       - "Cargo.lock"
