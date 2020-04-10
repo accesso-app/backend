@@ -6,7 +6,6 @@ use authmenow_public_logic::{
         UserRegisterForm, UserRepo,
     },
     models,
-    session::SessionCreateForm,
 };
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
