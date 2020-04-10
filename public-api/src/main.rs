@@ -1,7 +1,7 @@
 #[macro_use]
 extern crate diesel;
 
-use actix_web::{dev, middleware, web, HttpResponse, HttpServer};
+use actix_web::{middleware, web, HttpResponse, HttpServer};
 use handler::{not_found, AnswerFailure, FailureCode};
 use std::sync::RwLock;
 
@@ -21,10 +21,11 @@ async fn main() -> std::io::Result<()> {
     env_logger::init();
 
     let listen_port = std::env::var("LISTEN_PORT").expect("LISTEN_PORT");
+    let listen_host = std::env::var("LISTEN_HOST").expect("LISTEN_HOST");
     let connection_url = std::env::var("DATABASE_URL").expect("DATABASE_URL");
     let is_dev = std::env::var("DEV").map(|d| d != "false").unwrap_or(false);
 
-    let bind_address = format!("127.0.0.1:{port}", port = listen_port);
+    let bind_address = format!("{host}:{port}", host = listen_host, port = listen_port);
 
     let db = services::Database::new(connection_url).expect("Failed to create database");
     let generator = services::Generator::new();

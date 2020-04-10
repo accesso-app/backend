@@ -16,6 +16,9 @@
 ## ENVs
 
 - `DEV` (`"true"` sets true, otherwise false) - sets cookies secure=false,httpOnly=false
+- `DATABASE_URL` — Database connection URL (`postgres://authmenow:authmenow@localhost:5432/authmenow`)
+- `LISTEN_PORT` — port to listen on
+- `LISTEN_HOST` — host to listen on
 
 ## Flows
 
