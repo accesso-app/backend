@@ -20,6 +20,11 @@
 - `LISTEN_PORT` — port to listen on
 - `LISTEN_HOST` — host to listen on
 
+## Development
+
+- Use [`just`](https://github.com/casey/just) to run commands from [`justfile`](./justfile)
+- `just run` — to build and start `public-api` crate (aliased to `just run public`)
+
 ## Flows
 
 ## Glossary
