@@ -19,6 +19,8 @@ paths:
           $ref: "#/components/responses/OAuthAuthorizeDone"
         400:
           $ref: "#/components/responses/OAuthAuthorizeRequestFailure"
+        500:
+          description: Something goes wrong
 
   "/oauth/token":
     post:

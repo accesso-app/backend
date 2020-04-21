@@ -34,7 +34,7 @@ pub mod api {
         {
             self.api = self
                 .api
-                .bind("/oauth/authorize".to_owned(), Method::GET, handler);
+                .bind("/oauth/authorize".to_owned(), Method::POST, handler);
             self
         }
 
@@ -98,38 +98,7 @@ pub mod api {
 }
 
 pub mod components {
-    pub mod parameters {
-        use serde::{Deserialize, Serialize};
-
-        /// response_type is set to code indicating that you want an authorization code as the response.
-        #[derive(Debug, Serialize, Deserialize)]
-        pub enum OAuthResponseType {
-            #[serde(rename = "code")]
-            Code,
-        }
-
-        /// The client_id is the identifier for your app.
-        /// You will have received a client_id when first registering your app with the service.
-        pub type OAuthClientId = uuid::Uuid;
-
-        /// The redirect_uri may be optional depending on the API, but is highly recommended.
-        /// This is the URL to which you want the user to be redirected after the authorization is complete.
-        /// This must match the redirect URL that you have previously registered with the service.
-        pub type OAuthRedirectUri = String;
-
-        /// Include one or more scope values (space-separated) to request additional levels of access.
-        /// The values will depend on the particular service.
-        pub type OAuthScope = String;
-
-        /// The state parameter serves two functions.
-        /// When the user is redirected back to your app, whatever value you include as the state will also be included in the redirect.
-        /// This gives your app a chance to persist data between the user being directed to the authorization server and back again,
-        /// such as using the state parameter as a session key. This may be used to indicate what action in the app to perform after authorization is complete,
-        /// for example, indicating which of your app’s pages to redirect to after authorization. This also serves as a CSRF protection mechanism.
-        /// When the user is redirected back to your app, double check that the state value matches what you set it to originally.
-        /// This will ensure an attacker can’t intercept the authorization flow.
-        pub type OAuthState = String;
-    }
+    pub mod parameters {}
 
     pub mod responses {
         use serde::{Deserialize, Serialize};
@@ -215,6 +184,67 @@ pub mod components {
         pub struct SessionGetSuccess {
             pub user: super::schemas::SessionUser,
         }
+
+        #[doc = "Authorization completed, now access token can be obtained."]
+        #[derive(Debug, Serialize)]
+        pub struct OAuthAuthorizeDone {
+            #[doc = "User should be redirected to"]
+            #[serde(rename = "redirectUri")]
+            pub redirect_uri: String,
+
+            #[doc = "This parameter contains the authorization code which the client will later exchange for an access token."]
+            pub code: String,
+
+            #[doc = "If the initial request contained a state parameter, the response must also include the exact value from the request. The client will be using this to associate this response with the initial request."]
+            pub state: Option<String>,
+        }
+
+        /// Possible errors:
+        /// If the user denies the authorization request, the server will redirect the user back to the redirect URL with error=`access_denied` in the query string, and no code will be present. It is up to the app to decide what to display to the user at this point.
+        /// - `invalid_request` — The request is missing a required parameter, includes an invalid parameter value, or is otherwise malformed.
+        /// - `unsupported_response_type` — The authorization server does not support obtaining an authorization code using this method.
+        /// - `invalid_scope` — The requested scope is invalid, unknown, or malformed.
+        /// - `server_error` — The authorization server encountered an unexpected condition which prevented it from fulfilling the request.
+        /// - `temporarily_unavailable` — The authorization server is currently unable to handle the request due to a temporary overloading or maintenance of the server.
+        /// [OAuth2 Possible Errors](https://www.oauth.com/oauth2-servers/server-side-apps/possible-errors/)
+        #[derive(Debug, Serialize)]
+        pub enum OAuthAuthorizeRequestFailureError {
+            #[serde(rename = "invalid_request")]
+            InvalidRequest,
+
+            #[serde(rename = "access_denied")]
+            AccessDenied,
+
+            #[serde(rename = "unauthorized_client")]
+            UnauthorizedClient,
+
+            #[serde(rename = "unsupported_response_type")]
+            UnsupportedResponseType,
+
+            #[serde(rename = "invalid_scope")]
+            InvalidScope,
+
+            #[serde(rename = "server_error")]
+            ServerError,
+
+            #[serde(rename = "temporarily_unavailable")]
+            TemporarilyUnavailable,
+        }
+
+        /// There are two different kinds of errors to handle. The first kind of error is when the developer did something wrong when creating the authorization request. The other kind of error is when the user rejects the request (clicks the “Deny” button).
+        /// If there is something wrong with the syntax of the request, such as the redirect_uri or client_id is invalid, then it’s important not to redirect the user and instead you should show the error message directly. This is to avoid letting your authorization server be used as an open redirector.
+        /// If the redirect_uri and client_id are both valid, but there is still some other problem, it’s okay to redirect the user back to the redirect URI with the error in the query string.
+        #[derive(Debug, Serialize)]
+        pub struct OAuthAuthorizeRequestFailure {
+            pub error: OAuthAuthorizeRequestFailureError,
+
+            #[doc = "User should be redirected to if passed redirectUri and clientId is correct"]
+            #[serde(rename = "redirectUri")]
+            pub redirect_uri: Option<String>,
+
+            #[doc = "If the initial request contained a state parameter, the response must also include the exact value from the request. The client will be using this to associate this response with the initial request."]
+            pub state: Option<String>,
+        }
     }
 
     pub mod request_bodies {
@@ -244,6 +274,44 @@ pub mod components {
             pub email: String,
             pub password: String,
         }
+
+        /// responseType is set to code indicating that you want an authorization code as the response.
+        #[derive(Debug, Serialize, Deserialize)]
+        pub enum OAuthAuthorizeResponseType {
+            #[serde(rename = "code")]
+            Code,
+        }
+
+        #[derive(Debug, Serialize, Deserialize)]
+        pub struct OAuthAuthorize {
+            #[doc = "responseType is set to code indicating that you want an authorization code as the response."]
+            #[serde(rename = "responseType")]
+            pub response_type: OAuthAuthorizeResponseType,
+
+            #[doc = "The clientId is the identifier for your app. You will have received a clientId when first registering your app with the service."]
+            #[serde(rename = "clientId")]
+            pub client_id: uuid::Uuid,
+
+            /// The redirectUri may be optional depending on the API, but is highly recommended.
+            /// This is the URL to which you want the user to be redirected after the authorization is complete.
+            /// This must match the redirect URL that you have previously registered with the service.
+            #[serde(rename = "redirectUri")]
+            pub redirect_uri: String, // implement url::Url deserializer
+
+            /// Include one or more scope values (space-separated) to request additional levels of access.
+            /// The values will depend on the particular service.
+            /// Example user:view user:edit
+            pub scope: Option<String>, // implement custom Scope deserializer
+
+            /// The state parameter serves two functions.
+            /// When the user is redirected back to your app, whatever value you include as the state will also be included in the redirect.
+            /// This gives your app a chance to persist data between the user being directed to the authorization server and back again,
+            /// such as using the state parameter as a session key. This may be used to indicate what action in the app to perform after authorization is complete,
+            /// for example, indicating which of your app’s pages to redirect to after authorization. This also serves as a CSRF protection mechanism.
+            /// When the user is redirected back to your app, double check that the state value matches what you set it to originally.
+            /// This will ensure an attacker can’t intercept the authorization flow.
+            pub state: Option<String>,
+        }
     }
 
     pub mod schemas {
@@ -262,7 +330,7 @@ pub mod components {
 }
 
 pub mod paths {
-    use super::components::{parameters, responses};
+    use super::components::responses;
     pub mod register_request {
         use super::responses;
         use actix_swagger::{Answer, ContentType};
@@ -400,30 +468,17 @@ pub mod paths {
     }
 
     pub mod oauth_authorize_request {
-        use super::parameters;
-        use actix_swagger::Answer;
+        use super::responses;
+        use actix_swagger::{Answer, ContentType};
         use actix_web::http::StatusCode;
-        use serde::{Deserialize, Serialize};
+        use serde::Serialize;
 
-        #[derive(Debug, Serialize, Deserialize)]
+        #[derive(Debug, Serialize)]
         #[serde(untagged)]
         pub enum Response {
-            /// User redirected to `redirect_uri` with `error` or `code`
-            ///
-            /// ### Possible errors:
-            /// - If the user denies the authorization request, the server will redirect the user back to the redirect URL with error=`access_denied` in the query string, and no code will be present. It is up to the app to decide what to display to the user at this point.
-            /// - `invalid_request` — The request is missing a required parameter, includes an invalid parameter value, or is otherwise malformed.
-            /// - `unsupported_response_type` — The authorization server does not support obtaining an authorization code using this method.
-            /// - `invalid_scope` — The requested scope is invalid, unknown, or malformed.
-            /// - `server_error` — The authorization server encountered an unexpected condition which prevented it from fulfilling the request.
-            /// - `temporarily_unavailable` — The authorization server is currently unable to handle the request due to a temporary overloading or maintenance of the server.
-            ///
-            /// [OAuth2 Possible Errors](https://www.oauth.com/oauth2-servers/server-side-apps/possible-errors/)
-            SeeOther,
+            Ok(responses::OAuthAuthorizeDone),
 
-            BadRequest,
-
-            NotFound,
+            BadRequest(responses::OAuthAuthorizeRequestFailure),
 
             InternalServerError,
         }
@@ -432,32 +487,19 @@ pub mod paths {
             #[inline]
             pub fn answer<'a>(self) -> Answer<'a, Self> {
                 let status = match self {
-                    Self::SeeOther => StatusCode::SEE_OTHER,
-                    Self::NotFound => StatusCode::NOT_FOUND,
-                    Self::BadRequest => StatusCode::BAD_REQUEST,
+                    Self::Ok(_) => StatusCode::OK,
+                    Self::BadRequest(_) => StatusCode::BAD_REQUEST,
                     Self::InternalServerError => StatusCode::INTERNAL_SERVER_ERROR,
                 };
 
                 let content_type = match self {
-                    Self::SeeOther => None,
-                    Self::BadRequest => None,
-                    Self::NotFound => None,
+                    Self::Ok(_) => Some(ContentType::Json),
+                    Self::BadRequest(_) => Some(ContentType::Json),
                     Self::InternalServerError => None,
                 };
 
                 Answer::new(self).content_type(content_type).status(status)
             }
         }
-
-        #[derive(Debug, Serialize, Deserialize)]
-        pub struct QueryStruct {
-            pub response_type: parameters::OAuthResponseType,
-            pub client_id: parameters::OAuthClientId,
-            pub redirect_uri: parameters::OAuthRedirectUri,
-            pub scope: Option<parameters::OAuthScope>,
-            pub state: Option<parameters::OAuthState>,
-        }
-
-        pub type Query = actix_web::web::Query<QueryStruct>;
     }
 }
