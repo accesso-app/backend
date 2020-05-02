@@ -1,9 +1,9 @@
 use authmenow_db::schema::*;
 use authmenow_public_logic::{
     contracts::{
-        GetUserBySessionError, RegisterUserError, RequestsRepo, SaveRegisterRequestError,
-        SessionCreateError, SessionRepo, UnexpectedDatabaseError, UserCredentials,
-        UserRegisterForm, UserRepo,
+        AuthCodeRepo, ClientRepo, GetUserBySessionError, RegisterUserError, RequestsRepo,
+        SaveRegisterRequestError, SessionCreateError, SessionRepo, UnexpectedDatabaseError,
+        UserCredentials, UserRegisterForm, UserRepo,
     },
     models,
 };
@@ -155,6 +155,99 @@ impl SessionRepo for Database {
             .get_result::<SessionToken>(&conn)
             .map(Into::into)
             .map_err(diesel_error_to_session_create_error)
+    }
+}
+
+impl ClientRepo for Database {
+    fn client_find_by_id(
+        &self,
+        id: uuid::Uuid,
+    ) -> Result<Option<models::Client>, UnexpectedDatabaseError> {
+        let conn = self.conn();
+
+        clients::table
+            .filter(clients::id.eq(id))
+            .get_result::<Client>(&conn)
+            .map(Into::into)
+            .optional()
+            .map_err(diesel_error_to_unexpected)
+    }
+}
+
+#[derive(Identifiable, Insertable, PartialEq, Queryable)]
+struct Client {
+    id: uuid::Uuid,
+    redirect_uri: Vec<String>,
+    secret_key: String,
+    scopes: Vec<String>,
+    title: String,
+}
+
+impl Into<models::Client> for Client {
+    fn into(self) -> models::Client {
+        models::Client {
+            id: self.id,
+            redirect_uri: self.redirect_uri,
+            // secret_key: self.secret_key,
+            scopes: self.scopes,
+            title: self.title,
+        }
+    }
+}
+
+impl AuthCodeRepo for Database {
+    fn auth_code_create(
+        &self,
+        code: models::AuthorizationCode,
+    ) -> Result<models::AuthorizationCode, UnexpectedDatabaseError> {
+        let conn = self.conn();
+
+        diesel::insert_into(authorization_codes::table)
+            .values(AuthorizationCode::from(code))
+            .get_result::<AuthorizationCode>(&conn)
+            .map(Into::into)
+            .map_err(diesel_error_to_unexpected)
+    }
+}
+
+#[derive(Identifiable, Insertable, PartialEq, Queryable)]
+#[primary_key(code)]
+struct AuthorizationCode {
+    client_id: uuid::Uuid,
+    code: String,
+    created_at: chrono::NaiveDateTime,
+    redirect_uri: String,
+    scope: Option<Vec<String>>,
+    user_id: uuid::Uuid,
+}
+
+impl From<models::AuthorizationCode> for AuthorizationCode {
+    fn from(authorization_code: models::AuthorizationCode) -> Self {
+        Self {
+            client_id: authorization_code.client_id,
+            code: authorization_code.code,
+            created_at: authorization_code.created_at,
+            redirect_uri: authorization_code.redirect_uri,
+            scope: if authorization_code.scopes.is_empty() {
+                None
+            } else {
+                Some(authorization_code.scopes)
+            },
+            user_id: authorization_code.user_id,
+        }
+    }
+}
+
+impl Into<models::AuthorizationCode> for AuthorizationCode {
+    fn into(self) -> models::AuthorizationCode {
+        models::AuthorizationCode {
+            client_id: self.client_id,
+            code: self.code,
+            created_at: self.created_at,
+            redirect_uri: self.redirect_uri,
+            scopes: self.scope.unwrap_or(vec![]),
+            user_id: self.user_id,
+        }
     }
 }
 

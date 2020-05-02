@@ -148,13 +148,14 @@ components:
                   [OAuth2 Possible Errors](https://www.oauth.com/oauth2-servers/server-side-apps/possible-errors/)
                 type: string
                 enum:
-                  - invalid_request
                   - access_denied
-                  - unauthorized_client
-                  - unsupported_response_type
+                  - invalid_request
                   - invalid_scope
                   - server_error
                   - temporarily_unavailable
+                  - unauthenticated_user
+                  - unauthorized_client
+                  - unsupported_response_type
               redirectUri:
                 description: User should be redirected to if passed redirectUri and clientId is correct
                 type: string

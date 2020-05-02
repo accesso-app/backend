@@ -9,7 +9,7 @@ pub async fn route(
     app: web::Data<crate::App>,
     req: web::HttpRequest,
 ) -> Answer<'static, Response> {
-    use authmenow_public_logic::session::{Session, SessionResolveError::Unexpected};
+    use authmenow_public_logic::app::session::{Session, SessionResolveError::Unexpected};
 
     let app = app.read().unwrap();
 

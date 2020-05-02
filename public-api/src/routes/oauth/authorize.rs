@@ -23,7 +23,7 @@ impl FromRequest for Auth {
 
     #[inline]
     fn from_request(req: &actix_web::HttpRequest, _: &mut dev::Payload) -> Self::Future {
-        use authmenow_public_logic::session::Session;
+        use authmenow_public_logic::app::session::Session;
 
         if let Some(cookie) = req.cookie("session-token") {
             if let Some(app) = req.app_data::<web::Data<crate::App>>() {
@@ -47,11 +47,11 @@ pub async fn route(
     body: web::Json<request_bodies::OAuthAuthorize>,
     app: web::Data<crate::App>,
 ) -> Answer<'static, Response> {
-    use authmenow_public_logic::oauth::authorize::{
+    use authmenow_public_logic::app::oauth::authorize::{
         OAuthAuthorize, RequestAuthCode,
         RequestAuthCodeFailed::{
             AccessDenied, InvalidRequest, InvalidScope, ServerError, TemporarilyUnavailable,
-            UnauthorizedClient, UnsupportedResponseType,
+            Unauthenticated, UnauthorizedClient, UnsupportedResponseType,
         },
     };
 
@@ -117,6 +117,12 @@ pub async fn route(
 
         Err(InvalidRequest) => Response::BadRequest(Failure {
             error: FailureVariant::InvalidRequest,
+            redirect_uri: None,
+            state: None,
+        }),
+
+        Err(Unauthenticated) => Response::BadRequest(Failure {
+            error: FailureVariant::UnauthenticatedUser,
             redirect_uri: None,
             state: None,
         }),

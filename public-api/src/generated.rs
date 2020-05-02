@@ -218,6 +218,9 @@ pub mod components {
             #[serde(rename = "unauthorized_client")]
             UnauthorizedClient,
 
+            #[serde(rename = "unauthenticated_user")]
+            UnauthenticatedUser,
+
             #[serde(rename = "unsupported_response_type")]
             UnsupportedResponseType,
 
