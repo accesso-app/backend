@@ -85,8 +85,9 @@ async fn main() -> std::io::Result<()> {
             .default_service(web::route().to(not_found))
             .service(
                 generated::api::AuthmenowPublicApi::new()
-                    .bind_register_request(routes::register::request::route)
+                    .bind_oauth_authorize_request(routes::oauth::authorize::route)
                     .bind_register_confirmation(routes::register::confirmation::route)
+                    .bind_register_request(routes::register::request::route)
                     .bind_session_create(routes::session::create::route)
                     .bind_session_get(routes::session::get::route),
             )

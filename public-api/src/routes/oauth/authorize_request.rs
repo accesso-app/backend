@@ -52,15 +52,6 @@ impl FromRequest for AuthPrefer {
     }
 }
 
-impl From<DieselError> for AuthorizeError {
-    fn from(error: DieselError) -> AuthorizeError {
-        match error {
-            DieselError::NotFound => AuthorizeError::ClientNotFound,
-            _ => AuthorizeError::UnexpectedError,
-        }
-    }
-}
-
 fn handle_authorize(
     query: authorize::Query,
     pool: web::Data<DbPool>,
