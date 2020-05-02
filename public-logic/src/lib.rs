@@ -3,6 +3,7 @@ extern crate validator_derive;
 
 pub mod contracts;
 pub mod models;
+pub mod oauth_authorize;
 pub mod registrator;
 pub mod session;
 
