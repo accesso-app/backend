@@ -1,3 +1,7 @@
+pub use client::*;
+
+mod client;
+
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct RegisterRequest {
     pub email: String,

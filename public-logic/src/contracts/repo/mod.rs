@@ -1,5 +1,9 @@
 use crate::models::{RegisterRequest, SessionToken, User};
 
+pub use client::*;
+
+mod client;
+
 #[cfg(test)]
 use mockall::*;
 
