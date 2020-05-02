@@ -4,6 +4,7 @@ use crate::generated::{
 };
 use actix_swagger::Answer;
 use actix_web::{dev, web, FromRequest, HttpMessage};
+use authmenow_public_logic::models;
 
 use responses::{
     OAuthAuthorizeDone as Success, OAuthAuthorizeRequestFailure as Failure,
@@ -11,29 +12,38 @@ use responses::{
 };
 
 #[derive(Debug)]
-pub struct AuthToken {
-    token: Option<String>,
+pub struct Auth {
+    user: Option<models::User>,
 }
 
-impl FromRequest for AuthToken {
+impl FromRequest for Auth {
     type Config = ();
     type Error = actix_web::Error;
     type Future = futures::future::Ready<Result<Self, Self::Error>>;
 
     #[inline]
     fn from_request(req: &actix_web::HttpRequest, _: &mut dev::Payload) -> Self::Future {
+        use authmenow_public_logic::session::Session;
+
         if let Some(cookie) = req.cookie("session-token") {
-            futures::future::ok(AuthToken {
-                token: Some(cookie.value().to_owned()),
-            })
-        } else {
-            futures::future::ok(AuthToken { token: None })
+            if let Some(app) = req.app_data::<web::Data<crate::App>>() {
+                let app = app.read().unwrap();
+
+                return match app.session_resolve(cookie.value().to_owned()) {
+                    Err(_) => futures::future::ok(Auth { user: None }),
+                    Ok(user) => futures::future::ok(Auth { user }),
+                };
+            } else {
+                eprintln!("[Auth FromRequest] cannot resolve app data");
+            }
         }
+
+        futures::future::ok(Auth { user: None })
     }
 }
 
 pub async fn route(
-    auth: AuthToken,
+    auth: Auth,
     body: web::Json<request_bodies::OAuthAuthorize>,
     app: web::Data<crate::App>,
 ) -> Answer<'static, Response> {
@@ -59,7 +69,7 @@ pub async fn route(
 
     let mut app = app.write().unwrap();
 
-    match app.oauth_request_authorize_code(auth.token.clone(), form) {
+    match app.oauth_request_authorize_code(auth.user, form) {
         Err(ServerError) => Response::BadRequest(Failure {
             error: FailureVariant::ServerError,
             redirect_uri: None,
