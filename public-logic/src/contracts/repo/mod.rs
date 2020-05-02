@@ -1,5 +1,9 @@
 use crate::models::{RegisterRequest, SessionToken, User};
 
+pub use client::*;
+
+mod client;
+
 #[cfg(test)]
 use mockall::*;
 
@@ -86,6 +90,7 @@ pub enum SessionCreateError {
 pub struct MockDb {
     pub users: MockUserRepo,
     pub requests: MockRequestsRepo,
+    pub session: MockSessionRepo,
 }
 
 #[cfg(test)]
@@ -94,6 +99,7 @@ impl MockDb {
         Self {
             users: MockUserRepo::new(),
             requests: MockRequestsRepo::new(),
+            session: MockSessionRepo::new(),
         }
     }
 }
@@ -136,5 +142,18 @@ impl RequestsRepo for MockDb {
         email: String,
     ) -> Result<usize, UnexpectedDatabaseError> {
         self.requests.register_requests_delete_all_for_email(email)
+    }
+}
+
+#[cfg(test)]
+impl SessionRepo for MockDb {
+    fn get_user_by_session_token(&self, token: String) -> Result<User, GetUserBySessionError> {
+        self.session.get_user_by_session_token(token)
+    }
+    fn session_create(
+        &mut self,
+        session: SessionToken,
+    ) -> Result<SessionToken, SessionCreateError> {
+        self.session.session_create(session)
     }
 }

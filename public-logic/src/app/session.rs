@@ -18,7 +18,6 @@ pub trait Session {
 #[derive(Debug, PartialEq, Eq, Hash)]
 pub enum SessionResolveError {
     Unexpected,
-    InvalidCookie,
 }
 
 #[derive(Debug, Validate, PartialEq, Eq, Hash)]
