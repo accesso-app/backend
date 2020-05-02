@@ -1,10 +1,14 @@
-use crate::contracts::{EmailNotification, SecureGenerator, UserRepo};
+use crate::contracts::{
+    AuthCodeRepo, ClientRepo, EmailNotification, SecureGenerator, UnexpectedDatabaseError,
+};
+use crate::models::{AuthorizationCode, User};
 use crate::App;
 use validator::Validate;
 
 pub trait OAuthAuthorize {
     fn oauth_request_authorize_code(
         &mut self,
+        actor: Option<User>,
         form: RequestAuthCode,
     ) -> Result<AuthCodeCreated, RequestAuthCodeFailed>;
 }
@@ -14,7 +18,7 @@ pub struct RequestAuthCode {
     /// Now can receive `code` only
     pub response_type: String,
 
-    pub client_id: String,
+    pub client_id: uuid::Uuid,
 
     #[validate(url)]
     pub redirect_uri: String,
@@ -40,6 +44,8 @@ pub struct AuthCodeCreated {
 
 #[derive(Debug, PartialEq, Eq, Hash)]
 pub enum RequestAuthCodeFailed {
+    Unauthenticated,
+
     /// The request is missing a required parameter, includes an invalid parameter value, or is otherwise malformed.
     InvalidRequest,
 
@@ -52,7 +58,7 @@ pub enum RequestAuthCodeFailed {
         state: Option<String>,
     },
 
-    /// When user tries to call that method without authentication
+    /// The client is not authorized to request an authorization code using this method: The redirect_URI of the service either is incorrect or not provided.
     UnauthorizedClient,
 
     /// The authorization server does not support obtaining an authorization code using this method
@@ -76,14 +82,72 @@ pub enum RequestAuthCodeFailed {
 
 impl<Db, Email, Gen> OAuthAuthorize for App<Db, Email, Gen>
 where
-    Db: UserRepo,
+    Db: ClientRepo + AuthCodeRepo,
     Gen: SecureGenerator,
     Email: EmailNotification,
 {
     fn oauth_request_authorize_code(
         &mut self,
+        actor: Option<User>,
         form: RequestAuthCode,
     ) -> Result<AuthCodeCreated, RequestAuthCodeFailed> {
-        unimplemented!()
+        let actor = actor.ok_or(RequestAuthCodeFailed::Unauthenticated)?;
+
+        form.validate()?;
+
+        let client = self
+            .db
+            .client_find_by_id(form.client_id)?
+            .ok_or(RequestAuthCodeFailed::InvalidRequest)?;
+
+        if !client.is_allowed_redirect(&form.redirect_uri) {
+            return Err(RequestAuthCodeFailed::InvalidRequest);
+        }
+
+        if !client.is_allowed_response(&form.response_type) {
+            return Err(RequestAuthCodeFailed::UnsupportedResponseType {
+                redirect_uri: form.redirect_uri.clone(),
+                state: form.state.clone(),
+            });
+        }
+
+        if !client.all_scopes_allowed(&form.scopes) {
+            return Err(RequestAuthCodeFailed::InvalidScope {
+                redirect_uri: form.redirect_uri.clone(),
+                state: form.state.clone(),
+            });
+        }
+
+        // Check if actor already authorized with client
+        // TODO: think about authorize confirmation
+
+        let code = AuthorizationCode {
+            client_id: client.id,
+            code: self.generator.generate_token(),
+            created_at: chrono::Utc::now().naive_utc(),
+            redirect_uri: form.redirect_uri.clone(),
+            scopes: form.scopes.clone(),
+            user_id: actor.id,
+        };
+
+        let created = self.db.auth_code_create(code)?;
+
+        Ok(AuthCodeCreated {
+            code: created.code,
+            redirect_uri: created.redirect_uri,
+            state: form.state.clone(),
+        })
+    }
+}
+
+impl From<validator::ValidationErrors> for RequestAuthCodeFailed {
+    fn from(_: validator::ValidationErrors) -> Self {
+        Self::InvalidRequest
+    }
+}
+
+impl From<UnexpectedDatabaseError> for RequestAuthCodeFailed {
+    fn from(_: UnexpectedDatabaseError) -> Self {
+        RequestAuthCodeFailed::ServerError
     }
 }
