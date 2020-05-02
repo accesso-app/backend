@@ -9,17 +9,14 @@ pub async fn route(
     app: web::Data<crate::App>,
     req: web::HttpRequest,
 ) -> Answer<'static, Response> {
-    use authmenow_public_logic::session::{
-        Session,
-        SessionResolveError::{InvalidCookie, Unexpected},
-    };
+    use authmenow_public_logic::session::{Session, SessionResolveError::Unexpected};
 
     let app = app.read().unwrap();
 
     if let Some(ref cookie) = req.cookie(&session_config.name) {
         match app.session_resolve(cookie.value().to_owned()) {
             Err(Unexpected) => Response::Unexpected.answer(),
-            Err(InvalidCookie) | Ok(None) => Response::Unauthorized.answer(),
+            Ok(None) => Response::Unauthorized.answer(),
             Ok(Some(user)) => Response::Ok(responses::SessionGetSuccess {
                 user: schemas::SessionUser {
                     first_name: user.first_name,
