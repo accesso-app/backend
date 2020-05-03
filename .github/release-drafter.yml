@@ -16,8 +16,6 @@ categories:
       - test
 change-template: '- $TITLE #$NUMBER (@$AUTHOR)'
 template: |
-  ## Changes
-
   $CHANGES
 
   $CONTRIBUTORS
