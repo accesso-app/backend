@@ -196,6 +196,7 @@ pub mod components {
             pub code: String,
 
             #[doc = "If the initial request contained a state parameter, the response must also include the exact value from the request. The client will be using this to associate this response with the initial request."]
+            #[serde(skip_serializing_if = "Option::is_none")]
             pub state: Option<String>,
         }
 
@@ -243,9 +244,11 @@ pub mod components {
 
             #[doc = "User should be redirected to if passed redirectUri and clientId is correct"]
             #[serde(rename = "redirectUri")]
+            #[serde(skip_serializing_if = "Option::is_none")]
             pub redirect_uri: Option<String>,
 
             #[doc = "If the initial request contained a state parameter, the response must also include the exact value from the request. The client will be using this to associate this response with the initial request."]
+            #[serde(skip_serializing_if = "Option::is_none")]
             pub state: Option<String>,
         }
     }
