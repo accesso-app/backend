@@ -19,6 +19,11 @@
 - `DATABASE_URL` — Database connection URL (`postgres://authmenow:authmenow@localhost:5432/authmenow`)
 - `LISTEN_PORT` — port to listen on
 - `LISTEN_HOST` — host to listen on
+- `SG_API_KEY` — Key from https://sendgrid.com
+- `SG_APPLICATION_HOST` — Host where frontend is runned (example: `auth-dev.atomix.team` or `localhost:3000`)
+- `SG_EMAIL_CONFIRM_URL_PREFIX` — Prefix for code (example: `/register/confirm-`). Concatenated with applicaiton host and code.
+- `SG_EMAIL_CONFIRM_TEMPLATE` — Template ID from SendGrid to send confirmation email (example: `d-eec45c55c0364140bf38172e021c8ea5`)
+- `SG_SENDER_EMAIL` — Email of sender (example: `no-reply@auth-dev.atomix.team`)
 
 ## Development
 
