@@ -20,7 +20,7 @@ RUN cargo build --release --package authmenow-$CRATE_NAME
 
 # ----------------------------------------------------------------
 
-FROM docker.pkg.github.com/authmenow/backend/start-tools:1.0
+FROM docker.pkg.github.com/authmenow/backend/start-tools:1.1
 
 ARG CRATE_NAME
 

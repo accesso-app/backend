@@ -25,5 +25,5 @@ jobs:
           snapshot: true
           registry: docker.pkg.github.com
           dockerfile: start-tools.Dockerfile
-          tags: "1.0"
-  
+          tags: "1.1"
+
