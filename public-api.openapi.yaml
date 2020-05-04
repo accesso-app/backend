@@ -303,8 +303,7 @@ components:
                 format: uri
                 example: https://example-app.com/oauth/callback
               scope:
-                description:
-                  Include one or more scope values (space-separated) to request additional levels of access.<br/>
+                description: Include one or more scope values (space-separated) to request additional levels of access.<br/>
                 type: string
                 example: "user:view user:edit"
               state:

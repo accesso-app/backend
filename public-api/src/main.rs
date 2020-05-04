@@ -25,11 +25,25 @@ async fn main() -> std::io::Result<()> {
     let connection_url = std::env::var("DATABASE_URL").expect("DATABASE_URL");
     let is_dev = std::env::var("DEV").map(|d| d != "false").unwrap_or(false);
 
+    let sg_api_key = std::env::var("SG_API_KEY").expect("SG_API_KEY");
+    let sg_application_host = std::env::var("SG_APPLICATION_HOST").expect("SG_APPLICATION_HOST");
+    let sg_email_confirm_url_prefix =
+        std::env::var("SG_EMAIL_CONFIRM_URL_PREFIX").expect("SG_EMAIL_CONFIRM_URL_PREFIX");
+    let sg_email_confirm_template =
+        std::env::var("SG_EMAIL_CONFIRM_TEMPLATE").expect("SG_EMAIL_CONFIRM_TEMPLATE");
+    let sg_sender_email = std::env::var("SG_SENDER_EMAIL").expect("SG_SENDER_EMAIL");
+
     let bind_address = format!("{host}:{port}", host = listen_host, port = listen_port);
 
     let db = services::Database::new(connection_url).expect("Failed to create database");
     let generator = services::Generator::new();
-    let emailer = services::Email::new();
+    let emailer = services::Email {
+        api_key: sg_api_key,
+        sender_email: sg_sender_email,
+        application_host: sg_application_host,
+        email_confirm_url_prefix: sg_email_confirm_url_prefix,
+        email_confirm_template: sg_email_confirm_template,
+    };
 
     let session_cookie_config = cookie::SessionCookieConfig {
         http_only: !is_dev,
