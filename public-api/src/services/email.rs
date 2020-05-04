@@ -22,66 +22,38 @@ impl EmailNotification for Email {
 
         match message {
             EmailMessage::RegisterConfirmation { code } => {
-                futures::executor::block_on(async {
-                    let client = awc::Client::default();
+                let client = awc::Client::default();
 
-                    let resp = client
-                        .post("https://api.sendgrid.com/v3/mail/send")
-                        .header("Authorization", format!("Bearer {}", self.api_key.clone()))
-                        .send_json(&sg::MailSend {
-                            subject: "Confirm registration at Authmenow".to_owned(),
-                            template_id: self.email_confirm_template.clone(),
-                            from: sg::Sender {
-                                email: self.sender_email.clone(),
-                                name: "Authmenow".to_owned(),
+                let req = client
+                    .post("https://api.sendgrid.com/v3/mail/send")
+                    .header("Authorization", format!("Bearer {}", self.api_key.clone()))
+                    .send_json(&sg::MailSend {
+                        subject: "Confirm registration at Authmenow".to_owned(),
+                        template_id: self.email_confirm_template.clone(),
+                        from: sg::Sender {
+                            email: self.sender_email.clone(),
+                            name: "Authmenow".to_owned(),
+                        },
+                        personalizations: vec![sg::Personalization {
+                            dynamic_template_data: sg::TemplateData {
+                                application_host: self.application_host.clone(),
+                                confirm_registration_url: format!(
+                                    "https://{host}{prefix}{code}",
+                                    host = self.application_host,
+                                    prefix = self.email_confirm_url_prefix,
+                                    code = code
+                                ),
                             },
-                            personalizations: vec![sg::Personalization {
-                                dynamic_template_data: sg::TemplateData {
-                                    application_host: self.application_host.clone(),
-                                    confirm_registration_url: format!(
-                                        "https://{host}{prefix}{code}",
-                                        host = self.application_host,
-                                        prefix = self.email_confirm_url_prefix,
-                                        code = code
-                                    ),
-                                },
-                                to: vec![sg::Target {
-                                    email: email.clone(),
-                                }],
+                            to: vec![sg::Target {
+                                email: email.clone(),
                             }],
-                        })
-                        .await;
+                        }],
+                    });
 
-                    println!("EMAIL REQUEST SEND — {:#?}", resp);
+                actix_rt::spawn(async {
+                    let resp = req.await;
+                    println!("Email confirmation sent {:#?}", resp);
                 });
-
-                // let client = reqwest::blocking::Client::new();
-                // let _ = client
-                //     .post("https://api.sendgrid.com/v3/mail/send")
-                //     .header(reqwest::header::AUTHORIZATION, self.api_key.clone())
-                //     .json(&sg::MailSend {
-                //         subject: "Confirm registration at Authmenow".to_owned(),
-                //         template_id: self.email_confirm_template.clone(),
-                //         from: sg::Sender {
-                //             email: self.sender_email.clone(),
-                //             name: "Authmenow".to_owned(),
-                //         },
-                //         personalizations: vec![sg::Personalization {
-                //             dynamic_template_data: sg::TemplateData {
-                //                 application_host: self.application_host.clone(),
-                //                 confirm_registration_url: format!(
-                //                     "https://{host}{prefix}{code}",
-                //                     host = self.application_host,
-                //                     prefix = self.email_confirm_url_prefix,
-                //                     code = code
-                //                 ),
-                //             },
-                //             to: vec![sg::Target {
-                //                 email: email.clone(),
-                //             }],
-                //         }],
-                //     })
-                //     .send();
             }
             _ => {}
         };
