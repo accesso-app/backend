@@ -48,8 +48,8 @@ table! {
     users (id) {
         id -> Uuid,
         email -> Varchar,
-        first_name -> Varchar,
         password_hash -> Varchar,
+        first_name -> Varchar,
         last_name -> Varchar,
     }
 }
