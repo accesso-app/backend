@@ -23,7 +23,6 @@ table! {
         id -> Uuid,
         redirect_uri -> Array<Text>,
         secret_key -> Varchar,
-        scopes -> Array<Text>,
         title -> Varchar,
     }
 }

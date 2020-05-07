@@ -179,7 +179,6 @@ struct Client {
     id: uuid::Uuid,
     redirect_uri: Vec<String>,
     secret_key: String,
-    scopes: Vec<String>,
     title: String,
 }
 
@@ -189,7 +188,6 @@ impl Into<models::Client> for Client {
             id: self.id,
             redirect_uri: self.redirect_uri,
             // secret_key: self.secret_key,
-            scopes: self.scopes,
             title: self.title,
         }
     }

@@ -2,7 +2,6 @@
 pub struct Client {
     pub id: uuid::Uuid,
     pub redirect_uri: Vec<String>,
-    pub scopes: Vec<String>,
     pub title: String,
 }
 
@@ -20,22 +19,6 @@ impl Client {
             .iter()
             .find(|uri| *uri == redirect_uri)
             .is_some()
-    }
-
-    /// Check that scopes is exists in application
-    /// https://www.oauth.com/oauth2-servers/scope/
-    pub fn all_scopes_allowed(&self, scopes: &Vec<String>) -> bool {
-        if scopes.is_empty() {
-            true
-        } else {
-            for scope in scopes {
-                if let None = self.scopes.iter().find(|exists| *exists == scope) {
-                    return false;
-                }
-            }
-
-            true
-        }
     }
 }
 

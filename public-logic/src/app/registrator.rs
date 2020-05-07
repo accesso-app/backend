@@ -195,8 +195,8 @@ impl CreateRegisterRequest {
 mod tests {
     use super::*;
     use crate::contracts::*;
-    use crate::models::*;
-    use insta::assert_snapshot;
+    // use crate::models::*;
+    // use insta::assert_snapshot;
 
     fn mock_app() -> crate::App<MockDb, MockEmailNotification, MockSecureGenerator> {
         crate::App {
