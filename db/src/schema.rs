@@ -4,6 +4,7 @@ table! {
         created_at -> Timestamptz,
         token -> Varchar,
         user_id -> Uuid,
+        scopes -> Array<Text>,
     }
 }
 
