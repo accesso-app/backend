@@ -283,8 +283,8 @@ impl Into<models::RegisterRequest> for RegistrationRequest {
 struct User {
     pub id: uuid::Uuid,
     pub email: String,
-    pub first_name: String,
     pub password_hash: String,
+    pub first_name: String,
     pub last_name: String,
 }
 
@@ -293,9 +293,9 @@ impl Into<models::User> for User {
         models::User {
             id: self.id,
             email: self.email,
+            password_hash: self.password_hash,
             first_name: self.first_name,
             last_name: self.last_name,
-            password_hash: self.password_hash,
         }
     }
 }
