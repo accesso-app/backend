@@ -32,6 +32,10 @@ paths:
       responses:
         201:
           $ref: "#/components/responses/OAuthAccessTokenCreated"
+        400:
+          $ref: "#/components/responses/OAuthAccessTokenFailure"
+        500:
+          description: Something goes wrong
 
   "/register/request":
     post:
@@ -187,6 +191,25 @@ components:
                 type: integer
                 format: int32
                 description: UTC Unix TimeStamp when the access token expires
+
+    OAuthAccessTokenFailure:
+      description: When you can't exchange authorization code to access token
+      content:
+        application/json:
+          schema:
+            required:
+              - error
+            properties:
+              error:
+                type: string
+                enum:
+                  - invalid_request
+                  - invalid_client
+                  - invalid_grant
+                  - invalid_scope
+                  - unauthorized_client
+                  - unsupported_grant_type
+
 
     RegistrationRequestCreated:
       description: Registration link sent to email, now user can find out when the link expires

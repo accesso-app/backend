@@ -38,6 +38,18 @@ pub mod api {
             self
         }
 
+        pub fn bind_oauth_token<F, T, R>(mut self, handler: F) -> Self
+        where
+            F: Factory<T, R, Answer<'static, super::paths::oauth_token::Response>>,
+            T: FromRequest + 'static,
+            R: Future<Output = Answer<'static, super::paths::oauth_token::Response>> + 'static,
+        {
+            self.api = self
+                .api
+                .bind("/oauth/token".to_owned(), Method::POST, handler);
+            self
+        }
+
         pub fn bind_register_request<F, T, R>(mut self, handler: F) -> Self
         where
             F: Factory<T, R, Answer<'static, super::paths::register_request::Response>>,
@@ -250,6 +262,50 @@ pub mod components {
             #[doc = "If the initial request contained a state parameter, the response must also include the exact value from the request. The client will be using this to associate this response with the initial request."]
             #[serde(skip_serializing_if = "Option::is_none")]
             pub state: Option<String>,
+        }
+
+        /// The auth services validated the request and responds with an access token
+        /// [OAuth2 Example Flow](https://www.oauth.com/oauth2-servers/server-side-apps/example-flow/)
+        #[derive(Debug, Serialize)]
+        pub struct OAuthAccessTokenCreated {
+            pub access_token: String,
+            pub token_type: OAuthAccessTokenCreatedTokenType,
+
+            /// UTC Unix TimeStamp when the access token expires
+            pub expires: i32,
+        }
+
+        #[derive(Debug, Serialize)]
+        pub enum OAuthAccessTokenCreatedTokenType {
+            #[serde(rename = "bearer")]
+            Bearer,
+        }
+
+        /// When you can't exchange authorization code to access token
+        #[derive(Debug, Serialize)]
+        pub struct OAuthAccessTokenFailure {
+            pub error: OAuthAccessTokenFailureError,
+        }
+
+        #[derive(Debug, Serialize)]
+        pub enum OAuthAccessTokenFailureError {
+            #[serde(rename = "invalid_request")]
+            InvalidRequest,
+
+            #[serde(rename = "invalid_client")]
+            InvalidClient,
+
+            #[serde(rename = "invalid_grant")]
+            InvalidGrant,
+
+            #[serde(rename = "invalid_scope")]
+            InvalidScope,
+
+            #[serde(rename = "unauthorized_client")]
+            UnauthorizedClient,
+
+            #[serde(rename = "unsupported_grant_type")]
+            UnsupportedGrantType,
         }
     }
 
@@ -500,6 +556,40 @@ pub mod paths {
 
                 let content_type = match self {
                     Self::Ok(_) => Some(ContentType::Json),
+                    Self::BadRequest(_) => Some(ContentType::Json),
+                    Self::InternalServerError => None,
+                };
+
+                Answer::new(self).content_type(content_type).status(status)
+            }
+        }
+    }
+
+    pub mod oauth_token {
+        use super::responses;
+        use actix_swagger::{Answer, ContentType};
+        use actix_web::http::StatusCode;
+        use serde::Serialize;
+
+        #[derive(Debug, Serialize)]
+        #[serde(untagged)]
+        pub enum Response {
+            Created(responses::OAuthAccessTokenCreated),
+            BadRequest(responses::OAuthAccessTokenFailure),
+            InternalServerError,
+        }
+
+        impl Response {
+            #[inline]
+            pub fn answer<'a>(self) -> Answer<'a, Self> {
+                let status = match self {
+                    Self::Created(_) => StatusCode::OK,
+                    Self::BadRequest(_) => StatusCode::BAD_REQUEST,
+                    Self::InternalServerError => StatusCode::INTERNAL_SERVER_ERROR,
+                };
+
+                let content_type = match self {
+                    Self::Created(_) => Some(ContentType::Json),
                     Self::BadRequest(_) => Some(ContentType::Json),
                     Self::InternalServerError => None,
                 };
