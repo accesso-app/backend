@@ -35,6 +35,12 @@ async fn main() -> std::io::Result<()> {
 
     let bind_address = format!("{host}:{port}", host = listen_host, port = listen_port);
 
+    if is_dev {
+        println!("==> public-api runned in DEVELOPMENT MODE");
+    } else {
+        println!("==> PRODUCTION MODE in public-api");
+    }
+
     let db = services::Database::new(connection_url).expect("Failed to create database");
     let generator = services::Generator::new();
     let emailer = services::Email {
