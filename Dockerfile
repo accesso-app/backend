@@ -1,4 +1,4 @@
-FROM docker.pkg.github.com/authmenow/backend/builder:1.43 as build
+FROM docker.pkg.github.com/accesso-app/backend/builder:1.43 as build
 
 ENV USER="root"
 WORKDIR /app
@@ -14,13 +14,13 @@ COPY ./public-logic ./public-logic
 
 ARG CRATE_NAME
 
-RUN cargo test --release --verbose --package authmenow-$CRATE_NAME
+RUN cargo test --release --verbose --package accesso-$CRATE_NAME
 
-RUN cargo build --release --package authmenow-$CRATE_NAME
+RUN cargo build --release --package accesso-$CRATE_NAME
 
 # ----------------------------------------------------------------
 
-FROM docker.pkg.github.com/authmenow/backend/start-tools:1.1
+FROM docker.pkg.github.com/accesso-app/backend/start-tools:1.1
 
 ARG CRATE_NAME
 
@@ -29,7 +29,7 @@ WORKDIR /app
 RUN touch .env
 
 COPY --from=build /out/diesel /bin/
-COPY --from=build /app/target/release/authmenow-$CRATE_NAME ./server
+COPY --from=build /app/target/release/accesso-$CRATE_NAME ./server
 
 COPY --from=build /app/migrations ./migrations
 COPY --from=build /app/diesel.toml ./
