@@ -6,7 +6,7 @@ use handler::{not_found, AnswerFailure, FailureCode};
 use std::sync::RwLock;
 
 pub type App =
-    RwLock<authmenow_public_logic::App<services::Database, services::Email, services::Generator>>;
+    RwLock<accesso_public_logic::App<services::Database, services::Email, services::Generator>>;
 
 mod cookie;
 mod generated;
@@ -58,7 +58,7 @@ async fn main() -> std::io::Result<()> {
         name: "session-token".to_owned(),
     };
 
-    let app = authmenow_public_logic::App {
+    let app = accesso_public_logic::App {
         db,
         emailer,
         generator,
@@ -104,7 +104,7 @@ async fn main() -> std::io::Result<()> {
             .service(health::service())
             .default_service(web::route().to(not_found))
             .service(
-                generated::api::AuthmenowPublicApi::new()
+                generated::api::AccessoPublicApi::new()
                     .bind_oauth_authorize_request(routes::oauth::authorize::route)
                     .bind_register_confirmation(routes::register::confirmation::route)
                     .bind_register_request(routes::register::request::route)

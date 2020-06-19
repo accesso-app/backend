@@ -1,4 +1,4 @@
-use authmenow_public_logic::contracts::SecureGenerator;
+use accesso_public_logic::contracts::SecureGenerator;
 
 lazy_static::lazy_static! {
     static ref WORDS: Vec<&'static str> = {
@@ -10,7 +10,7 @@ lazy_static::lazy_static! {
 #[derive(Clone)]
 pub struct Generator {}
 
-static HARDCODED_SALT: &'static str = "AUTHMENOW_SALT";
+static HARDCODED_SALT: &'static str = "ACCESSO_SALT";
 const TOKEN_LENGTH: u8 = 28;
 
 impl Generator {

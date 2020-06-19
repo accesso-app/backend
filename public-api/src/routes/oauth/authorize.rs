@@ -4,7 +4,7 @@ use crate::generated::{
 };
 use actix_swagger::Answer;
 use actix_web::{dev, web, FromRequest, HttpMessage};
-use authmenow_public_logic::models;
+use accesso_public_logic::models;
 
 use responses::{
     OAuthAuthorizeDone as Success, OAuthAuthorizeRequestFailure as Failure,
@@ -23,7 +23,7 @@ impl FromRequest for Auth {
 
     #[inline]
     fn from_request(req: &actix_web::HttpRequest, _: &mut dev::Payload) -> Self::Future {
-        use authmenow_public_logic::app::session::Session;
+        use accesso_public_logic::app::session::Session;
 
         if let Some(cookie) = req.cookie("session-token") {
             if let Some(app) = req.app_data::<web::Data<crate::App>>() {
@@ -47,7 +47,7 @@ pub async fn route(
     body: web::Json<request_bodies::OAuthAuthorize>,
     app: web::Data<crate::App>,
 ) -> Answer<'static, Response> {
-    use authmenow_public_logic::app::oauth::authorize::{
+    use accesso_public_logic::app::oauth::authorize::{
         OAuthAuthorize, RequestAuthCode,
         RequestAuthCodeFailed::{
             AccessDenied, InvalidRequest, InvalidScope, ServerError, TemporarilyUnavailable,

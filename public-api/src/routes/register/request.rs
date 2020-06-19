@@ -7,7 +7,7 @@ pub async fn route(
     body: web::Json<request_bodies::Register>,
     app: web::Data<crate::App>,
 ) -> Answer<'static, register_request::Response> {
-    use authmenow_public_logic::app::registrator::{
+    use accesso_public_logic::app::registrator::{
         CreateRegisterRequest,
         RegisterRequestError::{EmailAlreadyRegistered, InvalidForm, Unexpected},
         Registrator,
