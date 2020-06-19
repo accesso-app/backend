@@ -1,6 +1,6 @@
 openapi: 3.0.1
 info:
-  title: Authmenow Public API.
+  title: Accesso App Public API.
   version: 0.2.0
   description: Public API for frontend and OAuth applications [Review Github](https://developer.github.com/apps/building-oauth-apps/authorizing-oauth-apps/)
 servers:
