@@ -7,15 +7,15 @@
     {
       "type": "lldb",
       "request": "launch",
-      "name": "Debug executable 'authmenow-public-api'",
+      "name": "Debug executable 'accesso-public-api'",
       "cargo": {
         "args": [
           "build",
-          "--bin=authmenow-public-api",
-          "--package=authmenow-public-api"
+          "--bin=accesso-public-api",
+          "--package=accesso-public-api"
         ],
         "filter": {
-          "name": "authmenow-public-api",
+          "name": "accesso-public-api",
           "kind": "bin"
         }
       },
@@ -25,16 +25,16 @@
     {
       "type": "lldb",
       "request": "launch",
-      "name": "Debug unit tests in executable 'authmenow-public-api'",
+      "name": "Debug unit tests in executable 'accesso-public-api'",
       "cargo": {
         "args": [
           "test",
           "--no-run",
-          "--bin=authmenow-public-api",
-          "--package=authmenow-public-api"
+          "--bin=accesso-public-api",
+          "--package=accesso-public-api"
         ],
         "filter": {
-          "name": "authmenow-public-api",
+          "name": "accesso-public-api",
           "kind": "bin"
         }
       },
@@ -44,11 +44,11 @@
     {
       "type": "lldb",
       "request": "launch",
-      "name": "Debug unit tests in library 'authmenow-db'",
+      "name": "Debug unit tests in library 'accesso-db'",
       "cargo": {
-        "args": ["test", "--no-run", "--lib", "--package=authmenow-db"],
+        "args": ["test", "--no-run", "--lib", "--package=accesso-db"],
         "filter": {
-          "name": "authmenow-db",
+          "name": "accesso-db",
           "kind": "lib"
         }
       },
@@ -58,16 +58,16 @@
     {
       "type": "lldb",
       "request": "launch",
-      "name": "Debug unit tests in library 'authmenow-public-logic'",
+      "name": "Debug unit tests in library 'accesso-public-logic'",
       "cargo": {
         "args": [
           "test",
           "--no-run",
           "--lib",
-          "--package=authmenow-public-logic"
+          "--package=accesso-public-logic"
         ],
         "filter": {
-          "name": "authmenow-public-logic",
+          "name": "accesso-public-logic",
           "kind": "lib"
         }
       },

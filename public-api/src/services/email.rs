@@ -1,4 +1,4 @@
-use authmenow_public_logic::contracts::{EmailMessage, EmailNotification};
+use accesso_public_logic::contracts::{EmailMessage, EmailNotification};
 
 #[derive(Clone)]
 pub struct Email {
@@ -28,11 +28,11 @@ impl EmailNotification for Email {
                     .post("https://api.sendgrid.com/v3/mail/send")
                     .header("Authorization", format!("Bearer {}", self.api_key.clone()))
                     .send_json(&sg::MailSend {
-                        subject: "Confirm registration at Authmenow".to_owned(),
+                        subject: "Confirm registration at Accesso".to_owned(),
                         template_id: self.email_confirm_template.clone(),
                         from: sg::Sender {
                             email: self.sender_email.clone(),
-                            name: "Authmenow".to_owned(),
+                            name: "Accesso".to_owned(),
                         },
                         personalizations: vec![sg::Personalization {
                             dynamic_template_data: sg::TemplateData {

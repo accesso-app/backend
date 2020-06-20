@@ -1,6 +1,6 @@
 openapi: 3.0.1
 info:
-  title: Authmenow Public API.
+  title: Accesso App Public API.
   version: 0.1.0
   description: Public API for frontend and OAuth applications
 servers:
@@ -71,7 +71,7 @@ components:
     cookieAuth:
       type: apiKey
       in: cookie
-      name: authmenowUser
+      name: accessoUser
 
   parameters:
     CsrfToken:
@@ -86,12 +86,12 @@ components:
     AuthCookie:
       schema:
         type: string
-        example: authmenowUser=hDxrvkba5yx3eAMDr5; Path=/; HttpOnly; Secure
+        example: accessoUser=hDxrvkba5yx3eAMDr5; Path=/; HttpOnly; Secure
 
     DeleteAuthCookie:
       schema:
         type: string
-        example: "authmenowUser="
+        example: "accessoUser="
 
     SetCsrfToken:
       schema:
@@ -148,7 +148,7 @@ components:
 
   responses:
     UserAuthenticated:
-      description: User authenticated in Authmenow
+      description: User authenticated in Accesso
       headers:
         Set-Cookie:
           $ref: "#/components/headers/SetCsrfToken"

@@ -8,23 +8,23 @@ pub mod api {
     };
     use std::future::Future;
 
-    pub struct AuthmenowPublicApi {
+    pub struct AccessoPublicApi {
         api: Api,
     }
 
-    impl AuthmenowPublicApi {
+    impl AccessoPublicApi {
         pub fn new() -> Self {
-            AuthmenowPublicApi { api: Api::new() }
+            AccessoPublicApi { api: Api::new() }
         }
     }
 
-    impl HttpServiceFactory for AuthmenowPublicApi {
+    impl HttpServiceFactory for AccessoPublicApi {
         fn register(self, config: &mut AppService) {
             self.api.register(config);
         }
     }
 
-    impl AuthmenowPublicApi {
+    impl AccessoPublicApi {
         pub fn bind_oauth_authorize_request<F, T, R>(mut self, handler: F) -> Self
         where
             F: Factory<T, R, Answer<'static, super::paths::oauth_authorize_request::Response>>,
@@ -88,9 +88,9 @@ pub mod api {
         }
     }
 
-    impl Default for AuthmenowPublicApi {
+    impl Default for AccessoPublicApi {
         fn default() -> Self {
-            let api = AuthmenowPublicApi::new();
+            let api = AccessoPublicApi::new();
             // add default handlers to response 501, if handler not binded
             api
         }
@@ -103,7 +103,7 @@ pub mod components {
     pub mod responses {
         use serde::{Deserialize, Serialize};
 
-        /// User authenticated in Authmenow
+        /// User authenticated in Accesso
         #[derive(Debug, Serialize, Deserialize)]
         pub struct UserAuthenticated {
             pub username: Option<String>,

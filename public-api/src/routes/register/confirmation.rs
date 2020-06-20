@@ -10,7 +10,7 @@ pub async fn route(
     body: web::Json<request_bodies::RegisterConfirmation>,
     app: web::Data<crate::App>,
 ) -> Answer<'static, confirm::Response> {
-    use authmenow_public_logic::app::registrator::{
+    use accesso_public_logic::app::registrator::{
         RegisterConfirmError::{AlreadyActivated, CodeNotFound, InvalidForm, Unexpected},
         RegisterForm, Registrator,
     };

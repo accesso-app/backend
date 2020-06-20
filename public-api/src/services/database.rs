@@ -1,5 +1,5 @@
-use authmenow_db::schema::*;
-use authmenow_public_logic::{
+use accesso_db::schema::*;
+use accesso_public_logic::{
     contracts::{
         AuthCodeRepo, ClientRepo, GetUserBySessionError, RegisterUserError, RequestsRepo,
         SaveRegisterRequestError, SessionCreateError, SessionRepo, UnexpectedDatabaseError,

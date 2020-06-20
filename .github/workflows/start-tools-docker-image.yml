@@ -19,7 +19,7 @@ jobs:
       - name: Publish Docker
         uses: elgohr/Publish-Docker-Github-Action@2.12
         with:
-          name: authmenow/backend/start-tools
+          name: accesso-app/backend/start-tools
           username: sergeysova
           password: ${{ secrets.GITHUB_TOKEN }}
           snapshot: true
