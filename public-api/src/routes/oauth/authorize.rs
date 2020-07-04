@@ -2,9 +2,9 @@ use crate::generated::{
     components::{request_bodies, responses},
     paths::oauth_authorize_request::Response,
 };
+use accesso_public_logic::models;
 use actix_swagger::Answer;
 use actix_web::{dev, web, FromRequest, HttpMessage};
-use accesso_public_logic::models;
 
 use responses::{
     OAuthAuthorizeDone as Success, OAuthAuthorizeRequestFailure as Failure,

@@ -374,6 +374,21 @@ pub mod components {
             /// This will ensure an attacker can’t intercept the authorization flow.
             pub state: Option<String>,
         }
+
+        #[derive(Debug, Serialize, Deserialize)]
+        pub enum OAuthAccessTokenExchangeGrantType {
+            #[serde(rename = "authorization_code")]
+            AuthorizationCode,
+        }
+
+        #[derive(Debug, Serialize, Deserialize)]
+        pub struct OAuthAccessTokenExchange {
+            pub grant_type: OAuthAccessTokenExchangeGrantType,
+            pub code: String,
+            pub redirect_uri: String,
+            pub client_id: String,
+            pub client_secret: String,
+        }
     }
 
     pub mod schemas {
