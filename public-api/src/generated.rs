@@ -272,7 +272,7 @@ pub mod components {
             pub token_type: OAuthAccessTokenCreatedTokenType,
 
             /// UTC Unix TimeStamp when the access token expires
-            pub expires: i32,
+            pub expires: i64,
         }
 
         #[derive(Debug, Serialize)]
@@ -386,7 +386,7 @@ pub mod components {
             pub grant_type: OAuthAccessTokenExchangeGrantType,
             pub code: String,
             pub redirect_uri: String,
-            pub client_id: String,
+            pub client_id: uuid::Uuid,
             pub client_secret: String,
         }
     }

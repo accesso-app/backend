@@ -1,9 +1,9 @@
 use accesso_db::schema::*;
 use accesso_public_logic::{
     contracts::{
-        AuthCodeRepo, ClientRepo, GetUserBySessionError, RegisterUserError, RequestsRepo,
-        SaveRegisterRequestError, SessionCreateError, SessionRepo, UnexpectedDatabaseError,
-        UserCredentials, UserRegisterForm, UserRepo,
+        AccessTokenRepo, AuthCodeRepo, ClientRepo, GetUserBySessionError, RegisterUserError,
+        RequestsRepo, SaveRegisterRequestError, SessionCreateError, SessionRepo,
+        UnexpectedDatabaseError, UserCredentials, UserRegisterForm, UserRepo,
     },
     models,
 };
@@ -325,6 +325,8 @@ impl Into<models::SessionToken> for SessionToken {
         }
     }
 }
+
+impl AccessTokenRepo for Database {}
 
 fn diesel_error_to_unexpected(error: diesel::result::Error) -> UnexpectedDatabaseError {
     log::error!(target: "services/database", "UNEXPECTED {:?}", error);
