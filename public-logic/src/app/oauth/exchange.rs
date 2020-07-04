@@ -2,14 +2,12 @@ use crate::contracts::{
     AccessTokenRepo, AuthCodeRepo, ClientRepo, EmailNotification, SecureGenerator,
     UnexpectedDatabaseError,
 };
-use crate::models::User;
 use crate::App;
 use validator::Validate;
 
 pub trait OAuthExchange {
     fn oauth_exchange_access_token(
         &mut self,
-        actor: Option<User>,
         form: ExchangeAccessTokenForm,
     ) -> Result<AccessTokenCreated, ExchangeFailed>;
 }
@@ -71,7 +69,6 @@ where
 {
     fn oauth_exchange_access_token(
         &mut self,
-        actor: Option<User>,
         form: ExchangeAccessTokenForm,
     ) -> Result<AccessTokenCreated, ExchangeFailed> {
         Err(ExchangeFailed::Unexpected)
