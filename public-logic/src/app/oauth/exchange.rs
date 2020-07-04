@@ -1,5 +1,6 @@
 use crate::contracts::{
-    AuthCodeRepo, ClientRepo, EmailNotification, SecureGenerator, UnexpectedDatabaseError,
+    AccessTokenRepo, AuthCodeRepo, ClientRepo, EmailNotification, SecureGenerator,
+    UnexpectedDatabaseError,
 };
 use crate::models::User;
 use crate::App;
@@ -29,7 +30,9 @@ pub struct ExchangeAccessTokenForm {
     /// If the redirect URL was included in the initial authorization request,<br/>
     /// it must be included in the token request as well, and must be identical.<br/>
     /// Some services support registering multiple redirect URLs, and some require the redirect URL to be specified on each request.<br/>
-    #[validate(email)]
+    /// The redirect URI in the token request must be an exact match of the redirect URI that was used when generating the authorization code.<br/>
+    /// The service must reject the request otherwise.
+    #[validate(url)]
     pub redirect_uri: String,
 
     pub client_id: uuid::Uuid,
@@ -57,4 +60,20 @@ pub enum ExchangeFailed {
     // UnsupportedGrantType,
     InvalidScope,
     Unauthorized,
+    Unexpected,
+}
+
+impl<Db, EMail, Gen> OAuthExchange for App<Db, EMail, Gen>
+where
+    Db: AuthCodeRepo + ClientRepo + AccessTokenRepo,
+    Gen: SecureGenerator,
+    EMail: EmailNotification,
+{
+    fn oauth_exchange_access_token(
+        &mut self,
+        actor: Option<User>,
+        form: ExchangeAccessTokenForm,
+    ) -> Result<AccessTokenCreated, ExchangeFailed> {
+        Err(ExchangeFailed::Unexpected)
+    }
 }

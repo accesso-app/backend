@@ -17,3 +17,6 @@ pub trait AuthCodeRepo {
         code: AuthorizationCode,
     ) -> Result<AuthorizationCode, UnexpectedDatabaseError>;
 }
+
+#[cfg_attr(test, automock)]
+pub trait AccessTokenRepo {}
