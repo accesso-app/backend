@@ -187,7 +187,7 @@ impl Into<models::Client> for Client {
         models::Client {
             id: self.id,
             redirect_uri: self.redirect_uri,
-            // secret_key: self.secret_key,
+            secret_key: self.secret_key,
             title: self.title,
         }
     }
@@ -205,6 +205,13 @@ impl AuthCodeRepo for Database {
             .get_result::<AuthorizationCode>(&conn)
             .map(Into::into)
             .map_err(diesel_error_to_unexpected)
+    }
+
+    fn auth_code_read(
+        &self,
+        _code: String,
+    ) -> Result<Option<models::AuthorizationCode>, UnexpectedDatabaseError> {
+        unimplemented!()
     }
 }
 

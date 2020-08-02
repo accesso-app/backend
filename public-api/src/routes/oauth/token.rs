@@ -16,7 +16,7 @@ pub async fn route(
 ) -> Answer<'static, Response> {
     use accesso_public_logic::app::oauth::exchange::{
         ExchangeAccessTokenForm,
-        ExchangeFailed::{InvalidClient, InvalidScope, Unauthorized, Unexpected},
+        ExchangeFailed::{InvalidClient, InvalidRequest, InvalidScope, Unauthorized, Unexpected},
         GrantType, OAuthExchange, TokenType,
     };
 
@@ -37,7 +37,9 @@ pub async fn route(
     let mut app = app.write().unwrap();
 
     match app.oauth_exchange_access_token(form) {
-        // FailureError::InvalidRequest?
+        Err(InvalidRequest) => Response::BadRequest(Failure {
+            error: FailureError::InvalidRequest,
+        }),
         Err(InvalidClient) => Response::BadRequest(Failure {
             error: FailureError::InvalidClient,
         }),

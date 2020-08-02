@@ -9,6 +9,7 @@ pub trait SecureGenerator {
     }
 
     fn generate_token(&self) -> String;
+    fn generate_token_long(&self) -> String;
 
     fn password_hash(&self, password: String) -> String;
 }
