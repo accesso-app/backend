@@ -2,8 +2,8 @@
 pub struct Client {
     pub id: uuid::Uuid,
     pub redirect_uri: Vec<String>,
-    pub scopes: Vec<String>,
     pub title: String,
+    pub secret_key: String,
 }
 
 impl Client {
@@ -22,20 +22,13 @@ impl Client {
             .is_some()
     }
 
-    /// Check that scopes is exists in application
-    /// https://www.oauth.com/oauth2-servers/scope/
-    pub fn all_scopes_allowed(&self, scopes: &Vec<String>) -> bool {
-        if scopes.is_empty() {
-            true
-        } else {
-            for scope in scopes {
-                if let None = self.scopes.iter().find(|exists| *exists == scope) {
-                    return false;
-                }
-            }
+    /// https://www.oauth.com/oauth2-servers/access-tokens/authorization-code-request/
+    pub fn is_allowed_secret(&self, id: &uuid::Uuid, secret: &str) -> bool {
+        self.id == *id && self.secret_key == secret
+    }
 
-            true
-        }
+    pub fn is_enabled(&self) -> bool {
+        true
     }
 }
 
@@ -47,4 +40,22 @@ pub struct AuthorizationCode {
     pub redirect_uri: String,
     pub scopes: Vec<String>,
     pub user_id: uuid::Uuid,
+}
+
+impl AuthorizationCode {
+    /// https://www.oauth.com/oauth2-servers/access-tokens/authorization-code-request/
+    pub fn is_redirect_same(&self, redirect_uri: &str) -> bool {
+        self.redirect_uri == redirect_uri
+    }
+
+    pub fn is_code_correct(&self, code: &str) -> bool {
+        self.code == code
+    }
+
+    pub fn is_expired(&self) -> bool {
+        let lifetime = time::Duration::minutes(15);
+        let now = chrono::Utc::now().naive_utc();
+
+        (self.created_at + lifetime) > now
+    }
 }

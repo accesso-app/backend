@@ -4,6 +4,7 @@ table! {
         created_at -> Timestamptz,
         token -> Varchar,
         user_id -> Uuid,
+        scopes -> Array<Text>,
     }
 }
 
@@ -23,7 +24,6 @@ table! {
         id -> Uuid,
         redirect_uri -> Array<Text>,
         secret_key -> Varchar,
-        scopes -> Array<Text>,
         title -> Varchar,
     }
 }

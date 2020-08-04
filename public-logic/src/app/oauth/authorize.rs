@@ -111,13 +111,6 @@ where
             });
         }
 
-        if !client.all_scopes_allowed(&form.scopes) {
-            return Err(RequestAuthCodeFailed::InvalidScope {
-                redirect_uri: form.redirect_uri.clone(),
-                state: form.state.clone(),
-            });
-        }
-
         // Check if actor already authorized with client
         // TODO: think about authorize confirmation
 
