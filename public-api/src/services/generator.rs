@@ -12,6 +12,7 @@ pub struct Generator {}
 
 static HARDCODED_SALT: &'static str = "ACCESSO_SALT";
 const TOKEN_LENGTH: u8 = 28;
+const TOKEN_LONG_LENGTH: usize = 52;
 
 impl Generator {
     pub fn new() -> Self {
@@ -30,6 +31,10 @@ impl SecureGenerator for Generator {
 
     fn generate_token(&self) -> String {
         random_string(TOKEN_LENGTH as usize)
+    }
+
+    fn generate_token_long(&self) -> String {
+        random_string(TOKEN_LONG_LENGTH)
     }
 }
 

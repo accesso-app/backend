@@ -16,7 +16,10 @@ pub async fn route(
 ) -> Answer<'static, Response> {
     use accesso_public_logic::app::oauth::exchange::{
         ExchangeAccessTokenForm,
-        ExchangeFailed::{InvalidClient, InvalidRequest, InvalidScope, Unauthorized, Unexpected},
+        ExchangeFailed::{
+            InvalidClient, InvalidGrant, InvalidRequest, InvalidScope, UnauthorizedClient,
+            Unexpected,
+        },
         GrantType, OAuthExchange, TokenType,
     };
 
@@ -43,11 +46,13 @@ pub async fn route(
         Err(InvalidClient) => Response::BadRequest(Failure {
             error: FailureError::InvalidClient,
         }),
-        // FailureError::InvalidGrant?
+        Err(InvalidGrant) => Response::BadRequest(Failure {
+            error: FailureError::InvalidGrant,
+        }),
         Err(InvalidScope) => Response::BadRequest(Failure {
             error: FailureError::InvalidScope,
         }),
-        Err(Unauthorized) => Response::BadRequest(Failure {
+        Err(UnauthorizedClient) => Response::BadRequest(Failure {
             error: FailureError::UnauthorizedClient,
         }),
         // FailureError::UnsupportedGrantType?
@@ -55,7 +60,7 @@ pub async fn route(
 
         Ok(created) => Response::Created(Created {
             access_token: created.access_token,
-            expires: created.expires.timestamp(),
+            expires_in: created.expires_in.timestamp(),
             token_type: match created.token_type {
                 TokenType::Bearer => responses::OAuthAccessTokenCreatedTokenType::Bearer,
             },

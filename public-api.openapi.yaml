@@ -187,7 +187,7 @@ components:
               token_type:
                 type: string
                 enum: [bearer]
-              expires:
+              expires_in:
                 type: integer
                 format: int32
                 description: UTC Unix TimeStamp when the access token expires

@@ -272,7 +272,7 @@ pub mod components {
             pub token_type: OAuthAccessTokenCreatedTokenType,
 
             /// UTC Unix TimeStamp when the access token expires
-            pub expires: i64,
+            pub expires_in: i64,
         }
 
         #[derive(Debug, Serialize)]

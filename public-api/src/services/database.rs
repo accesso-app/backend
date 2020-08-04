@@ -209,9 +209,31 @@ impl AuthCodeRepo for Database {
 
     fn auth_code_read(
         &self,
-        _code: String,
+        code: String,
     ) -> Result<Option<models::AuthorizationCode>, UnexpectedDatabaseError> {
-        unimplemented!()
+        let conn = self.conn();
+
+        authorization_codes::table
+            .filter(authorization_codes::code.eq(code))
+            .get_result::<AuthorizationCode>(&conn)
+            .map(Into::into)
+            .optional()
+            .map_err(diesel_error_to_unexpected)
+    }
+}
+
+impl AccessTokenRepo for Database {
+    fn access_token_create(
+        &self,
+        token: models::AccessToken,
+    ) -> Result<models::AccessToken, UnexpectedDatabaseError> {
+        let conn = self.conn();
+
+        diesel::insert_into(access_tokens::table)
+            .values(AccessToken::from(token))
+            .get_result::<AccessToken>(&conn)
+            .map(Into::into)
+            .map_err(diesel_error_to_unexpected)
     }
 }
 
@@ -333,7 +355,39 @@ impl Into<models::SessionToken> for SessionToken {
     }
 }
 
-impl AccessTokenRepo for Database {}
+#[derive(Identifiable, Insertable, Queryable)]
+#[primary_key(token)]
+pub struct AccessToken {
+    pub client_id: uuid::Uuid,
+    pub created_at: chrono::NaiveDateTime,
+    pub token: String,
+    pub user_id: uuid::Uuid,
+    pub scopes: Vec<String>,
+}
+
+impl From<models::AccessToken> for AccessToken {
+    fn from(token: models::AccessToken) -> Self {
+        Self {
+            client_id: token.client_id,
+            created_at: token.created_at,
+            token: token.token,
+            user_id: token.user_id,
+            scopes: token.scopes,
+        }
+    }
+}
+
+impl Into<models::AccessToken> for AccessToken {
+    fn into(self) -> models::AccessToken {
+        models::AccessToken {
+            client_id: self.client_id,
+            created_at: self.created_at,
+            token: self.token,
+            user_id: self.user_id,
+            scopes: self.scopes,
+        }
+    }
+}
 
 fn diesel_error_to_unexpected(error: diesel::result::Error) -> UnexpectedDatabaseError {
     log::error!(target: "services/database", "UNEXPECTED {:?}", error);
