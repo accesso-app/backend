@@ -1,4 +1,4 @@
-FROM docker.pkg.github.com/accesso-app/backend/builder:1.43 as build
+FROM docker.pkg.github.com/accesso-app/backend/builder:1.45.2 as build
 
 ENV USER="root"
 WORKDIR /app
