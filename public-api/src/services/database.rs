@@ -144,6 +144,22 @@ impl SessionRepo for Database {
             .map_err(diesel_error_to_get_user_by_session_error)
     }
 
+    fn get_user_by_access_token(
+        &self,
+        token: String,
+    ) -> Result<models::User, GetUserBySessionError> {
+        let conn = self.conn();
+
+        users::table
+            .inner_join(access_tokens::table)
+            .select(users::all_columns)
+            .filter(access_tokens::token.eq(token))
+            .filter(access_tokens::expires_at.gt(chrono::Utc::now().naive_utc()))
+            .first::<User>(&conn)
+            .map(Into::into)
+            .map_err(diesel_error_to_get_user_by_session_error)
+    }
+
     fn session_create(
         &mut self,
         session: models::SessionToken,
@@ -359,20 +375,20 @@ impl Into<models::SessionToken> for SessionToken {
 #[primary_key(token)]
 pub struct AccessToken {
     pub client_id: uuid::Uuid,
-    pub created_at: chrono::NaiveDateTime,
     pub token: String,
     pub user_id: uuid::Uuid,
     pub scopes: Vec<String>,
+    pub expires_at: chrono::NaiveDateTime,
 }
 
 impl From<models::AccessToken> for AccessToken {
     fn from(token: models::AccessToken) -> Self {
         Self {
             client_id: token.client_id,
-            created_at: token.created_at,
             token: token.token,
             user_id: token.user_id,
             scopes: token.scopes,
+            expires_at: token.expires_at,
         }
     }
 }
@@ -381,10 +397,10 @@ impl Into<models::AccessToken> for AccessToken {
     fn into(self) -> models::AccessToken {
         models::AccessToken {
             client_id: self.client_id,
-            created_at: self.created_at,
             token: self.token,
             user_id: self.user_id,
             scopes: self.scopes,
+            expires_at: self.expires_at,
         }
     }
 }

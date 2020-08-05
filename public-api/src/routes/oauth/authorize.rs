@@ -25,11 +25,15 @@ impl FromRequest for Auth {
     fn from_request(req: &actix_web::HttpRequest, _: &mut dev::Payload) -> Self::Future {
         use accesso_public_logic::app::session::Session;
 
-        if let Some(cookie) = req.cookie("session-token") {
+        let session_config = req
+            .app_data::<web::Data<crate::cookie::SessionCookieConfig>>()
+            .expect("SessionCookieConfig not provided");
+
+        if let Some(cookie) = req.cookie(&session_config.name) {
             if let Some(app) = req.app_data::<web::Data<crate::App>>() {
                 let app = app.read().unwrap();
 
-                return match app.session_resolve(cookie.value().to_owned()) {
+                return match app.session_resolve_by_cookie(cookie.value().to_owned()) {
                     Err(_) => futures::future::ok(Auth { user: None }),
                     Ok(user) => futures::future::ok(Auth { user }),
                 };
