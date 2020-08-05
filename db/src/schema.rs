@@ -1,10 +1,10 @@
 table! {
     access_tokens (token) {
         client_id -> Uuid,
-        created_at -> Timestamptz,
         token -> Varchar,
         user_id -> Uuid,
         scopes -> Array<Text>,
+        expires_at -> Timestamptz,
     }
 }
 

@@ -107,6 +107,7 @@ async fn main() -> std::io::Result<()> {
                 generated::api::AccessoPublicApi::new()
                     .bind_oauth_authorize_request(routes::oauth::authorize::route)
                     .bind_oauth_token(routes::oauth::token::route)
+                    .bind_viewer_get(routes::viewer::get::route)
                     .bind_register_confirmation(routes::register::confirmation::route)
                     .bind_register_request(routes::register::request::route)
                     .bind_session_create(routes::session::create::route)

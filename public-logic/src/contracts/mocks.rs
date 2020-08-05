@@ -6,6 +6,7 @@ pub struct DbMock {
     pub users: Vec<User>,
     pub register_requests: Vec<RegisterRequest>,
     pub session_tokens: Vec<SessionToken>,
+    pub access_tokens: Vec<AccessToken>,
 }
 
 impl UserRepo for DbMock {
@@ -98,6 +99,26 @@ impl SessionRepo for DbMock {
     fn get_user_by_session_token(&self, token: String) -> Result<User, GetUserBySessionError> {
         let token = self
             .session_tokens
+            .iter()
+            .find(|t| t.token == token)
+            .map(|t| t.clone());
+
+        if let Some(token) = token {
+            let user = self.users.iter().find(|u| u.id == token.user_id);
+
+            if let Some(user) = user {
+                Ok(user.clone())
+            } else {
+                Err(GetUserBySessionError::NotFound)
+            }
+        } else {
+            Err(GetUserBySessionError::NotFound)
+        }
+    }
+
+    fn get_user_by_access_token(&self, token: String) -> Result<User, GetUserBySessionError> {
+        let token = self
+            .access_tokens
             .iter()
             .find(|t| t.token == token)
             .map(|t| t.clone());

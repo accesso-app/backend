@@ -8,7 +8,16 @@ use crate::App;
 use validator::Validate;
 
 pub trait Session {
-    fn session_resolve(&self, cookie: String) -> Result<Option<User>, SessionResolveError>;
+    fn session_resolve_by_cookie(
+        &self,
+        cookie: String,
+    ) -> Result<Option<User>, SessionResolveError>;
+
+    fn session_resolve_by_access_token(
+        &self,
+        access_token: String,
+    ) -> Result<Option<User>, SessionResolveError>;
+
     fn session_create(
         &mut self,
         form: SessionCreateForm,
@@ -44,8 +53,22 @@ where
     DB: SessionRepo + UserRepo,
     G: SecureGenerator,
 {
-    fn session_resolve(&self, cookie: String) -> Result<Option<User>, SessionResolveError> {
+    fn session_resolve_by_cookie(
+        &self,
+        cookie: String,
+    ) -> Result<Option<User>, SessionResolveError> {
         match self.db.get_user_by_session_token(cookie) {
+            Err(GetUserBySessionError::Unexpected) => Err(SessionResolveError::Unexpected),
+            Err(GetUserBySessionError::NotFound) => Ok(None),
+            Ok(user) => Ok(Some(user)),
+        }
+    }
+
+    fn session_resolve_by_access_token(
+        &self,
+        access_token: String,
+    ) -> Result<Option<User>, SessionResolveError> {
+        match self.db.get_user_by_access_token(access_token) {
             Err(GetUserBySessionError::Unexpected) => Err(SessionResolveError::Unexpected),
             Err(GetUserBySessionError::NotFound) => Ok(None),
             Ok(user) => Ok(Some(user)),

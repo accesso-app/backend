@@ -23,6 +23,7 @@ pub trait UserRepo {
 #[cfg_attr(test, automock)]
 pub trait SessionRepo {
     fn get_user_by_session_token(&self, token: String) -> Result<User, GetUserBySessionError>;
+    fn get_user_by_access_token(&self, token: String) -> Result<User, GetUserBySessionError>;
     fn session_create(&mut self, session: SessionToken)
         -> Result<SessionToken, SessionCreateError>;
 }
@@ -149,6 +150,9 @@ impl RequestsRepo for MockDb {
 impl SessionRepo for MockDb {
     fn get_user_by_session_token(&self, token: String) -> Result<User, GetUserBySessionError> {
         self.session.get_user_by_session_token(token)
+    }
+    fn get_user_by_access_token(&self, token: String) -> Result<User, GetUserBySessionError> {
+        self.session.get_user_by_access_token(token)
     }
     fn session_create(
         &mut self,
