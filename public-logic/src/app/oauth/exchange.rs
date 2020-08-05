@@ -118,7 +118,7 @@ where
 
                 let access_token = AccessToken {
                     client_id: client.id,
-                    created_at: chrono::Utc::now().naive_utc(),
+                    expires_at: chrono::Utc::now().naive_utc() + AccessToken::lifetime(),
                     token: self.generator.generate_token_long(),
                     user_id: authorization_code.user_id,
                     scopes: authorization_code.scopes.clone(),
@@ -131,7 +131,7 @@ where
                 Ok(AccessTokenCreated {
                     access_token: created.token.clone(),
                     token_type: TokenType::Bearer,
-                    expires_in: chrono::Utc.from_utc_datetime(&created.expires_at()),
+                    expires_in: chrono::Utc.from_utc_datetime(&created.expires_at),
                 })
             }
         }
