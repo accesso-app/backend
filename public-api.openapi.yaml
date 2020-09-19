@@ -36,7 +36,38 @@ paths:
           $ref: "#/components/responses/OAuthAccessTokenFailure"
         500:
           description: Something goes wrong
+            
+  "/access-recovery/send-email":
+    post:
+      operationId: accessRecoverySendEmail
+      tags: [Access Recovery]
+      description: Send password recovery confirmation code to email
+      requestBody:
+        $ref: '#/components/requestBodies/AccessRecoverySendEmail'
+      responses:
+        200:
+          $ref: '#/components/responses/AccessRecoverySendEmailSuccess'
+        400:
+          $ref: '#/components/responses/AccessRecoverySendEmailFailure'
+        500:
+          description: Something goes wrong
 
+  
+  "/access-recovery/set-password":
+    post:
+      operationId: accessRecoverySetPassword
+      tags: [Access Recovery]
+      description: Set new password by reset code from email
+      requestBody:
+        $ref: "#/components/requestBodies/AccessRecoverySetPassword"
+      responses:
+        200:
+          $ref: '#/components/responses/AccessRecoverySetPasswordSuccess'
+        400:
+          $ref: '#/components/responses/AccessRecoverySetPasswordFailure'
+        500:
+          description: Something goes wrong
+          
   "/viewer":
     get:
       operationId: viewerGet
@@ -51,7 +82,7 @@ paths:
           $ref: "#/components/responses/ViewerGetFailure"
         500:
           description: Something goes wrong
-
+  
   "/register/request":
     post:
       operationId: registerRequest
@@ -269,6 +300,42 @@ components:
                   - "email_already_activated"
                   - "invalid_form"
                   - "invalid_payload"
+                  
+    AccessRecoverySetPasswordSuccess:
+      description: Confirmation code is sent to email
+
+    AccessRecoverySetPasswordFailure:
+      description: ''
+      content:
+        application/json:
+          schema:
+            required:
+              - error
+            properties: 
+              error: 
+                type: string
+                enum: 
+                  - "invalid_code"
+                  - "password_is_too_short"
+                  - "password_is_too_weak"
+      
+    AccessRecoverySendEmailSuccess:
+      description: Password changed successfully
+
+    AccessRecoverySendEmailFailure:
+      description: Reset code or password is invalid
+      content: 
+        application/json:
+          schema:
+            required: 
+              - error
+            properties:
+              error:
+                type: string
+                enum:
+                  - "invalid_email"
+                  - "invalid_password"
+
     ViewerGetSuccess:
       description: Get profile of the user
       content:
@@ -428,6 +495,35 @@ components:
             properties:
               email:
                 type: string
+                
+    AccessRecoverySendEmail:
+      required: true
+      content:
+        application/json:
+          schema:
+            required:
+              - email
+            properties:
+              email:
+                type: string
+                format: email
+                example: "user@gmail.com"
+    
+    AccessRecoverySetPassword:
+      required: true
+      content:
+        application/json:
+          schema:
+            required:
+              - password
+              - code
+            properties:
+              password:
+                type: string
+                example: new_password
+              code: 
+                type: string
+                example: beside-kibitz-diverge-install
 
     RegisterConfirmation:
       required: true
