@@ -1,7 +1,7 @@
 openapi: 3.0.1
 info:
   title: Accesso App Public API.
-  version: 0.2.0
+  version: 0.3.0
   description: Public API for frontend and OAuth applications [Review Github](https://developer.github.com/apps/building-oauth-apps/authorizing-oauth-apps/)
 servers:
   - url: http://localhost:9005/
@@ -36,7 +36,7 @@ paths:
           $ref: "#/components/responses/OAuthAccessTokenFailure"
         500:
           description: Something goes wrong
-            
+
   "/access-recovery/send-email":
     post:
       operationId: accessRecoverySendEmail
@@ -52,7 +52,7 @@ paths:
         500:
           description: Something goes wrong
 
-  
+
   "/access-recovery/set-password":
     post:
       operationId: accessRecoverySetPassword
@@ -67,7 +67,7 @@ paths:
           $ref: '#/components/responses/AccessRecoverySetPasswordFailure'
         500:
           description: Something goes wrong
-          
+
   "/viewer":
     get:
       operationId: viewerGet
@@ -82,7 +82,7 @@ paths:
           $ref: "#/components/responses/ViewerGetFailure"
         500:
           description: Something goes wrong
-  
+
   "/register/request":
     post:
       operationId: registerRequest
@@ -300,7 +300,7 @@ components:
                   - "email_already_activated"
                   - "invalid_form"
                   - "invalid_payload"
-                  
+
     AccessRecoverySetPasswordSuccess:
       description: Confirmation code is sent to email
 
@@ -311,23 +311,23 @@ components:
           schema:
             required:
               - error
-            properties: 
-              error: 
+            properties:
+              error:
                 type: string
-                enum: 
+                enum:
                   - "invalid_code"
                   - "password_is_too_short"
                   - "password_is_too_weak"
-      
+
     AccessRecoverySendEmailSuccess:
       description: Password changed successfully
 
     AccessRecoverySendEmailFailure:
       description: Reset code or password is invalid
-      content: 
+      content:
         application/json:
           schema:
-            required: 
+            required:
               - error
             properties:
               error:
@@ -495,7 +495,7 @@ components:
             properties:
               email:
                 type: string
-                
+
     AccessRecoverySendEmail:
       required: true
       content:
@@ -508,7 +508,7 @@ components:
                 type: string
                 format: email
                 example: "user@gmail.com"
-    
+
     AccessRecoverySetPassword:
       required: true
       content:
@@ -521,7 +521,7 @@ components:
               password:
                 type: string
                 example: new_password
-              code: 
+              code:
                 type: string
                 example: beside-kibitz-diverge-install
 
