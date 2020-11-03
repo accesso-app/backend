@@ -22,21 +22,6 @@ paths:
         500:
           description: Something goes wrong
 
-  "/oauth/token":
-    post:
-      operationId: oauthToken
-      tags: [OAuth]
-      description: Exchange the authorization code for an access token
-      requestBody:
-        $ref: "#/components/requestBodies/OAuthAccessTokenExchange"
-      responses:
-        201:
-          $ref: "#/components/responses/OAuthAccessTokenCreated"
-        400:
-          $ref: "#/components/responses/OAuthAccessTokenFailure"
-        500:
-          description: Something goes wrong
-
   "/access-recovery/send-email":
     post:
       operationId: accessRecoverySendEmail
@@ -215,47 +200,6 @@ components:
                   If the initial request contained a state parameter, the response must also include the exact value from the request.
                   The client will be using this to associate this response with the initial request.
                 type: string
-
-    OAuthAccessTokenCreated:
-      description:
-        The auth services validated the request and responds with an access token
-        [OAuth2 Example Flow](https://www.oauth.com/oauth2-servers/server-side-apps/example-flow/)
-      content:
-        application/json:
-          schema:
-            required:
-              - access_token
-              - token_type
-              - expires
-            properties:
-              access_token:
-                type: string
-              token_type:
-                type: string
-                enum: [bearer]
-              expires_in:
-                type: integer
-                format: int32
-                description: UTC Unix TimeStamp when the access token expires
-
-    OAuthAccessTokenFailure:
-      description: When you can't exchange authorization code to access token
-      content:
-        application/json:
-          schema:
-            required:
-              - error
-            properties:
-              error:
-                type: string
-                enum:
-                  - invalid_request
-                  - invalid_client
-                  - invalid_grant
-                  - invalid_scope
-                  - unauthorized_client
-                  - unsupported_grant_type
-
 
     RegistrationRequestCreated:
       description: Registration link sent to email, now user can find out when the link expires
@@ -450,39 +394,6 @@ components:
                   for example, indicating which of your app’s pages to redirect to after authorization. This also serves as a CSRF protection mechanism.<br/>
                   When the user is redirected back to your app, double check that the state value matches what you set it to originally.
                   This will ensure an attacker can’t intercept the authorization flow.
-                type: string
-
-    OAuthAccessTokenExchange:
-      required: true
-      content:
-        application/json:
-          schema:
-            required:
-              - grant_type
-              - code
-              - redirect_uri
-              - client_id
-              - client_secret
-            properties:
-              grant_type:
-                type: string
-                enum: [authorization_code]
-              code:
-                type: string
-                description:
-                  This parameter is for the authorization code received from the authorization server
-                  which will be in the query string parameter “code” in this request.
-              redirect_uri:
-                type: string
-                format: uri
-                example: https://example-app.com/oauth/callback
-                description:
-                  If the redirect URL was included in the initial authorization request,<br/>
-                  it must be included in the token request as well, and must be identical.<br/>
-                  Some services support registering multiple redirect URLs, and some require the redirect URL to be specified on each request.<br/>
-              client_id:
-                type: string
-              client_secret:
                 type: string
 
     Register:
