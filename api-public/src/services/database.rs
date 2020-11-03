@@ -1,5 +1,5 @@
 use accesso_db::schema::*;
-use accesso_public_logic::{
+use accesso_core::{
     contracts::{
         AccessTokenRepo, AuthCodeRepo, ClientRepo, GetUserBySessionError, RegisterUserError,
         RequestsRepo, SaveRegisterRequestError, SessionCreateError, SessionRepo,

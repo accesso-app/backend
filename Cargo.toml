@@ -1,7 +1,7 @@
 [workspace]
 members = [
   # "admin-api",
-  "public-api",
-  "public-logic",
-  "db"
+  "api-public",
+  "core",
+  "db",
 ]

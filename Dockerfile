@@ -9,8 +9,8 @@ COPY ./diesel.toml ./diesel.toml
 COPY ./Cargo.lock ./Cargo.toml ./
 COPY ./migrations ./migrations
 COPY ./db ./db
-COPY ./public-api ./public-api
-COPY ./public-logic ./public-logic
+COPY ./api-public ./api-public
+COPY ./core ./core
 
 ARG CRATE_NAME
 

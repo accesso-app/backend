@@ -2,7 +2,7 @@ use crate::generated::{
     components::{request_bodies, responses},
     paths::oauth_authorize_request::Response,
 };
-use accesso_public_logic::models;
+use accesso_core::models;
 use actix_swagger::Answer;
 use actix_web::{dev, web, FromRequest, HttpMessage};
 
@@ -23,7 +23,7 @@ impl FromRequest for Auth {
 
     #[inline]
     fn from_request(req: &actix_web::HttpRequest, _: &mut dev::Payload) -> Self::Future {
-        use accesso_public_logic::app::session::Session;
+        use accesso_core::app::session::Session;
 
         let session_config = req
             .app_data::<web::Data<crate::cookie::SessionCookieConfig>>()
@@ -51,7 +51,7 @@ pub async fn route(
     body: web::Json<request_bodies::OAuthAuthorize>,
     app: web::Data<crate::App>,
 ) -> Answer<'static, Response> {
-    use accesso_public_logic::app::oauth::authorize::{
+    use accesso_core::app::oauth::authorize::{
         OAuthAuthorize, RequestAuthCode,
         RequestAuthCodeFailed::{
             AccessDenied, InvalidRequest, InvalidScope, ServerError, TemporarilyUnavailable,

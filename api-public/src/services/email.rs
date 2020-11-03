@@ -1,4 +1,4 @@
-use accesso_public_logic::contracts::{EmailMessage, EmailNotification};
+use accesso_core::contracts::{EmailMessage, EmailNotification};
 
 #[derive(Clone)]
 pub struct Email {

@@ -7,7 +7,7 @@ use responses::{
 };
 
 pub async fn route(access_token: parameters::AccessToken, app: web::Data<crate::App>) -> Answer {
-    use accesso_public_logic::app::session::{Session, SessionResolveError::Unexpected};
+    use accesso_core::app::session::{Session, SessionResolveError::Unexpected};
 
     let app = app.read().unwrap();
 

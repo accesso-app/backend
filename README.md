@@ -11,7 +11,7 @@
 5. Create UUID extension at accesso database (`create extension "uuid-ossp";`)
 6. Copy `.env.sample` to `.env` (`cp .env.sample .env`)
 7. Migrate database (`diesel migration run`)
-8. Run (example: `cd public-api && cargo run`)
+8. Run (example: `cd api-public && cargo run`)
 
 ## ENVs
 
@@ -28,7 +28,7 @@
 ## Development
 
 - Use [`just`](https://github.com/casey/just) to run commands from [`justfile`](./justfile)
-- `just run` — to build and start `public-api` crate (aliased to `just run public`)
+- `just run` — to build and start `api-public` crate (aliased to `just run public`)
 
 ## Flows
 
