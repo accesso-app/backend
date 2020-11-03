@@ -10,26 +10,27 @@ COPY ./Cargo.lock ./Cargo.toml ./
 COPY ./migrations ./migrations
 COPY ./db ./db
 COPY ./api-public ./api-public
+COPY ./api-internal ./api-internal
 COPY ./core ./core
 
-ARG CRATE_NAME
+ARG API_NAME
 
-RUN cargo test --release --verbose --package accesso-$CRATE_NAME
+RUN cargo test --release --verbose --package accesso-api-$API_NAME
 
-RUN cargo build --release --package accesso-$CRATE_NAME
+RUN cargo build --release --package accesso-api-$API_NAME
 
 # ----------------------------------------------------------------
 
 FROM docker.pkg.github.com/accesso-app/backend/start-tools:1.1
 
-ARG CRATE_NAME
+ARG API_NAME
 
 WORKDIR /app
 
 RUN touch .env
 
 COPY --from=build /out/diesel /bin/
-COPY --from=build /app/target/release/accesso-$CRATE_NAME ./server
+COPY --from=build /app/target/release/accesso-api-$API_NAME ./server
 
 COPY --from=build /app/migrations ./migrations
 COPY --from=build /app/diesel.toml ./

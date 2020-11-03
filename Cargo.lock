@@ -76,10 +76,14 @@ dependencies = [
 name = "accesso-db"
 version = "0.1.0"
 dependencies = [
+ "accesso-core",
  "chrono",
  "diesel",
+ "log",
+ "r2d2",
  "serde",
  "serde_json",
+ "uuid",
 ]
 
 [[package]]
