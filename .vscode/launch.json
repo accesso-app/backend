@@ -7,15 +7,15 @@
     {
       "type": "lldb",
       "request": "launch",
-      "name": "Debug executable 'accesso-public-api'",
+      "name": "Debug executable 'accesso-api-public'",
       "cargo": {
         "args": [
           "build",
-          "--bin=accesso-public-api",
-          "--package=accesso-public-api"
+          "--bin=accesso-api-public",
+          "--package=accesso-api-public"
         ],
         "filter": {
-          "name": "accesso-public-api",
+          "name": "accesso-api-public",
           "kind": "bin"
         }
       },
@@ -25,16 +25,16 @@
     {
       "type": "lldb",
       "request": "launch",
-      "name": "Debug unit tests in executable 'accesso-public-api'",
+      "name": "Debug unit tests in executable 'accesso-api-public'",
       "cargo": {
         "args": [
           "test",
           "--no-run",
-          "--bin=accesso-public-api",
-          "--package=accesso-public-api"
+          "--bin=accesso-api-public",
+          "--package=accesso-api-public"
         ],
         "filter": {
-          "name": "accesso-public-api",
+          "name": "accesso-api-public",
           "kind": "bin"
         }
       },
@@ -58,16 +58,16 @@
     {
       "type": "lldb",
       "request": "launch",
-      "name": "Debug unit tests in library 'accesso-public-logic'",
+      "name": "Debug unit tests in library 'accesso-core'",
       "cargo": {
         "args": [
           "test",
           "--no-run",
           "--lib",
-          "--package=accesso-public-logic"
+          "--package=accesso-core"
         ],
         "filter": {
-          "name": "accesso-public-logic",
+          "name": "accesso-core",
           "kind": "lib"
         }
       },

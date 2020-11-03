@@ -8,7 +8,7 @@ pub async fn route(
     app: web::Data<crate::App>,
     req: web::HttpRequest,
 ) -> Answer {
-    use accesso_public_logic::app::session::{Session, SessionResolveError::Unexpected};
+    use accesso_core::app::session::{Session, SessionResolveError::Unexpected};
 
     let app = app.read().unwrap();
 

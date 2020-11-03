@@ -8,17 +8,17 @@ on:
     paths:
       - ".github/workflows/api-docker-image.yml"
       - "db/**"
-      - "public-api/**"
-      - "public-logic/**"
+      - "api-public/**"
+      - "core/**"
       - "migrations/**"
       - "docker-entrypoint.sh"
       - "Dockerfile"
       - "Cargo.lock"
     tags:
-      - "public-api@*"
+      - "api-public@*"
 
 jobs:
-  public-api:
+  api-public:
     runs-on: ubuntu-latest
 
     steps:
@@ -27,11 +27,11 @@ jobs:
       - name: Publish Docker
         uses: sergeysova/docker-publish-action@v1
         with:
-          image: accesso-app/backend/public-api
+          image: accesso-app/backend/api-public
           registry: docker.pkg.github.com
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-          buildargs: CRATE_NAME=public-api
+          buildargs: CRATE_NAME=api-public
           snapshot: "true"
           tag_semver: skip
           tag_separator: "@"

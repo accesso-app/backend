@@ -14,7 +14,7 @@ pub async fn route(
     body: web::Json<request_bodies::OAuthAccessTokenExchange>,
     app: web::Data<crate::App>,
 ) -> Answer<'static, Response> {
-    use accesso_public_logic::app::oauth::exchange::{
+    use accesso_core::app::oauth::exchange::{
         ExchangeAccessTokenForm,
         ExchangeFailed::{
             InvalidClient, InvalidGrant, InvalidRequest, InvalidScope, UnauthorizedClient,

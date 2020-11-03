@@ -1,4 +1,4 @@
-use accesso_public_logic::contracts::SecureGenerator;
+use accesso_core::contracts::SecureGenerator;
 
 lazy_static::lazy_static! {
     static ref WORDS: Vec<&'static str> = {

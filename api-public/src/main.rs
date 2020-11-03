@@ -6,7 +6,7 @@ use handler::{not_found, AnswerFailure, FailureCode};
 use std::sync::RwLock;
 
 pub type App =
-    RwLock<accesso_public_logic::App<services::Database, services::Email, services::Generator>>;
+    RwLock<accesso_core::App<services::Database, services::Email, services::Generator>>;
 
 mod cookie;
 mod generated;
@@ -36,9 +36,9 @@ async fn main() -> std::io::Result<()> {
     let bind_address = format!("{host}:{port}", host = listen_host, port = listen_port);
 
     if is_dev {
-        println!("==> public-api runned in DEVELOPMENT MODE");
+        println!("==> api-public runned in DEVELOPMENT MODE");
     } else {
-        println!("==> PRODUCTION MODE in public-api");
+        println!("==> PRODUCTION MODE in api-public");
     }
 
     let db = services::Database::new(connection_url).expect("Failed to create database");
@@ -58,7 +58,7 @@ async fn main() -> std::io::Result<()> {
         name: "session-token".to_owned(),
     };
 
-    let app = accesso_public_logic::App {
+    let app = accesso_core::App {
         db,
         emailer,
         generator,
