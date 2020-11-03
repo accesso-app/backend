@@ -6,7 +6,7 @@ use handler::{not_found, AnswerFailure, FailureCode};
 use std::sync::RwLock;
 
 pub type App =
-    RwLock<accesso_core::App<services::Database, services::Email, services::Generator>>;
+    RwLock<accesso_core::App<accesso_db::Database, services::Email, services::Generator>>;
 
 mod cookie;
 mod generated;
@@ -41,7 +41,7 @@ async fn main() -> std::io::Result<()> {
         println!("==> PRODUCTION MODE in api-public");
     }
 
-    let db = services::Database::new(connection_url).expect("Failed to create database");
+    let db = accesso_db::Database::new(connection_url).expect("Failed to create database");
     let generator = services::Generator::new();
     let emailer = services::Email {
         api_key: sg_api_key,
@@ -105,13 +105,7 @@ async fn main() -> std::io::Result<()> {
             .default_service(web::route().to(not_found))
             .service(
                 generated::api::AccessoPublicApi::new()
-                    .bind_oauth_authorize_request(routes::oauth::authorize::route)
-                    .bind_oauth_token(routes::oauth::token::route)
-                    .bind_viewer_get(routes::viewer::get::route)
-                    .bind_register_confirmation(routes::register::confirmation::route)
-                    .bind_register_request(routes::register::request::route)
-                    .bind_session_create(routes::session::create::route)
-                    .bind_session_get(routes::session::get::route),
+                    .bind_oauth_token(routes::oauth::token::route),
             )
     })
     .bind(bind_address)?

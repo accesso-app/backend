@@ -25,6 +25,19 @@ pub mod api {
     }
 
     impl AccessoPublicApi {
+        pub fn bind_oauth_authorize_request<F, T, R>(mut self, handler: F) -> Self
+        where
+            F: Factory<T, R, Answer<'static, super::paths::oauth_authorize_request::Response>>,
+            T: FromRequest + 'static,
+            R: Future<Output = Answer<'static, super::paths::oauth_authorize_request::Response>>
+                + 'static,
+        {
+            self.api = self
+                .api
+                .bind("/oauth/authorize".to_owned(), Method::POST, handler);
+            self
+        }
+
         pub fn bind_oauth_token<F, T, R>(mut self, handler: F) -> Self
         where
             F: Factory<T, R, Answer<'static, super::paths::oauth_token::Response>>,
@@ -34,6 +47,65 @@ pub mod api {
             self.api = self
                 .api
                 .bind("/oauth/token".to_owned(), Method::POST, handler);
+            self
+        }
+
+        pub fn bind_viewer_get<F, T, R>(mut self, handler: F) -> Self
+        where
+            F: Factory<T, R, super::paths::viewer_get::Answer>,
+            T: FromRequest + 'static,
+            R: Future<Output = super::paths::viewer_get::Answer> + 'static,
+        {
+            self.api = self.api.bind("/viewer".to_owned(), Method::GET, handler);
+            self
+        }
+
+        pub fn bind_register_request<F, T, R>(mut self, handler: F) -> Self
+        where
+            F: Factory<T, R, Answer<'static, super::paths::register_request::Response>>,
+            T: FromRequest + 'static,
+            R: Future<Output = Answer<'static, super::paths::register_request::Response>> + 'static,
+        {
+            self.api = self
+                .api
+                .bind("/register/request".to_owned(), Method::POST, handler);
+            self
+        }
+
+        pub fn bind_register_confirmation<F, T, R>(mut self, handler: F) -> Self
+        where
+            F: Factory<T, R, Answer<'static, super::paths::register_confirmation::Response>>,
+            T: FromRequest + 'static,
+            R: Future<Output = Answer<'static, super::paths::register_confirmation::Response>>
+                + 'static,
+        {
+            self.api = self
+                .api
+                .bind("/register/confirmation".to_owned(), Method::POST, handler);
+            self
+        }
+
+        pub fn bind_session_create<F, T, R>(mut self, handler: F) -> Self
+        where
+            F: Factory<T, R, Answer<'static, super::paths::session_create::Response>>,
+            T: FromRequest + 'static,
+            R: Future<Output = Answer<'static, super::paths::session_create::Response>> + 'static,
+        {
+            self.api = self
+                .api
+                .bind("/session/create".to_owned(), Method::POST, handler);
+            self
+        }
+
+        pub fn bind_session_get<F, T, R>(mut self, handler: F) -> Self
+        where
+            F: Factory<T, R, Answer<'static, super::paths::session_get::Response>>,
+            T: FromRequest + 'static,
+            R: Future<Output = Answer<'static, super::paths::session_get::Response>> + 'static,
+        {
+            self.api = self
+                .api
+                .bind("/session/get".to_owned(), Method::POST, handler);
             self
         }
     }
@@ -412,6 +484,219 @@ pub mod components {
 
 pub mod paths {
     use super::components::responses;
+    pub mod register_request {
+        use super::responses;
+        use actix_swagger::ContentType;
+        use actix_web::http::StatusCode;
+        use serde::Serialize;
+
+        pub type Answer = actix_swagger::Answer<'static, Response>;
+
+        #[derive(Debug, Serialize)]
+        #[serde(untagged)]
+        pub enum Response {
+            Created(responses::RegistrationRequestCreated),
+            BadRequest(responses::RegisterFailed),
+            Unexpected,
+        }
+
+        impl Response {
+            #[inline]
+            pub fn answer<'a>(self) -> actix_swagger::Answer<'a, Self> {
+                let status = match self {
+                    Self::Created(_) => StatusCode::CREATED,
+                    Self::BadRequest(_) => StatusCode::BAD_REQUEST,
+                    Self::Unexpected => StatusCode::INTERNAL_SERVER_ERROR,
+                };
+
+                let content_type = match self {
+                    Self::Created(_) => Some(ContentType::Json),
+                    Self::BadRequest(_) => Some(ContentType::Json),
+                    Self::Unexpected => None,
+                };
+
+                actix_swagger::Answer::new(self)
+                    .status(status)
+                    .content_type(content_type)
+            }
+        }
+    }
+
+    pub mod session_create {
+        use super::responses;
+        use actix_swagger::{Answer, ContentType};
+        use actix_web::http::StatusCode;
+        use serde::Serialize;
+
+        #[derive(Debug, Serialize)]
+        #[serde(untagged)]
+        pub enum Response {
+            Created(responses::SessionCreateSucceeded),
+            BadRequest(responses::SessionCreateFailed),
+            Unexpected,
+        }
+
+        impl Response {
+            #[inline]
+            pub fn answer<'a>(self) -> Answer<'a, Self> {
+                let status = match self {
+                    Self::Created(_) => StatusCode::CREATED,
+                    Self::BadRequest(_) => StatusCode::BAD_REQUEST,
+                    Self::Unexpected => StatusCode::INTERNAL_SERVER_ERROR,
+                };
+
+                let content_type = match self {
+                    Self::Created(_) => Some(ContentType::Json),
+                    Self::BadRequest(_) => Some(ContentType::Json),
+                    Self::Unexpected => None,
+                };
+
+                Answer::new(self).status(status).content_type(content_type)
+            }
+        }
+    }
+
+    pub mod viewer_get {
+        use super::responses;
+        use actix_swagger::ContentType;
+        use actix_web::http::StatusCode;
+        use serde::Serialize;
+
+        pub type Answer = actix_swagger::Answer<'static, Response>;
+
+        #[derive(Debug, Serialize)]
+        #[serde(untagged)]
+        pub enum Response {
+            Ok(responses::ViewerGetSuccess),
+            BadRequest(responses::ViewerGetFailure),
+            Unexpected,
+        }
+
+        impl Into<Answer> for Response {
+            #[inline]
+            fn into(self) -> Answer {
+                let status = match self {
+                    Self::Ok(_) => StatusCode::OK,
+                    Self::BadRequest(_) => StatusCode::BAD_REQUEST,
+                    Self::Unexpected => StatusCode::INTERNAL_SERVER_ERROR,
+                };
+
+                let content_type = match self {
+                    Self::Ok(_) => Some(ContentType::Json),
+                    Self::BadRequest(_) => None,
+                    Self::Unexpected => None,
+                };
+
+                Answer::new(self).status(status).content_type(content_type)
+            }
+        }
+    }
+
+    pub mod session_get {
+        use super::responses;
+        use actix_swagger::ContentType;
+        use actix_web::http::StatusCode;
+        use serde::Serialize;
+
+        pub type Answer = actix_swagger::Answer<'static, Response>;
+
+        #[derive(Debug, Serialize)]
+        #[serde(untagged)]
+        pub enum Response {
+            Ok(responses::SessionGetSuccess),
+            Unauthorized,
+            Unexpected,
+        }
+
+        impl Into<Answer> for Response {
+            #[inline]
+            fn into(self) -> Answer {
+                let status = match self {
+                    Self::Ok(_) => StatusCode::OK,
+                    Self::Unauthorized => StatusCode::UNAUTHORIZED,
+                    Self::Unexpected => StatusCode::INTERNAL_SERVER_ERROR,
+                };
+
+                let content_type = match self {
+                    Self::Ok(_) => Some(ContentType::Json),
+                    Self::Unauthorized => None,
+                    Self::Unexpected => None,
+                };
+
+                Answer::new(self).status(status).content_type(content_type)
+            }
+        }
+    }
+
+    pub mod register_confirmation {
+        use super::responses;
+        use actix_swagger::{Answer, ContentType};
+        use actix_web::http::StatusCode;
+        use serde::Serialize;
+
+        #[derive(Debug, Serialize)]
+        #[serde(untagged)]
+        pub enum Response {
+            Created,
+            BadRequest(responses::RegisterConfirmationFailed),
+            Unexpected,
+        }
+
+        impl Response {
+            #[inline]
+            pub fn answer<'a>(self) -> Answer<'a, Self> {
+                let status = match self {
+                    Self::Created => StatusCode::CREATED,
+                    Self::BadRequest(_) => StatusCode::BAD_REQUEST,
+                    Self::Unexpected => StatusCode::INTERNAL_SERVER_ERROR,
+                };
+
+                let content_type = match self {
+                    Self::Created => None,
+                    Self::BadRequest(_) => Some(ContentType::Json),
+                    Self::Unexpected => None,
+                };
+
+                Answer::new(self).status(status).content_type(content_type)
+            }
+        }
+    }
+
+    pub mod oauth_authorize_request {
+        use super::responses;
+        use actix_swagger::{Answer, ContentType};
+        use actix_web::http::StatusCode;
+        use serde::Serialize;
+
+        #[derive(Debug, Serialize)]
+        #[serde(untagged)]
+        pub enum Response {
+            Ok(responses::OAuthAuthorizeDone),
+
+            BadRequest(responses::OAuthAuthorizeRequestFailure),
+
+            InternalServerError,
+        }
+
+        impl Response {
+            #[inline]
+            pub fn answer<'a>(self) -> Answer<'a, Self> {
+                let status = match self {
+                    Self::Ok(_) => StatusCode::OK,
+                    Self::BadRequest(_) => StatusCode::BAD_REQUEST,
+                    Self::InternalServerError => StatusCode::INTERNAL_SERVER_ERROR,
+                };
+
+                let content_type = match self {
+                    Self::Ok(_) => Some(ContentType::Json),
+                    Self::BadRequest(_) => Some(ContentType::Json),
+                    Self::InternalServerError => None,
+                };
+
+                Answer::new(self).content_type(content_type).status(status)
+            }
+        }
+    }
 
     pub mod oauth_token {
         use super::responses;

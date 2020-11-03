@@ -10,6 +10,7 @@ COPY ./Cargo.lock ./Cargo.toml ./
 COPY ./migrations ./migrations
 COPY ./db ./db
 COPY ./api-public ./api-public
+COPY ./api-internal ./api-internal
 COPY ./core ./core
 
 ARG CRATE_NAME
