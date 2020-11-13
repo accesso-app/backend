@@ -2,6 +2,15 @@
 
 [![StackShare](http://img.shields.io/badge/tech-stack-0690fa.svg?style=flat)](https://stackshare.io/authmenow/backend)
 
+## Directories and crates
+
+- `db` — database schema, can be reused in different crates
+- `core` — main crate with business-logic of the accesso
+- `api-private` — crate with actix-web http2 routes, used only inside private network
+- `api-internal` — crate with http server, used only by accesso frontend
+- `api-admin` — crate with http server, used only by accesso admin frontend
+- `api-public` — crate with http server, used from outside
+
 ## Local installation
 
 1. Install stable rust (`curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`)

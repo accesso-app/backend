@@ -1,4 +1,4 @@
-use accesso_db::schema::*;
+use crate::schema::*;
 use accesso_core::{
     contracts::{
         AccessTokenRepo, AuthCodeRepo, ClientRepo, GetUserBySessionError, RegisterUserError,

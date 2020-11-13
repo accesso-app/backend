@@ -105,7 +105,12 @@ async fn main() -> std::io::Result<()> {
             .default_service(web::route().to(not_found))
             .service(
                 generated::api::AccessoPublicApi::new()
-                    .bind_oauth_token(routes::oauth::token::route),
+                    .bind_oauth_authorize_request(routes::oauth::authorize::route)
+                    .bind_viewer_get(routes::viewer::get::route)
+                    .bind_register_confirmation(routes::register::confirmation::route)
+                    .bind_register_request(routes::register::request::route)
+                    .bind_session_create(routes::session::create::route)
+                    .bind_session_get(routes::session::get::route),
             )
     })
     .bind(bind_address)?
