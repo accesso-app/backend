@@ -46,6 +46,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
           dockerfile: builder.Dockerfile
           tag_from_label: version
+          tag_separator: "@"
           cache: true
 
   start-tools-image:
@@ -63,6 +64,7 @@ jobs:
           registry: docker.pkg.github.com
           dockerfile: start-tools.Dockerfile
           tag_from_label: version
+          tag_separator: "@"
           cache: true
 
   api-image:
