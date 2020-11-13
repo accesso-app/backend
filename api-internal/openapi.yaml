@@ -1,8 +1,8 @@
 openapi: 3.0.1
 info:
-  title: Accesso App Public API.
-  version: 0.3.0
-  description: Public API for frontend and OAuth applications [Review Github](https://developer.github.com/apps/building-oauth-apps/authorizing-oauth-apps/)
+  title: Accesso App Internal API.
+  version: 0.4.0
+  description: Internal API for frontend
 servers:
   - url: http://localhost:9005/
   - url: https://auth-dev.atomix.team/api/v0
