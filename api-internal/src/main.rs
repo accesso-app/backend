@@ -36,9 +36,9 @@ async fn main() -> std::io::Result<()> {
     let bind_address = format!("{host}:{port}", host = listen_host, port = listen_port);
 
     if is_dev {
-        println!("==> api-public runned in DEVELOPMENT MODE");
+        println!("==> api-internal runned in DEVELOPMENT MODE");
     } else {
-        println!("==> PRODUCTION MODE in api-public");
+        println!("==> PRODUCTION MODE in api-internal");
     }
 
     let db = accesso_db::Database::new(connection_url).expect("Failed to create database");
@@ -104,7 +104,7 @@ async fn main() -> std::io::Result<()> {
             .service(health::service())
             .default_service(web::route().to(not_found))
             .service(
-                generated::api::AccessoPublicApi::new()
+                generated::api::AccessoInternalApi::new()
                     .bind_oauth_authorize_request(routes::oauth::authorize::route)
                     .bind_viewer_get(routes::viewer::get::route)
                     .bind_register_confirmation(routes::register::confirmation::route)

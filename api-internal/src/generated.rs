@@ -8,23 +8,23 @@ pub mod api {
     };
     use std::future::Future;
 
-    pub struct AccessoPublicApi {
+    pub struct AccessoInternalApi {
         api: Api,
     }
 
-    impl AccessoPublicApi {
+    impl AccessoInternalApi {
         pub fn new() -> Self {
-            AccessoPublicApi { api: Api::new() }
+            AccessoInternalApi { api: Api::new() }
         }
     }
 
-    impl HttpServiceFactory for AccessoPublicApi {
+    impl HttpServiceFactory for AccessoInternalApi {
         fn register(self, config: &mut AppService) {
             self.api.register(config);
         }
     }
 
-    impl AccessoPublicApi {
+    impl AccessoInternalApi {
         pub fn bind_oauth_authorize_request<F, T, R>(mut self, handler: F) -> Self
         where
             F: Factory<T, R, Answer<'static, super::paths::oauth_authorize_request::Response>>,
@@ -110,9 +110,9 @@ pub mod api {
         }
     }
 
-    impl Default for AccessoPublicApi {
+    impl Default for AccessoInternalApi {
         fn default() -> Self {
-            let api = AccessoPublicApi::new();
+            let api = AccessoInternalApi::new();
             // add default handlers to response 501, if handler not binded
             api
         }
