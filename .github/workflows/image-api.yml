@@ -86,15 +86,6 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Cache dependencies
-        uses: actions/cache@v2
-        with:
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            target
-
       - name: Detect changes
         uses: dorny/paths-filter@v2
         id: changes
