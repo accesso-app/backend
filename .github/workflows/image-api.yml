@@ -10,20 +10,6 @@ on:
     branches:
       - master
       - dev
-    paths:
-      - ".github/workflows/image-api.yml"
-      - "db/**"
-      - "core/**"
-      - "migrations/**"
-      - "api-admin/**"
-      - "api-internal/**"
-      - "api-private/**"
-      - "api-public/**"
-      - "docker-entrypoint.sh"
-      - "Dockerfile"
-      - "builder.Dockerfile"
-      - "start-tools.Dockerfile"
-      - "Cargo.lock"
     tags:
       - "api-admin@*"
       - "api-internal@*"
@@ -37,7 +23,17 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: Detect changes
+        uses: dorny/paths-filter@v2
+        id: changes
+        with:
+          list-files: none
+          filters: |
+            builder:
+              - 'builder.Dockerfile'
+
       - name: Publish Docker
+        if: steps.changes.outputs.builder == 'true'
         uses: sergeysova/docker-publish-action@master
         with:
           image: accesso-app/backend/builder
@@ -55,7 +51,17 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: Detect changes
+        uses: dorny/paths-filter@v2
+        id: changes
+        with:
+          list-files: none
+          filters: |
+            tools:
+              - 'start-tools.Dockerfile'
+
       - name: Publish Docker
+        if: steps.changes.outputs.tools == 'true'
         uses: sergeysova/docker-publish-action@master
         with:
           image: accesso-app/backend/start-tools
@@ -74,13 +80,29 @@ jobs:
         api: [internal, public]
 
     name: api-${{ matrix.api }}
-    needs: [builder-image, start-tools-image]
+    # needs: [builder-image, start-tools-image]
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v2
 
-      - name: Publish Docker
+      - name: Detect changes
+        uses: dorny/paths-filter@v2
+        id: changes
+        with:
+          list-files: none
+          filters: |
+            source:
+              - 'api-${{ matrix.api }}/**'
+              - 'core/**'
+              - 'db/**'
+              - 'resources/**'
+              - 'Cargo.lock'
+              - 'Cargo.toml'
+              - 'Dockerfile'
+
+      - name: Publish Docker image
+        if: steps.changes.outputs.source == 'true'
         uses: sergeysova/docker-publish-action@v1
         with:
           image: accesso-app/backend/api-${{ matrix.api }}
@@ -94,10 +116,13 @@ jobs:
           tag_separator: "@"
           semver_higher: "true"
 
+  deploy:
+    name: Trigger deploy to DEV
+    runs-on: ubuntu-latest
+    steps:
       - name: Trigger deploy to Dev
         uses: peter-evans/repository-dispatch@v1
         with:
           token: ${{ secrets.TRIGGER_DEPLOY_TOKEN }}
           repository: accesso-app/releases
           event-type: deploy-dev
-          client-payload: '{"github": ${{ toJson(github) }}}'
