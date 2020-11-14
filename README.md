@@ -1,6 +1,6 @@
 # Readme
 
-[![StackShare](http://img.shields.io/badge/tech-stack-0690fa.svg?style=flat)](https://stackshare.io/authmenow/backend)
+[![StackShare](http://img.shields.io/badge/tech-stack-0690fa.svg?style=flat)](https://stackshare.io/authmenow/backend) ![API Docker Image CI](https://github.com/accesso-app/backend/workflows/API%20Docker%20Image%20CI/badge.svg)
 
 ## Directories and crates
 

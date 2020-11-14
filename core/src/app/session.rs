@@ -22,6 +22,17 @@ pub trait Session {
         &mut self,
         form: SessionCreateForm,
     ) -> Result<(SessionToken, User), SessionCreateError>;
+
+    fn session_delete(
+        &mut self,
+        user: &User,
+        strategy: SessionDeleteStrategy,
+    ) -> Result<(), SessionDeleteError>;
+}
+
+pub enum SessionDeleteStrategy {
+    All,
+    Single(String),
 }
 
 #[derive(Debug, PartialEq, Eq, Hash)]
@@ -43,6 +54,11 @@ pub enum SessionCreateError {
     Unexpected,
     InvalidForm,
     InvalidCredentials,
+}
+
+#[derive(Debug, PartialEq, Eq, Hash)]
+pub enum SessionDeleteError {
+    Unexpected,
 }
 
 const MAX_TOKEN_CREATE_ATTEMPTS: u8 = 10;
@@ -114,6 +130,24 @@ where
             Ok((session, user))
         } else {
             Err(SessionCreateError::InvalidCredentials)
+        }
+    }
+
+    fn session_delete(
+        &mut self,
+        user: &User,
+        strategy: SessionDeleteStrategy,
+    ) -> Result<(), SessionDeleteError> {
+        match strategy {
+            SessionDeleteStrategy::All => self
+                .db
+                .session_delete_by_user_id(user.id)
+                .map_err(|_unexpected| SessionDeleteError::Unexpected),
+
+            SessionDeleteStrategy::Single(token) => self
+                .db
+                .session_delete_token(token.as_ref())
+                .map_err(|_unexpected| SessionDeleteError::Unexpected),
         }
     }
 }

@@ -14,6 +14,7 @@ mod handler;
 mod health;
 mod routes;
 mod services;
+mod session;
 
 #[actix_rt::main]
 async fn main() -> std::io::Result<()> {
@@ -106,11 +107,12 @@ async fn main() -> std::io::Result<()> {
             .service(
                 generated::api::AccessoInternalApi::new()
                     .bind_oauth_authorize_request(routes::oauth::authorize::route)
-                    .bind_viewer_get(routes::viewer::get::route)
                     .bind_register_confirmation(routes::register::confirmation::route)
                     .bind_register_request(routes::register::request::route)
                     .bind_session_create(routes::session::create::route)
-                    .bind_session_get(routes::session::get::route),
+                    .bind_session_delete(routes::session::delete::route)
+                    .bind_session_get(routes::session::get::route)
+                    .bind_viewer_get(routes::viewer::get::route),
             )
     })
     .bind(bind_address)?

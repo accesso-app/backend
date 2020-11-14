@@ -97,6 +97,18 @@ pub mod api {
             self
         }
 
+        pub fn bind_session_delete<F, T, R>(mut self, handler: F) -> Self
+        where
+            F: Factory<T, R, Answer<'static, super::paths::session_delete::Response>>,
+            T: FromRequest + 'static,
+            R: Future<Output = Answer<'static, super::paths::session_delete::Response>> + 'static,
+        {
+            self.api = self
+                .api
+                .bind("/session/delete".to_owned(), Method::POST, handler);
+            self
+        }
+
         pub fn bind_session_get<F, T, R>(mut self, handler: F) -> Self
         where
             F: Factory<T, R, Answer<'static, super::paths::session_get::Response>>,
@@ -250,6 +262,18 @@ pub mod components {
             #[serde(rename = "invalid_form")]
             InvalidForm,
 
+            #[serde(rename = "invalid_payload")]
+            InvalidPayload,
+        }
+
+        #[doc = "failed to delete session"]
+        #[derive(Debug, Serialize)]
+        pub struct SessionDeleteFailure {
+            pub error: SessionDeleteFailureError,
+        }
+
+        #[derive(Debug, Serialize)]
+        pub enum SessionDeleteFailureError {
             #[serde(rename = "invalid_payload")]
             InvalidPayload,
         }
@@ -413,6 +437,12 @@ pub mod components {
             pub password: String,
         }
 
+        #[derive(Debug, Serialize, Deserialize)]
+        pub struct SessionDelete {
+            #[serde(rename = "deleteAllSessions")]
+            pub delete_all_sessions: bool,
+        }
+
         /// responseType is set to code indicating that you want an authorization code as the response.
         #[derive(Debug, Serialize, Deserialize)]
         pub enum OAuthAuthorizeResponseType {
@@ -548,6 +578,52 @@ pub mod paths {
                 let content_type = match self {
                     Self::Created(_) => Some(ContentType::Json),
                     Self::BadRequest(_) => Some(ContentType::Json),
+                    Self::Unexpected => None,
+                };
+
+                Answer::new(self).status(status).content_type(content_type)
+            }
+        }
+    }
+
+    pub mod session_delete {
+        use super::responses;
+        use actix_swagger::ContentType;
+        use actix_web::http::StatusCode;
+        use serde::Serialize;
+
+        pub type Answer = actix_swagger::Answer<'static, Response>;
+
+        #[derive(Debug, Serialize)]
+        #[serde(untagged)]
+        pub enum Response {
+            Ok,
+            BadRequest(responses::SessionDeleteFailure),
+            Unauthorized,
+            Unexpected,
+        }
+
+        impl Response {
+            #[inline]
+            pub fn answer(self) -> Answer {
+                self.into()
+            }
+        }
+
+        impl Into<Answer> for Response {
+            #[inline]
+            fn into(self) -> Answer {
+                let status = match self {
+                    Self::Ok => StatusCode::OK,
+                    Self::BadRequest(_) => StatusCode::BAD_REQUEST,
+                    Self::Unauthorized => StatusCode::UNAUTHORIZED,
+                    Self::Unexpected => StatusCode::INTERNAL_SERVER_ERROR,
+                };
+
+                let content_type = match self {
+                    Self::Ok => None,
+                    Self::BadRequest(_) => Some(ContentType::Json),
+                    Self::Unauthorized => None,
                     Self::Unexpected => None,
                 };
 

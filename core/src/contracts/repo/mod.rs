@@ -26,6 +26,11 @@ pub trait SessionRepo {
     fn get_user_by_access_token(&self, token: String) -> Result<User, GetUserBySessionError>;
     fn session_create(&mut self, session: SessionToken)
         -> Result<SessionToken, SessionCreateError>;
+    fn session_delete_token(&mut self, session_token: &str) -> Result<(), UnexpectedDatabaseError>;
+    fn session_delete_by_user_id(
+        &mut self,
+        user_id: uuid::Uuid,
+    ) -> Result<(), UnexpectedDatabaseError>;
 }
 
 #[cfg_attr(test, automock)]

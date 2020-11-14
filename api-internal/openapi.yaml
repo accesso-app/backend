@@ -28,15 +28,14 @@ paths:
       tags: [Access Recovery]
       description: Send password recovery confirmation code to email
       requestBody:
-        $ref: '#/components/requestBodies/AccessRecoverySendEmail'
+        $ref: "#/components/requestBodies/AccessRecoverySendEmail"
       responses:
         200:
-          $ref: '#/components/responses/AccessRecoverySendEmailSuccess'
+          $ref: "#/components/responses/AccessRecoverySendEmailSuccess"
         400:
-          $ref: '#/components/responses/AccessRecoverySendEmailFailure'
+          $ref: "#/components/responses/AccessRecoverySendEmailFailure"
         500:
           description: Something goes wrong
-
 
   "/access-recovery/set-password":
     post:
@@ -47,19 +46,20 @@ paths:
         $ref: "#/components/requestBodies/AccessRecoverySetPassword"
       responses:
         200:
-          $ref: '#/components/responses/AccessRecoverySetPasswordSuccess'
+          $ref: "#/components/responses/AccessRecoverySetPasswordSuccess"
         400:
-          $ref: '#/components/responses/AccessRecoverySetPasswordFailure'
+          $ref: "#/components/responses/AccessRecoverySetPasswordFailure"
         500:
           description: Something goes wrong
 
   "/viewer":
     get:
       operationId: viewerGet
+      # TODO: move to public api
       tags: [External]
       description: Get info about viewer by access token
       parameters:
-        - $ref: '#/components/parameters/AccessToken'
+        - $ref: "#/components/parameters/AccessToken"
       responses:
         200:
           $ref: "#/components/responses/ViewerGetSuccess"
@@ -129,6 +129,24 @@ paths:
       responses:
         200:
           $ref: "#/components/responses/SessionGetSuccess"
+        401:
+          description: User not authorized
+        500:
+          description: Something went wrong
+
+  "/session/delete":
+    post:
+      operationId: sessionDelete
+      tags: [Session]
+      # TODO: Add rate limit and CSRF protection
+      description: Delete current or all sessions
+      requestBody:
+        $ref: "#/components/requestBodies/SessionDelete"
+      responses:
+        200:
+          description: session deleted
+        400:
+          $ref: "#/components/responses/SessionDeleteFailure"
         401:
           description: User not authorized
         500:
@@ -249,7 +267,7 @@ components:
       description: Confirmation code is sent to email
 
     AccessRecoverySetPasswordFailure:
-      description: ''
+      description: ""
       content:
         application/json:
           schema:
@@ -352,6 +370,19 @@ components:
             properties:
               user:
                 $ref: "#/components/schemas/SessionUser"
+
+    SessionDeleteFailure:
+      description: failed to delete session
+      content:
+        application/json:
+          schema:
+            required:
+              - error
+            properties:
+              error:
+                type: string
+                enum:
+                  - "invalid_payload"
 
   requestBodies:
     OAuthAuthorize:
@@ -470,6 +501,18 @@ components:
                 format: email
               password:
                 type: string
+
+    SessionDelete:
+      required: true
+      description: sd
+      content:
+        application/json:
+          schema:
+            required:
+              - deleteAllSessions
+            properties:
+              deleteAllSessions:
+                type: boolean
 
   schemas:
     SessionUser:
