@@ -588,9 +588,11 @@ pub mod paths {
 
     pub mod session_delete {
         use super::responses;
-        use actix_swagger::{Answer, ContentType};
+        use actix_swagger::ContentType;
         use actix_web::http::StatusCode;
         use serde::Serialize;
+
+        pub type Answer = actix_swagger::Answer<'static, Response>;
 
         #[derive(Debug, Serialize)]
         #[serde(untagged)]
@@ -603,7 +605,14 @@ pub mod paths {
 
         impl Response {
             #[inline]
-            pub fn answer<'a>(self) -> Answer<'a, Self> {
+            pub fn answer(self) -> Answer {
+                self.into()
+            }
+        }
+
+        impl Into<Answer> for Response {
+            #[inline]
+            fn into(self) -> Answer {
                 let status = match self {
                     Self::Ok => StatusCode::OK,
                     Self::BadRequest(_) => StatusCode::BAD_REQUEST,

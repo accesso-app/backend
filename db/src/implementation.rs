@@ -172,6 +172,29 @@ impl SessionRepo for Database {
             .map(Into::into)
             .map_err(diesel_error_to_session_create_error)
     }
+
+    fn session_delete_token(&mut self, session_token: &str) -> Result<(), UnexpectedDatabaseError> {
+        let conn = self.conn();
+
+        diesel::delete(session_tokens::table)
+            .filter(session_tokens::token.eq(session_token))
+            .execute(&conn)
+            .map(|_| ())
+            .map_err(diesel_error_to_unexpected)
+    }
+
+    fn session_delete_by_user_id(
+        &mut self,
+        user_id: uuid::Uuid,
+    ) -> Result<(), UnexpectedDatabaseError> {
+        let conn = self.conn();
+
+        diesel::delete(session_tokens::table)
+            .filter(session_tokens::user_id.eq(user_id))
+            .execute(&conn)
+            .map(|_| ())
+            .map_err(diesel_error_to_unexpected)
+    }
 }
 
 impl ClientRepo for Database {

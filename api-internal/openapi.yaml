@@ -55,6 +55,7 @@ paths:
   "/viewer":
     get:
       operationId: viewerGet
+      # TODO: move to public api
       tags: [External]
       description: Get info about viewer by access token
       parameters:
