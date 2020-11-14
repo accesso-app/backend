@@ -1,4 +1,4 @@
-// #![allow(dead_code)]
+#![allow(dead_code)]
 
 pub mod api {
     use actix_swagger::{Answer, Api, Method};
