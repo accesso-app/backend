@@ -165,4 +165,14 @@ impl SessionRepo for MockDb {
     ) -> Result<SessionToken, SessionCreateError> {
         self.session.session_create(session)
     }
+
+    fn session_delete_token(&mut self, session_token: &str) -> Result<(), UnexpectedDatabaseError> {
+        self.session.session_delete_token(session_token)
+    }
+    fn session_delete_by_user_id(
+        &mut self,
+        user_id: uuid::Uuid,
+    ) -> Result<(), UnexpectedDatabaseError> {
+        self.session.session_delete_by_user_id(user_id)
+    }
 }

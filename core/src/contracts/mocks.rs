@@ -158,4 +158,15 @@ impl SessionRepo for DbMock {
             }
         }
     }
+
+    fn session_delete_token(&mut self, session_token: &str) -> Result<(), UnexpectedDatabaseError> {
+        unimplemented!()
+    }
+
+    fn session_delete_by_user_id(
+        &mut self,
+        user_id: uuid::Uuid,
+    ) -> Result<(), UnexpectedDatabaseError> {
+        unimplemented!()
+    }
 }
