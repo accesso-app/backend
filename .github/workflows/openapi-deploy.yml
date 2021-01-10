@@ -24,14 +24,14 @@ jobs:
       - name: Generate OpenAPI UI
         uses: Legion2/swagger-ui-action@v1
         with:
-          output: dist/api-${{ matrix-api }}
-          spec-file: api-${{ matrix-api }}/openapi.yaml
+          output: dist/api-${{ matrix.api }}
+          spec-file: api-${{ matrix.api }}/openapi.yaml
 
-      - name: Upload api-${{ matrix-api }} as artifact
+      - name: Upload api-${{ matrix.api }} as artifact
         uses: actions/upload-artifact@v2
         with:
-          name: api-${{ matrix-api }}
-          path: dist/api-${{ matrix-api }}
+          name: api-${{ matrix.api }}
+          path: dist/api-${{ matrix.api }}
 
   deploy:
     runs-on: ubuntu-latest
