@@ -6,6 +6,7 @@ info:
 servers:
   - url: http://localhost:9005/
   - url: https://auth-dev.atomix.team/api/v0
+  - url: https://accesso.sova.dev/api/v0
 paths:
   "/oauth/authorize":
     post:
