@@ -4,6 +4,7 @@ pub struct Client {
     pub redirect_uri: Vec<String>,
     pub title: String,
     pub secret_key: String,
+    pub allowed_registrations: bool,
 }
 
 impl Client {

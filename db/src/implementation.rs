@@ -229,6 +229,7 @@ impl Into<models::Client> for Client {
             redirect_uri: self.redirect_uri,
             secret_key: self.secret_key,
             title: self.title,
+            allowed_registrations: self.allowed_registrations,
         }
     }
 }
