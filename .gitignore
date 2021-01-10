@@ -85,3 +85,6 @@ $RECYCLE.BIN/
 
 .env
 .data
+.config.*
+.config-*.*
+!.config*.sample

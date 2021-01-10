@@ -1,0 +1,15 @@
+debug = true
+
+[cookies]
+http_only = false
+secure = false
+
+[database]
+database = "authmenow"
+host = "localhost"
+password = "authmenow"
+user = "authmenow"
+
+[server]
+host = "localhost"
+port = 9005

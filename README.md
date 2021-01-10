@@ -24,15 +24,32 @@
 
 ## ENVs
 
-- `DEV` (`"true"` sets true, otherwise false) - sets cookies secure=false,httpOnly=false
+- `ACCESSO_MODE` (`"development"`, `"test"`, or `"production"`) — changes environment for config loading
 - `DATABASE_URL` — Database connection URL (`postgres://accesso:accesso@localhost:5432/accesso`)
-- `LISTEN_PORT` — port to listen on
-- `LISTEN_HOST` — host to listen on
-- `SG_API_KEY` — Key from https://sendgrid.com
-- `SG_APPLICATION_HOST` — Host where frontend is runned (example: `auth-dev.atomix.team` or `localhost:3000`)
-- `SG_EMAIL_CONFIRM_URL_PREFIX` — Prefix for code (example: `/register/confirm-`). Concatenated with applicaiton host and code.
-- `SG_EMAIL_CONFIRM_TEMPLATE` — Template ID from SendGrid to send confirmation email (example: `d-eec45c55c0364140bf38172e021c8ea5`)
-- `SG_SENDER_EMAIL` — Email of sender (example: `no-reply@auth-dev.atomix.team`)
+- `ACCESSO_SERVER__PORT` — port to listen on
+- `ACCESSO_SERVER__HOST` — host to listen on
+- Each variable from [`config/default.toml`](/config/default.toml) can be set via environment variable using [`config`](https://docs.rs/config)
+
+> Note: each variable should be prefixed via "ACCESSO_", section name should be separated with `__`
+> Example: server.port -> ACCESSO_SERVER__PORT
+> Example: database.pool_size -> ACCESSO_DATABASE__POOL_SIZE
+
+## Configuration
+
+Each API can load configuration in `toml`, `hjson`, `json`, `yaml`, and `ini`. File `config/default.toml` is required.
+
+Config loading formats: `config/{API}-{ENV}` and `.config-{API}-{ENV}`, `API` and `ENV` are optional.
+
+After loading `config/default.toml`, server is trying to load environment configs and specific for API. For example, you have set `ACCESSO_MODE=production` and starting `api-public`:
+- `config/default-production.toml`
+- `config/public.toml`
+- `config/public-production.toml`
+- `.config.toml`
+- `.config-production.toml`
+- `.config-public.toml`
+- `.config-public-production.toml`
+
+Configs in repository's root should be prefixed with dot (ex.: `.config-production.json`) and should NOT be committed. It is just local configs.
 
 ## Development
 

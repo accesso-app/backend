@@ -9,6 +9,7 @@ COPY ./diesel.toml ./diesel.toml
 COPY ./Cargo.lock ./Cargo.toml ./
 COPY ./migrations ./migrations
 COPY ./db ./db
+COPY ./settings ./settings
 COPY ./api-public ./api-public
 COPY ./api-internal ./api-internal
 COPY ./core ./core
@@ -34,6 +35,7 @@ COPY --from=build /app/target/release/accesso-api-$API_NAME ./server
 
 COPY --from=build /app/migrations ./migrations
 COPY --from=build /app/diesel.toml ./
+COPY ./config ./config
 COPY ./docker-entrypoint.sh ./entrypoint.sh
 
 RUN chmod +x entrypoint.sh && chmod +x server

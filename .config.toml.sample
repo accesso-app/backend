@@ -1,0 +1,6 @@
+# Create `.config.toml` or `.config-internal.toml` or `.config-internal-production.toml`
+
+[sendgrid]
+api_key = "SG.KEYKEYKEY"
+email_confirm_template = "d-TPLID"
+sender_email = "no-reply@domain.com"

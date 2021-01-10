@@ -19,9 +19,9 @@ pub struct Database {
 }
 
 impl Database {
-    pub fn new(connection_url: String) -> Result<Self, r2d2::Error> {
+    pub fn new(connection_url: String, size: u32) -> Result<Self, r2d2::Error> {
         let manager = ConnectionManager::<PgConnection>::new(connection_url);
-        let pool = r2d2::Pool::builder().build(manager)?;
+        let pool = r2d2::Pool::builder().max_size(size).build(manager)?;
 
         Ok(Self { pool })
     }
@@ -219,6 +219,7 @@ struct Client {
     redirect_uri: Vec<String>,
     secret_key: String,
     title: String,
+    allowed_registrations: bool,
 }
 
 impl Into<models::Client> for Client {

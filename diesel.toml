@@ -3,3 +3,4 @@
 
 [print_schema]
 file = "db/src/schema.rs"
+with_docs = false

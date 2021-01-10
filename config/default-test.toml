@@ -1,0 +1,5 @@
+debug = true
+
+[cookies]
+http_only = false
+secure = false
