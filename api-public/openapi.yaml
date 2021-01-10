@@ -1,0 +1,99 @@
+openapi: 3.0.1
+info:
+  title: Accesso App Public API.
+  version: 0.4.0
+  description: Public API for OAuth applications [Review Github](https://developer.github.com/apps/building-oauth-apps/authorizing-oauth-apps/)
+servers:
+  - url: http://localhost:9005/
+  - url: https://auth-dev.atomix.team/api/v0
+paths:
+  "/oauth/token":
+    post:
+      operationId: oauthToken
+      tags: [OAuth]
+      description: Exchange the authorization code for an access token
+      requestBody:
+        $ref: "#/components/requestBodies/OAuthAccessTokenExchange"
+      responses:
+        201:
+          $ref: "#/components/responses/OAuthAccessTokenCreated"
+        400:
+          $ref: "#/components/responses/OAuthAccessTokenFailure"
+        500:
+          description: Something goes wrong
+
+components:
+  responses:
+    OAuthAccessTokenCreated:
+      description:
+        The auth services validated the request and responds with an access token
+        [OAuth2 Example Flow](https://www.oauth.com/oauth2-servers/server-side-apps/example-flow/)
+      content:
+        application/json:
+          schema:
+            required:
+              - access_token
+              - token_type
+              - expires
+            properties:
+              access_token:
+                type: string
+              token_type:
+                type: string
+                enum: [bearer]
+              expires_in:
+                type: integer
+                format: int32
+                description: UTC Unix TimeStamp when the access token expires
+
+    OAuthAccessTokenFailure:
+      description: When you can't exchange authorization code to access token
+      content:
+        application/json:
+          schema:
+            required:
+              - error
+            properties:
+              error:
+                type: string
+                enum:
+                  - invalid_request
+                  - invalid_client
+                  - invalid_grant
+                  - invalid_scope
+                  - unauthorized_client
+                  - unsupported_grant_type
+
+  requestBodies:
+    OAuthAccessTokenExchange:
+      required: true
+      content:
+        application/json:
+          schema:
+            required:
+              - grant_type
+              - code
+              - redirect_uri
+              - client_id
+              - client_secret
+            properties:
+              grant_type:
+                type: string
+                enum: [authorization_code]
+              code:
+                type: string
+                description:
+                  This parameter is for the authorization code received from the authorization server
+                  which will be in the query string parameter “code” in this request.
+              redirect_uri:
+                type: string
+                format: uri
+                example: https://example-app.com/oauth/callback
+                description:
+                  If the redirect URL was included in the initial authorization request,<br/>
+                  it must be included in the token request as well, and must be identical.<br/>
+                  Some services support registering multiple redirect URLs, and some require the redirect URL to be specified on each request.<br/>
+              client_id:
+                type: string
+              client_secret:
+                type: string

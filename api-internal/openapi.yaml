@@ -1,0 +1,537 @@
+openapi: 3.0.1
+info:
+  title: Accesso App Internal API.
+  version: 0.4.0
+  description: Internal API for frontend
+servers:
+  - url: http://localhost:9005/
+  - url: https://auth-dev.atomix.team/api/v0
+  - url: https://accesso.sova.dev/api/v0
+paths:
+  "/oauth/authorize":
+    post:
+      operationId: oauthAuthorizeRequest
+      tags: [OAuth]
+      description: Authorization request
+      requestBody:
+        $ref: "#/components/requestBodies/OAuthAuthorize"
+      responses:
+        200:
+          $ref: "#/components/responses/OAuthAuthorizeDone"
+        400:
+          $ref: "#/components/responses/OAuthAuthorizeRequestFailure"
+        500:
+          description: Something goes wrong
+
+  "/access-recovery/send-email":
+    post:
+      operationId: accessRecoverySendEmail
+      tags: [Access Recovery]
+      description: Send password recovery confirmation code to email
+      requestBody:
+        $ref: "#/components/requestBodies/AccessRecoverySendEmail"
+      responses:
+        200:
+          $ref: "#/components/responses/AccessRecoverySendEmailSuccess"
+        400:
+          $ref: "#/components/responses/AccessRecoverySendEmailFailure"
+        500:
+          description: Something goes wrong
+
+  "/access-recovery/set-password":
+    post:
+      operationId: accessRecoverySetPassword
+      tags: [Access Recovery]
+      description: Set new password by reset code from email
+      requestBody:
+        $ref: "#/components/requestBodies/AccessRecoverySetPassword"
+      responses:
+        200:
+          $ref: "#/components/responses/AccessRecoverySetPasswordSuccess"
+        400:
+          $ref: "#/components/responses/AccessRecoverySetPasswordFailure"
+        500:
+          description: Something goes wrong
+
+  "/viewer":
+    get:
+      operationId: viewerGet
+      # TODO: move to public api
+      tags: [External]
+      description: Get info about viewer by access token
+      parameters:
+        - $ref: "#/components/parameters/AccessToken"
+      responses:
+        200:
+          $ref: "#/components/responses/ViewerGetSuccess"
+        400:
+          $ref: "#/components/responses/ViewerGetFailure"
+        500:
+          description: Something goes wrong
+
+  "/register/request":
+    post:
+      operationId: registerRequest
+      tags: [Register]
+      # TODO: Add rate limit and CSRF protection
+      description: Send registration link to email
+      requestBody:
+        $ref: "#/components/requestBodies/Register"
+      responses:
+        201:
+          $ref: "#/components/responses/RegistrationRequestCreated"
+        400:
+          $ref: "#/components/responses/RegisterFailed"
+        500:
+          description: Something goes wrong
+
+  # Maybe add method to check code before fill form?
+  # Can improve a user experience
+
+  "/register/confirmation":
+    post:
+      operationId: registerConfirmation
+      tags: [Register]
+      # TODO: Add rate limit and CSRF protection
+      description: Confirm email, fill profile required fields and create user
+      requestBody:
+        $ref: "#/components/requestBodies/RegisterConfirmation"
+      responses:
+        201:
+          description: Okay, user created
+        400:
+          $ref: "#/components/responses/RegisterConfirmationFailed"
+        500:
+          description: Something goes wrong
+
+  "/session/create":
+    post:
+      operationId: sessionCreate
+      tags: [Session]
+      # TODO: Add rate limit and CSRF protection
+      description: Login and create new session token
+      requestBody:
+        $ref: "#/components/requestBodies/SessionCreate"
+      responses:
+        201:
+          $ref: "#/components/responses/SessionCreateSucceeded"
+        400:
+          $ref: "#/components/responses/SessionCreateFailed"
+        500:
+          description: Something went wrong
+
+  "/session/get":
+    post:
+      operationId: sessionGet
+      tags: [Session]
+      # TODO: Add rate limit and CSRF protection
+      description: Read session token and show current session.
+        Authenticated checked by session-token cookie
+      responses:
+        200:
+          $ref: "#/components/responses/SessionGetSuccess"
+        401:
+          description: User not authorized
+        500:
+          description: Something went wrong
+
+  "/session/delete":
+    post:
+      operationId: sessionDelete
+      tags: [Session]
+      # TODO: Add rate limit and CSRF protection
+      description: Delete current or all sessions
+      requestBody:
+        $ref: "#/components/requestBodies/SessionDelete"
+      responses:
+        200:
+          description: session deleted
+        400:
+          $ref: "#/components/responses/SessionDeleteFailure"
+        401:
+          description: User not authorized
+        500:
+          description: Something went wrong
+
+components:
+  responses:
+    OAuthAuthorizeDone:
+      description: Authorization completed, now access token can be obtained.
+      content:
+        application/json:
+          schema:
+            required:
+              - redirectUri
+              - code
+            properties:
+              redirectUri:
+                description: User should be redirected to
+                type: string
+                format: url
+              code:
+                description: This parameter contains the authorization code which the client will later exchange for an access token.
+                type: string
+              state:
+                description:
+                  If the initial request contained a state parameter, the response must also include the exact value from the request.
+                  The client will be using this to associate this response with the initial request.
+                type: string
+
+    OAuthAuthorizeRequestFailure:
+      description:
+        There are two different kinds of errors to handle. The first kind of error is when the developer did something wrong when creating the authorization request. The other kind of error is when the user rejects the request (clicks the “Deny” button).
+        <br/>
+        If there is something wrong with the syntax of the request, such as the redirect_uri or client_id is invalid, then it’s important not to redirect the user and instead you should show the error message directly. This is to avoid letting your authorization server be used as an open redirector.
+        <br/>
+        If the redirect_uri and client_id are both valid, but there is still some other problem, it’s okay to redirect the user back to the redirect URI with the error in the query string.
+      content:
+        application/json:
+          schema:
+            required:
+              - error
+            properties:
+              error:
+                description: |
+                  Possible errors: <br/>
+                  If the user denies the authorization request, the server will redirect the user back to the redirect URL with error=`access_denied` in the query string, and no code will be present. It is up to the app to decide what to display to the user at this point.<br/>
+                  `invalid_request` — The request is missing a required parameter, includes an invalid parameter value, or is otherwise malformed.<br/>
+                  `unsupported_response_type` — The authorization server does not support obtaining an authorization code using this method.<br/>
+                  `invalid_scope` — The requested scope is invalid, unknown, or malformed.<br/>
+                  `server_error` — The authorization server encountered an unexpected condition which prevented it from fulfilling the request.<br/>
+                  `temporarily_unavailable` — The authorization server is currently unable to handle the request due to a temporary overloading or maintenance of the server.<br/>
+                  [OAuth2 Possible Errors](https://www.oauth.com/oauth2-servers/server-side-apps/possible-errors/)
+                type: string
+                enum:
+                  - access_denied
+                  - invalid_request
+                  - invalid_scope
+                  - server_error
+                  - temporarily_unavailable
+                  - unauthenticated_user
+                  - unauthorized_client
+                  - unsupported_response_type
+              redirectUri:
+                description: User should be redirected to if passed redirectUri and clientId is correct
+                type: string
+                format: url
+              state:
+                description:
+                  If the initial request contained a state parameter, the response must also include the exact value from the request.
+                  The client will be using this to associate this response with the initial request.
+                type: string
+
+    RegistrationRequestCreated:
+      description: Registration link sent to email, now user can find out when the link expires
+      content:
+        application/json:
+          schema:
+            required:
+              - expiresAt
+            properties:
+              expiresAt:
+                type: integer
+                format: int32
+                description: UTC Unix TimeStamp when the link expires
+
+    RegisterFailed:
+      description: Please, login or recover password
+      content:
+        application/json:
+          schema:
+            required:
+              - error
+            properties:
+              error:
+                type: string
+                enum:
+                  - "email_already_registered"
+                  - "invalid_form"
+                  - "invalid_payload"
+
+    RegisterConfirmationFailed:
+      description: Please, login or recover password
+      content:
+        application/json:
+          schema:
+            required:
+              - error
+            properties:
+              error:
+                type: string
+                enum:
+                  - "code_invalid_or_expired"
+                  - "email_already_activated"
+                  - "invalid_form"
+                  - "invalid_payload"
+
+    AccessRecoverySetPasswordSuccess:
+      description: Confirmation code is sent to email
+
+    AccessRecoverySetPasswordFailure:
+      description: ""
+      content:
+        application/json:
+          schema:
+            required:
+              - error
+            properties:
+              error:
+                type: string
+                enum:
+                  - "invalid_code"
+                  - "password_is_too_short"
+                  - "password_is_too_weak"
+
+    AccessRecoverySendEmailSuccess:
+      description: Password changed successfully
+
+    AccessRecoverySendEmailFailure:
+      description: Reset code or password is invalid
+      content:
+        application/json:
+          schema:
+            required:
+              - error
+            properties:
+              error:
+                type: string
+                enum:
+                  - "invalid_email"
+                  - "invalid_password"
+
+    ViewerGetSuccess:
+      description: Get profile of the user
+      content:
+        application/json:
+          schema:
+            required:
+              - firstName
+              - lastName
+              - id
+            properties:
+              firstName:
+                type: string
+              lastName:
+                type: string
+              id:
+                type: string
+                format: uuid
+
+    ViewerGetFailure:
+      description: Failed to get profile of the user
+      content:
+        application/json:
+          schema:
+            required:
+              - error
+            properties:
+              error:
+                type: string
+                enum:
+                  - "invalid_token"
+                  - "unauthorized"
+
+    SessionCreateSucceeded:
+      description: Session created, token wrote to cookies
+      content:
+        application/json:
+          schema:
+            # TODO: Use SessionUser here
+            required:
+              - firstName
+              - lastName
+            properties:
+              firstName:
+                type: string
+              lastName:
+                type: string
+
+    SessionCreateFailed:
+      description: Login failed
+      content:
+        application/json:
+          schema:
+            required:
+              - error
+            properties:
+              error:
+                type: string
+                enum:
+                  - "invalid_credentials"
+                  - "invalid_form"
+                  - "invalid_payload"
+
+    SessionGetSuccess:
+      description: Session exists
+      content:
+        application/json:
+          schema:
+            required:
+              - user
+            properties:
+              user:
+                $ref: "#/components/schemas/SessionUser"
+
+    SessionDeleteFailure:
+      description: failed to delete session
+      content:
+        application/json:
+          schema:
+            required:
+              - error
+            properties:
+              error:
+                type: string
+                enum:
+                  - "invalid_payload"
+
+  requestBodies:
+    OAuthAuthorize:
+      required: true
+      content:
+        application/json:
+          schema:
+            required:
+              - responseType
+              - clientId
+              - redirectUri
+            properties:
+              responseType:
+                description: responseType is set to code indicating that you want an authorization code as the response.
+                type: string
+                enum: [code]
+              clientId:
+                description: The clientId is the identifier for your app.
+                  You will have received a clientId when first registering your app with the service.
+                type: string
+                format: uuid
+                example: 41190cee-5231-4dcc-8167-ebf798b55ce3
+              redirectUri:
+                description: |
+                  The redirectUri may be optional depending on the API, but is highly recommended.<br/>
+                  This is the URL to which you want the user to be redirected after the authorization is complete.<br/>
+                  This must match the redirect URL that you have previously registered with the service.<br/>
+                type: string
+                format: uri
+                example: https://example-app.com/oauth/callback
+              scope:
+                description: Include one or more scope values (space-separated) to request additional levels of access.<br/>
+                type: string
+                example: "user:view user:edit"
+              state:
+                description: The state parameter serves two functions.<br/>
+                  When the user is redirected back to your app, whatever value you include as the state will also be included in the redirect.<br/>
+                  This gives your app a chance to persist data between the user being directed to the authorization server and back again,
+                  such as using the state parameter as a session key. This may be used to indicate what action in the app to perform after authorization is complete,
+                  for example, indicating which of your app’s pages to redirect to after authorization. This also serves as a CSRF protection mechanism.<br/>
+                  When the user is redirected back to your app, double check that the state value matches what you set it to originally.
+                  This will ensure an attacker can’t intercept the authorization flow.
+                type: string
+
+    Register:
+      required: true
+      content:
+        application/json:
+          schema:
+            required:
+              - email
+            properties:
+              email:
+                type: string
+
+    AccessRecoverySendEmail:
+      required: true
+      content:
+        application/json:
+          schema:
+            required:
+              - email
+            properties:
+              email:
+                type: string
+                format: email
+                example: "user@gmail.com"
+
+    AccessRecoverySetPassword:
+      required: true
+      content:
+        application/json:
+          schema:
+            required:
+              - password
+              - code
+            properties:
+              password:
+                type: string
+                example: new_password
+              code:
+                type: string
+                example: beside-kibitz-diverge-install
+
+    RegisterConfirmation:
+      required: true
+      content:
+        application/json:
+          schema:
+            required:
+              - confirmationCode
+              - firstName
+              - lastName
+              - password
+            properties:
+              confirmationCode:
+                type: string
+              firstName:
+                type: string
+              lastName:
+                type: string
+              password:
+                type: string
+
+    SessionCreate:
+      required: true
+      content:
+        application/json:
+          schema:
+            required:
+              - email
+              - password
+            properties:
+              email:
+                type: string
+                format: email
+              password:
+                type: string
+
+    SessionDelete:
+      required: true
+      description: sd
+      content:
+        application/json:
+          schema:
+            required:
+              - deleteAllSessions
+            properties:
+              deleteAllSessions:
+                type: boolean
+
+  schemas:
+    SessionUser:
+      description: Current user in a session
+      type: object
+      required:
+        - firstName
+        - lastName
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+
+  parameters:
+    AccessToken:
+      in: header
+      name: X-Access-Token
+      schema:
+        type: string
+      required: true
