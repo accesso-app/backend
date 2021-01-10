@@ -46,8 +46,14 @@ jobs:
       - run: ls -R
         working-directory: dist/
 
-      - run: echo '<a href="/backend/api-internal/index.html">api-internal</a>' >> dist/index.html
-      - run: echo '<a href="/backend/api-public/index.html">api-public</a>' >> dist/index.html
+      - name: Create index.html
+        run: |
+          echo '<h2>Accesso OpenAPI</h2>' >> dist/index.html
+          echo '<ul>' >> dist/index.html
+          echo '  <li><a href="/backend/api-internal/index.html">api-internal</a></li>' >> dist/index.html
+          echo '  <li><a href="/backend/api-public/index.html">api-public</a></li>' >> dist/index.html
+          echo '  <li><a href="/backend/api-admin/index.html">api-admin</a></li>' >> dist/index.html
+          echo '</ul>' >> dist/index.html
 
       - name: Deploy to Github Pages
         uses: peaceiris/actions-gh-pages@v3
