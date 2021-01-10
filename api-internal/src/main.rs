@@ -1,6 +1,7 @@
 #[macro_use]
 extern crate diesel;
 
+use accesso_settings::Settings;
 use actix_web::{middleware, web, HttpResponse, HttpServer};
 use handler::{not_found, AnswerFailure, FailureCode};
 use std::sync::RwLock;
@@ -21,42 +22,34 @@ async fn main() -> std::io::Result<()> {
     dotenv::dotenv().ok();
     env_logger::init();
 
-    let listen_port = std::env::var("LISTEN_PORT").expect("LISTEN_PORT");
-    let listen_host = std::env::var("LISTEN_HOST").expect("LISTEN_HOST");
-    let connection_url = std::env::var("DATABASE_URL").expect("DATABASE_URL");
-    let is_dev = std::env::var("DEV").map(|d| d != "false").unwrap_or(false);
+    let settings = Settings::new("internal").expect("failed to parse settings");
+    let bind_address = settings.server.bind_address();
 
-    let sg_api_key = std::env::var("SG_API_KEY").expect("SG_API_KEY");
-    let sg_application_host = std::env::var("SG_APPLICATION_HOST").expect("SG_APPLICATION_HOST");
-    let sg_email_confirm_url_prefix =
-        std::env::var("SG_EMAIL_CONFIRM_URL_PREFIX").expect("SG_EMAIL_CONFIRM_URL_PREFIX");
-    let sg_email_confirm_template =
-        std::env::var("SG_EMAIL_CONFIRM_TEMPLATE").expect("SG_EMAIL_CONFIRM_TEMPLATE");
-    let sg_sender_email = std::env::var("SG_SENDER_EMAIL").expect("SG_SENDER_EMAIL");
-
-    let bind_address = format!("{host}:{port}", host = listen_host, port = listen_port);
-
-    if is_dev {
+    if settings.debug {
         println!("==> api-internal runned in DEVELOPMENT MODE");
     } else {
         println!("==> PRODUCTION MODE in api-internal");
     }
 
-    let db = accesso_db::Database::new(connection_url).expect("Failed to create database");
+    let db = accesso_db::Database::new(
+        settings.database.connection_url(),
+        settings.database.pool_size,
+    )
+    .expect("Failed to create database");
     let generator = services::Generator::new();
     let emailer = services::Email {
-        api_key: sg_api_key,
-        sender_email: sg_sender_email,
-        application_host: sg_application_host,
-        email_confirm_url_prefix: sg_email_confirm_url_prefix,
-        email_confirm_template: sg_email_confirm_template,
+        api_key: settings.sendgrid.api_key,
+        sender_email: settings.sendgrid.sender_email,
+        application_host: settings.sendgrid.application_host,
+        email_confirm_url_prefix: settings.sendgrid.email_confirm_url_prefix,
+        email_confirm_template: settings.sendgrid.email_confirm_template,
     };
 
     let session_cookie_config = cookie::SessionCookieConfig {
-        http_only: !is_dev,
-        secure: !is_dev,
-        path: "/".to_owned(),
-        name: "session-token".to_owned(),
+        http_only: settings.cookies.http_only,
+        secure: settings.cookies.secure,
+        path: settings.cookies.path.clone(),
+        name: settings.cookies.name.clone(),
     };
 
     let app = accesso_core::App {
@@ -68,7 +61,7 @@ async fn main() -> std::io::Result<()> {
     let app_lock = std::sync::RwLock::new(app);
     let app_data = web::Data::new(app_lock);
 
-    HttpServer::new(move || {
+    let mut server = HttpServer::new(move || {
         actix_web::App::new()
             .app_data(app_data.clone())
             .data(session_cookie_config.clone())
@@ -113,8 +106,20 @@ async fn main() -> std::io::Result<()> {
                     .bind_session_delete(routes::session::delete::route)
                     .bind_session_get(routes::session::get::route),
             )
-    })
-    .bind(bind_address)?
-    .run()
-    .await
+    });
+
+    if let Some(workers) = settings.server.workers {
+        server = server.workers(workers as usize);
+    }
+    if let Some(backlog) = settings.server.backlog {
+        server = server.backlog(backlog);
+    }
+    if let Some(keep_alive) = settings.server.keep_alive {
+        server = server.keep_alive(actix_http::KeepAlive::Timeout(keep_alive as usize));
+    }
+    if let Some(client_shutdown) = settings.server.client_shutdown {
+        server = server.client_shutdown(client_shutdown);
+    }
+
+    server.bind(bind_address)?.run().await
 }
