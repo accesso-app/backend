@@ -54,36 +54,37 @@ Configs in repository's root should be prefixed with dot (ex.: `.config-producti
 ## Development
 
 - Use [`just`](https://github.com/casey/just) to run commands from [`justfile`](./justfile)
-- `just run` — to build and start `api-public` crate (aliased to `just run public`)
-
-## Flows
+- `just` — to build and start `api-internal` crate (aliased to `just internal`)
+- `just public` — to build and run `api-public`
 
 ## Glossary
 
 It's implements simplified OAuth 2.0 flow ([example](https://itnext.io/an-oauth-2-0-introduction-for-beginners-6e386b19f7a9))
 
-- Application — OAuth Client App
-- User — the person who wants to be authenticated, to access protected information.
-- Accesso — Authorization server
+- **Client** — OAuth 2.0 Client App.
+- **User — the person who wants to be authenticated, to access protected information.
+- **Accesso** — Authorization server.
+- **Registration Request** — When User registers on Accesso, server send code of request to his email.
+- **Authorization Code** — When user authorizes in Client through OAuth 2.0 authorization code flow, he needs to exchange code to access token.
+- **Access Token** — Token that exchanged from authorization code, used to send requests from Client server to Accesso server on behalf of User.
+- **Session Token** — Token used to authenticate user on Accesso Frontend, it writes to cookies.
 
-### Authorization flow
+## Authorization code flow
 
-Client side:
+> `accesso.server` is an alias for domain of an Accesso instance
 
-1. User wants to login. Open https://application/login
-2. Application (redirects|opens a window) to https://accesso/session?application_id&redirect_uri&state
-3. Accesso checks application request (application_id matches redirect_uri)
-4. Accesso shows login form
-5. User inserts credentials
-6. Accesso checks credentials
-7. Accesso sends authorization_code to redirect_uri
-
-Server side:
-
-8. Application sends authorization_code, application_id and secret_key to Accesso
-9. Accesso checks authorization_code (application_id matches secret_key, matches authorization_code)
-10. Accesso sends access_token back to Application
-
-11. Application makes request using access_token to Accesso to get info about session
-12. Accesso checks access_token
-13. Accesso returns info about session back to Application
+1. On the Client side, user presses "Login with Accesso" button.
+1. Client redirects to `accesso.server/oauth/authorize` with Client ID, redirect URI and state.
+1. Accesso Frontend shows pages and checks User authentication.
+1. If User not authenticated, redirect to login, then redirect back to `/oauth/authorize` with all parameters.
+1. Accesso Frontend sends `oauthAuthorize` to Accesso Internal API.
+1. Accesso Internal API validates Client ID and parameters.
+1. [?] Accesso Internal API checks if User already registered in the Client.
+1. [?] If User not registered in the Client, Accesso Internal API returns need_confirmation to Accesso Frontend.
+1. [?] Accesso Frontend shows a confirmation window to User.
+1. [?] When User clicks "Register" in the confirmation window, Accesso Frontend sends _`oauthRegister` (?)_ to Accesso Internal API with all parameters.
+1. [?] Accesso Internal API creates Authorization Code and returns it to Accesso Frontend.
+1. Accesso Frontend redirects to redirect URI passed from Client with Authorization Code.
+1. Client Server send `oauthToken` to Accesso Public API with authorization code, Client ID and secret to exchange it to Access Token.
+1. Accesso Public API validates parameters and returns a new Accesso Token.
+1. Client Server send any request to Accesso Public API with Access Token.

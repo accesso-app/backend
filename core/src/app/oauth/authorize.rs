@@ -100,6 +100,13 @@ where
             .client_find_by_id(form.client_id)?
             .ok_or(RequestAuthCodeFailed::InvalidRequest)?;
 
+        // TODO: register or login?
+        // If user already registered in application, just transaprently check
+        // If user not registered, show confirmation dialog
+
+        // TODO: check `client.allowed_registrations` when user registers
+        // If not allowed reject authorization request
+
         if !client.is_allowed_redirect(&form.redirect_uri) {
             return Err(RequestAuthCodeFailed::InvalidRequest);
         }
