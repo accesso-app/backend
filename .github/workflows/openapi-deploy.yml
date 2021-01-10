@@ -1,0 +1,45 @@
+name: OpenAPI Deploy
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - "api-*/openapi.yaml"
+
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        api: [internal, public] # admin, private
+
+    name: build docs for api-${{ matrix.api }}
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Generate OpenAPI UI
+        uses: Legion2/swagger-ui-action@v1
+        with:
+          output: dist/api-${{ matrix-api }}
+          spec-file: api-${{ matrix-api }}/openapi.yaml
+
+      - name: Upload api-${{ matrix-api }} as artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: api-${{ matrix-api }}
+          path: dist/api-${{ matrix-api }}
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [build]
+
+    steps:
+      - uses: actions/download-artifact@v2
+        with:
+          directory: dist/
+      - run: ls -R
+        working-directory: dist/
