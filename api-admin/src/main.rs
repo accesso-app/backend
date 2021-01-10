@@ -1,3 +1,4 @@
+use accesso_settings::Settings;
 use actix_swagger::{Answer, ContentType, StatusCode};
 use actix_web::{middleware, web, App, Error, HttpRequest, HttpResponse, HttpServer, Responder};
 use diesel::pg::PgConnection;
@@ -60,20 +61,19 @@ async fn not_found(_req: HttpRequest) -> impl Responder {
 
 #[actix_rt::main]
 async fn main() -> std::io::Result<()> {
-    std::env::set_var("RUST_LOG", "actix_web=info,diesel=debug");
     env_logger::init();
     dotenv::dotenv().ok();
 
-    let listen_port = std::env::var("LISTEN_PORT").expect("LISTEN_PORT");
-    let connection_url = std::env::var("DATABASE_URL").expect("DATABASE_URL");
-    let manager = ConnectionManager::<PgConnection>::new(connection_url);
+    let settings = Settings::new("admin").expect("failed to parse settings");
+
+    let manager = ConnectionManager::<PgConnection>::new(settings.database.connection_url());
     let pool = r2d2::Pool::builder()
         .build(manager)
         .expect("Failed to create pool");
 
-    let bind = format!("127.0.0.1:{}", listen_port);
+    let bind = settings.server.bind_address();
 
-    let server = HttpServer::new(move || {
+    HttpServer::new(move || {
         App::new()
             .data(pool.clone())
             .wrap(middleware::Logger::default())
@@ -97,9 +97,7 @@ async fn main() -> std::io::Result<()> {
             .default_service(web::route().to(not_found))
             .service(web::resource("/admin/signin").route(web::post().to(admin_signin)))
     })
-    .bind(&bind)?;
-
-    println!("Starting server on port {}", listen_port);
-
-    server.run().await
+    .bind(&bind)?
+    .run()
+    .await
 }

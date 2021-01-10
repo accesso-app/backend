@@ -6,6 +6,7 @@ version = "0.1.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [dependencies]
+accesso-settings = {"path" = "../settings"}
 actix-rt = "1.0.0"
 actix-swagger = "0.1.1"
 actix-web = "2.0.0"
