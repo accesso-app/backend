@@ -104,8 +104,9 @@ async fn main() -> std::io::Result<()> {
             .service(health::service())
             .default_service(web::route().to(not_found))
             .service(
-                generated::api::AccessoPublicApi::new()
-                    .bind_oauth_token(routes::oauth::token::route),
+                generated::api::create()
+                    .bind_oauth_token(routes::oauth::token::route)
+                    .bind_viewer_get(routes::viewer::get::route),
             )
     })
     .bind(bind_address)?

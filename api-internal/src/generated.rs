@@ -12,10 +12,8 @@ pub mod api {
         api: Api,
     }
 
-    impl AccessoInternalApi {
-        pub fn new() -> Self {
-            AccessoInternalApi { api: Api::new() }
-        }
+    pub fn create() -> AccessoInternalApi {
+        AccessoInternalApi { api: Api::new() }
     }
 
     impl HttpServiceFactory for AccessoInternalApi {
@@ -47,16 +45,6 @@ pub mod api {
             self.api = self
                 .api
                 .bind("/oauth/token".to_owned(), Method::POST, handler);
-            self
-        }
-
-        pub fn bind_viewer_get<F, T, R>(mut self, handler: F) -> Self
-        where
-            F: Factory<T, R, super::paths::viewer_get::Answer>,
-            T: FromRequest + 'static,
-            R: Future<Output = super::paths::viewer_get::Answer> + 'static,
-        {
-            self.api = self.api.bind("/viewer".to_owned(), Method::GET, handler);
             self
         }
 
@@ -119,14 +107,6 @@ pub mod api {
                 .api
                 .bind("/session/get".to_owned(), Method::POST, handler);
             self
-        }
-    }
-
-    impl Default for AccessoInternalApi {
-        fn default() -> Self {
-            let api = AccessoInternalApi::new();
-            // add default handlers to response 501, if handler not binded
-            api
         }
     }
 }
@@ -226,17 +206,6 @@ pub mod components {
         #[derive(Debug, Serialize, Deserialize)]
         pub struct RegisterConfirmationFailed {
             pub error: RegisterConfirmationFailedError,
-        }
-
-        #[derive(Debug, Serialize)]
-        pub struct ViewerGetSuccess {
-            #[serde(rename = "firstName")]
-            pub first_name: String,
-
-            #[serde(rename = "lastName")]
-            pub last_name: String,
-
-            pub id: uuid::Uuid,
         }
 
         #[derive(Debug, Serialize)]
@@ -348,20 +317,6 @@ pub mod components {
             #[doc = "If the initial request contained a state parameter, the response must also include the exact value from the request. The client will be using this to associate this response with the initial request."]
             #[serde(skip_serializing_if = "Option::is_none")]
             pub state: Option<String>,
-        }
-
-        #[derive(Debug, Serialize)]
-        pub enum ViewerGetFailureError {
-            #[serde(rename = "invalid_token")]
-            InvalidToken,
-
-            #[serde(rename = "unauthorized")]
-            Unauthorized,
-        }
-
-        #[derive(Debug, Serialize)]
-        pub struct ViewerGetFailure {
-            pub error: ViewerGetFailureError,
         }
 
         /// The auth services validated the request and responds with an access token
@@ -624,42 +579,6 @@ pub mod paths {
                     Self::Ok => None,
                     Self::BadRequest(_) => Some(ContentType::Json),
                     Self::Unauthorized => None,
-                    Self::Unexpected => None,
-                };
-
-                Answer::new(self).status(status).content_type(content_type)
-            }
-        }
-    }
-
-    pub mod viewer_get {
-        use super::responses;
-        use actix_swagger::ContentType;
-        use actix_web::http::StatusCode;
-        use serde::Serialize;
-
-        pub type Answer = actix_swagger::Answer<'static, Response>;
-
-        #[derive(Debug, Serialize)]
-        #[serde(untagged)]
-        pub enum Response {
-            Ok(responses::ViewerGetSuccess),
-            BadRequest(responses::ViewerGetFailure),
-            Unexpected,
-        }
-
-        impl Into<Answer> for Response {
-            #[inline]
-            fn into(self) -> Answer {
-                let status = match self {
-                    Self::Ok(_) => StatusCode::OK,
-                    Self::BadRequest(_) => StatusCode::BAD_REQUEST,
-                    Self::Unexpected => StatusCode::INTERNAL_SERVER_ERROR,
-                };
-
-                let content_type = match self {
-                    Self::Ok(_) => Some(ContentType::Json),
-                    Self::BadRequest(_) => None,
                     Self::Unexpected => None,
                 };
 

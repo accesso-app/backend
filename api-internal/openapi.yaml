@@ -54,22 +54,6 @@ paths:
         500:
           description: Something goes wrong
 
-  "/viewer":
-    get:
-      operationId: viewerGet
-      # TODO: move to public api
-      tags: [External]
-      description: Get info about viewer by access token
-      parameters:
-        - $ref: "#/components/parameters/AccessToken"
-      responses:
-        200:
-          $ref: "#/components/responses/ViewerGetSuccess"
-        400:
-          $ref: "#/components/responses/ViewerGetFailure"
-        500:
-          description: Something goes wrong
-
   "/register/request":
     post:
       operationId: registerRequest
@@ -300,38 +284,6 @@ components:
                   - "invalid_email"
                   - "invalid_password"
 
-    ViewerGetSuccess:
-      description: Get profile of the user
-      content:
-        application/json:
-          schema:
-            required:
-              - firstName
-              - lastName
-              - id
-            properties:
-              firstName:
-                type: string
-              lastName:
-                type: string
-              id:
-                type: string
-                format: uuid
-
-    ViewerGetFailure:
-      description: Failed to get profile of the user
-      content:
-        application/json:
-          schema:
-            required:
-              - error
-            properties:
-              error:
-                type: string
-                enum:
-                  - "invalid_token"
-                  - "unauthorized"
-
     SessionCreateSucceeded:
       description: Session created, token wrote to cookies
       content:
@@ -529,10 +481,3 @@ components:
         lastName:
           type: string
 
-  parameters:
-    AccessToken:
-      in: header
-      name: X-Access-Token
-      schema:
-        type: string
-      required: true
