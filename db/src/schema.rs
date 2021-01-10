@@ -25,6 +25,7 @@ table! {
         redirect_uri -> Array<Text>,
         secret_key -> Varchar,
         title -> Varchar,
+        allowed_registrations -> Bool,
     }
 }
 
