@@ -463,9 +463,9 @@ pub mod paths {
             Unexpected,
         }
 
-        impl Into<Answer> for Response {
+        impl Response {
             #[inline]
-            fn into(self) -> Answer {
+            pub fn answer(self) -> Answer {
                 let status = match self {
                     Self::Ok(_) => StatusCode::OK,
                     Self::BadRequest(_) => StatusCode::BAD_REQUEST,

@@ -12,6 +12,7 @@ mod cookie;
 mod generated;
 mod handler;
 mod health;
+mod lib;
 mod routes;
 mod services;
 

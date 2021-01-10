@@ -2,6 +2,7 @@ use crate::generated::{
     components::{request_bodies, responses},
     paths::oauth_token::Response,
 };
+use crate::lib::{blocking, EachResult};
 use actix_swagger::Answer;
 use actix_web::web;
 
@@ -10,19 +11,18 @@ use responses::{
     OAuthAccessTokenFailureError as FailureError,
 };
 
+use accesso_core::app::oauth::exchange::{
+    ExchangeAccessTokenForm,
+    ExchangeFailed::{
+        InvalidClient, InvalidGrant, InvalidRequest, InvalidScope, UnauthorizedClient, Unexpected,
+    },
+    GrantType, OAuthExchange, TokenType,
+};
+
 pub async fn route(
     body: web::Json<request_bodies::OAuthAccessTokenExchange>,
     app: web::Data<crate::App>,
 ) -> Answer<'static, Response> {
-    use accesso_core::app::oauth::exchange::{
-        ExchangeAccessTokenForm,
-        ExchangeFailed::{
-            InvalidClient, InvalidGrant, InvalidRequest, InvalidScope, UnauthorizedClient,
-            Unexpected,
-        },
-        GrantType, OAuthExchange, TokenType,
-    };
-
     let grant_type = match body.grant_type {
         request_bodies::OAuthAccessTokenExchangeGrantType::AuthorizationCode => {
             GrantType::AuthorizationCode
@@ -37,34 +37,38 @@ pub async fn route(
         client_secret: body.client_secret.clone(),
     };
 
-    let mut app = app.write().unwrap();
+    blocking(Response::InternalServerError.answer(), move || {
+        let mut app = app.write().unwrap();
 
-    match app.oauth_exchange_access_token(form) {
-        Err(InvalidRequest) => Response::BadRequest(Failure {
-            error: FailureError::InvalidRequest,
-        }),
-        Err(InvalidClient) => Response::BadRequest(Failure {
-            error: FailureError::InvalidClient,
-        }),
-        Err(InvalidGrant) => Response::BadRequest(Failure {
-            error: FailureError::InvalidGrant,
-        }),
-        Err(InvalidScope) => Response::BadRequest(Failure {
-            error: FailureError::InvalidScope,
-        }),
-        Err(UnauthorizedClient) => Response::BadRequest(Failure {
-            error: FailureError::UnauthorizedClient,
-        }),
-        // FailureError::UnsupportedGrantType?
-        Err(Unexpected) => Response::InternalServerError,
+        match app.oauth_exchange_access_token(form) {
+            Err(InvalidRequest) => Response::BadRequest(Failure {
+                error: FailureError::InvalidRequest,
+            }),
+            Err(InvalidClient) => Response::BadRequest(Failure {
+                error: FailureError::InvalidClient,
+            }),
+            Err(InvalidGrant) => Response::BadRequest(Failure {
+                error: FailureError::InvalidGrant,
+            }),
+            Err(InvalidScope) => Response::BadRequest(Failure {
+                error: FailureError::InvalidScope,
+            }),
+            Err(UnauthorizedClient) => Response::BadRequest(Failure {
+                error: FailureError::UnauthorizedClient,
+            }),
+            // FailureError::UnsupportedGrantType?
+            Err(Unexpected) => Response::InternalServerError,
 
-        Ok(created) => Response::Created(Created {
-            access_token: created.access_token,
-            expires_in: created.expires_in.timestamp(),
-            token_type: match created.token_type {
-                TokenType::Bearer => responses::OAuthAccessTokenCreatedTokenType::Bearer,
-            },
-        }),
-    }
-    .answer()
+            Ok(created) => Response::Created(Created {
+                access_token: created.access_token,
+                expires_in: created.expires_in.timestamp(),
+                token_type: match created.token_type {
+                    TokenType::Bearer => responses::OAuthAccessTokenCreatedTokenType::Bearer,
+                },
+            }),
+        }
+        .answer()
+    })
+    .await
+    .get()
 }
