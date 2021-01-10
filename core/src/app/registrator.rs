@@ -110,31 +110,32 @@ where
 
         let code = form.confirmation_code.clone();
 
-        if let Some(request) = self.db.register_request_get_by_code(code)? {
-            let password_hash = self.generator.password_hash(form.password);
+        match self.db.register_request_get_by_code(code)? {
+            Some(request) => {
+                let password_hash = self.generator.password_hash(form.password);
 
-            let created_user = self.db.user_register(UserRegisterForm {
-                id: uuid::Uuid::new_v4(),
-                email: request.email,
-                password_hash,
-                first_name: form.first_name,
-                last_name: form.last_name,
-            })?;
+                let created_user = self.db.user_register(UserRegisterForm {
+                    id: uuid::Uuid::new_v4(),
+                    email: request.email,
+                    password_hash,
+                    first_name: form.first_name,
+                    last_name: form.last_name,
+                })?;
 
-            self.emailer.send(
-                created_user.email.clone(),
-                EmailMessage::RegisterFinished {
-                    first_name: created_user.first_name,
-                    last_name: created_user.last_name,
-                },
-            );
+                self.emailer.send(
+                    created_user.email.clone(),
+                    EmailMessage::RegisterFinished {
+                        first_name: created_user.first_name,
+                        last_name: created_user.last_name,
+                    },
+                );
 
-            self.db
-                .register_requests_delete_all_for_email(created_user.email)?;
+                self.db
+                    .register_requests_delete_all_for_email(created_user.email)?;
 
-            Ok(())
-        } else {
-            Err(RegisterConfirmError::CodeNotFound)
+                Ok(())
+            }
+            None => Err(RegisterConfirmError::CodeNotFound),
         }
     }
 }
