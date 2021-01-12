@@ -8,12 +8,12 @@ path = "/"
 secure = true
 
 [database]
-database = "accesso"
-host = "localhost"
-password = "accesso"
-pool_size = 8
+# database = "accesso"
+# host = "localhost"
+# password = "accesso"
+# pool_size = 8
 port = 5432
-user = "accesso"
+# user = "accesso"
 
 [sendgrid]
 application_host = "locahost:3000"
