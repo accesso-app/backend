@@ -2,6 +2,9 @@
 # Created by https://www.gitignore.io/api/rust,windows,linux,macos
 # Edit at https://www.gitignore.io/?templates=rust,windows,linux,macos
 
+# Intellij local folder
+.idea
+
 ### Linux ###
 *~
 
