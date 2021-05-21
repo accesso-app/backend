@@ -5,10 +5,11 @@ http_only = false
 secure = false
 
 [database]
-database = "authmenow"
+database = "accesso"
 host = "localhost"
-password = "authmenow"
-user = "authmenow"
+password = "accesso"
+user = "accesso"
+pool_size = 2
 
 [server]
 host = "localhost"
