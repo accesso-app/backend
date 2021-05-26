@@ -13,11 +13,7 @@
 
 ## Local installation
 
-1. Install stable rust:
-
-   ```sh
-   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-   ```
+1. [Install](https://rustup.rs/) stable rust.
 
 2. Install PostgreSQL:
 
@@ -52,7 +48,7 @@
    \q
    ```
 
-7. Enter `accesso` database:
+7. Log in to `accesso` database:
 
    ```sh
    psql accesso
