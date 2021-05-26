@@ -13,14 +13,78 @@
 
 ## Local installation
 
-1. Install stable rust (`curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`)
-2. Install PostgreSQL (`brew install postgresql`)
-3. Install diesel_cli (`cargo install diesel_cli --no-default-features --features postgres`)
-4. Create database, role and grant all privileges (https://howtocards.io/open/26)
-5. Create UUID extension at accesso database (`create extension "uuid-ossp";`)
-6. Copy `.env.sample` to `.env` (`cp .env.sample .env`)
-7. Migrate database (`diesel migration run`)
-8. Run (example: `cd api-public && cargo run`)
+1. Install stable rust:
+
+   ```sh
+   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+   ```
+
+2. Install PostgreSQL:
+
+   ```sh
+   brew install postgresql
+   ```
+
+3. Install diesel_cli:
+
+   ```sh
+   cargo install diesel_cli --no-default-features --features postgres
+   ```
+
+4. Run postgresql service:
+
+   ```sh
+   brew services start postgresql
+   ```
+
+5. Enter postgres database:
+
+   ```sh
+   psql postgres
+   ```
+
+6. Create DB, user, grant all privileges and quit (line by line):
+
+   ```sql
+   CREATE DATABASE accesso;
+   CREATE USER accesso WITH LOGIN ENCRYPTED PASSWORD 'accesso';
+   GRANT ALL PRIVILEGES ON DATABASE accesso TO accesso;
+   \q
+   ```
+
+7. Enter `accesso` database:
+
+   ```sh
+   psql accesso
+   ```
+
+8. Install `uuid-ossp` extension and quit:
+
+   ```sql
+   CREATE EXTENSION "uuid-ossp";
+   \q
+   ```
+
+9. Create `.env` and `.config.toml`:
+
+   ```sh
+   cp .env.sample .env
+   cp .config.toml.sample .config.toml
+   ```
+
+10. Migrate database:
+
+    ```sh
+    diesel migration run
+    ```
+
+11. [Install just and run](#development)
+
+## Development
+
+- Use [`just`](https://github.com/casey/just) to run commands from [`justfile`](./justfile)
+- `just` — to build and start `api-internal` crate (aliased to `just internal`)
+- `just public` — to build and run `api-public`
 
 ## ENVs
 
@@ -50,12 +114,6 @@ After loading `config/default.toml`, server is trying to load environment config
 - `.config-public-production.toml`
 
 Configs in repository's root should be prefixed with dot (ex.: `.config-production.json`) and should NOT be committed. It is just local configs.
-
-## Development
-
-- Use [`just`](https://github.com/casey/just) to run commands from [`justfile`](./justfile)
-- `just` — to build and start `api-internal` crate (aliased to `just internal`)
-- `just public` — to build and run `api-public`
 
 ## Glossary
 
