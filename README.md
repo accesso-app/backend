@@ -13,68 +13,68 @@
 
 ## Local installation
 
-1. [Install](https://rustup.rs/) stable rust.
+First, [install stable rust](https://rustup.rs/).
 
-2. Install PostgreSQL:
+Install PostgreSQL:
 
-   ```sh
-   brew install postgresql
-   ```
+```sh
+brew install postgresql
+```
 
-3. Install diesel_cli:
+Install diesel_cli:
 
-   ```sh
-   cargo install diesel_cli --no-default-features --features postgres
-   ```
+```sh
+cargo install diesel_cli --no-default-features --features postgres
+```
 
-4. Run postgresql service:
+Run postgresql service:
 
-   ```sh
-   brew services start postgresql
-   ```
+```sh
+brew services start postgresql
+```
 
-5. Enter postgres database:
+Enter postgres database:
 
-   ```sh
-   psql postgres
-   ```
+```sh
+psql postgres
+```
 
-6. Create DB, user, grant all privileges and quit (line by line):
+Create DB, user, grant all privileges and quit (line by line):
 
-   ```sql
-   CREATE DATABASE accesso;
-   CREATE USER accesso WITH LOGIN ENCRYPTED PASSWORD 'accesso';
-   GRANT ALL PRIVILEGES ON DATABASE accesso TO accesso;
-   \q
-   ```
+```sql
+CREATE DATABASE accesso;
+CREATE USER accesso WITH LOGIN ENCRYPTED PASSWORD 'accesso';
+GRANT ALL PRIVILEGES ON DATABASE accesso TO accesso;
+\q
+```
 
-7. Log in to `accesso` database:
+Log in to `accesso` database:
 
-   ```sh
-   psql accesso
-   ```
+```sh
+psql accesso
+```
 
-8. Install `uuid-ossp` extension and quit:
+Install `uuid-ossp` extension and quit:
 
-   ```sql
-   CREATE EXTENSION "uuid-ossp";
-   \q
-   ```
+```sql
+CREATE EXTENSION "uuid-ossp";
+\q
+```
 
-9. Create `.env` and `.config.toml`:
+Create `.env` and `.config.toml`:
 
-   ```sh
-   cp .env.sample .env
-   cp .config.toml.sample .config.toml
-   ```
+```sh
+cp .env.sample .env
+cp .config.toml.sample .config.toml
+```
 
-10. Migrate database:
+Migrate database:
 
-    ```sh
-    diesel migration run
-    ```
+```sh
+diesel migration run
+```
 
-11. [Install just and run](#development)
+Finally, [install just and run](#development).
 
 ## Development
 
