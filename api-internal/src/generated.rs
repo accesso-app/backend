@@ -1,9 +1,10 @@
 #![allow(dead_code)]
+#![allow(clippy::from_over_into)]
 
 pub mod api {
     use actix_swagger::{Answer, Api, Method};
     use actix_web::{
-        dev::{AppService, Factory, HttpServiceFactory},
+        dev::{AppService, Handler, HttpServiceFactory},
         FromRequest,
     };
     use std::future::Future;
@@ -25,7 +26,7 @@ pub mod api {
     impl AccessoInternalApi {
         pub fn bind_oauth_authorize_request<F, T, R>(mut self, handler: F) -> Self
         where
-            F: Factory<T, R, Answer<'static, super::paths::oauth_authorize_request::Response>>,
+            F: Handler<T, R>,
             T: FromRequest + 'static,
             R: Future<Output = Answer<'static, super::paths::oauth_authorize_request::Response>>
                 + 'static,
@@ -38,7 +39,7 @@ pub mod api {
 
         pub fn bind_oauth_token<F, T, R>(mut self, handler: F) -> Self
         where
-            F: Factory<T, R, Answer<'static, super::paths::oauth_token::Response>>,
+            F: Handler<T, R>,
             T: FromRequest + 'static,
             R: Future<Output = Answer<'static, super::paths::oauth_token::Response>> + 'static,
         {
@@ -50,7 +51,7 @@ pub mod api {
 
         pub fn bind_register_request<F, T, R>(mut self, handler: F) -> Self
         where
-            F: Factory<T, R, Answer<'static, super::paths::register_request::Response>>,
+            F: Handler<T, R>,
             T: FromRequest + 'static,
             R: Future<Output = Answer<'static, super::paths::register_request::Response>> + 'static,
         {
@@ -62,7 +63,7 @@ pub mod api {
 
         pub fn bind_register_confirmation<F, T, R>(mut self, handler: F) -> Self
         where
-            F: Factory<T, R, Answer<'static, super::paths::register_confirmation::Response>>,
+            F: Handler<T, R>,
             T: FromRequest + 'static,
             R: Future<Output = Answer<'static, super::paths::register_confirmation::Response>>
                 + 'static,
@@ -75,7 +76,7 @@ pub mod api {
 
         pub fn bind_session_create<F, T, R>(mut self, handler: F) -> Self
         where
-            F: Factory<T, R, Answer<'static, super::paths::session_create::Response>>,
+            F: Handler<T, R>,
             T: FromRequest + 'static,
             R: Future<Output = Answer<'static, super::paths::session_create::Response>> + 'static,
         {
@@ -87,7 +88,7 @@ pub mod api {
 
         pub fn bind_session_delete<F, T, R>(mut self, handler: F) -> Self
         where
-            F: Factory<T, R, Answer<'static, super::paths::session_delete::Response>>,
+            F: Handler<T, R>,
             T: FromRequest + 'static,
             R: Future<Output = Answer<'static, super::paths::session_delete::Response>> + 'static,
         {
@@ -99,7 +100,7 @@ pub mod api {
 
         pub fn bind_session_get<F, T, R>(mut self, handler: F) -> Self
         where
-            F: Factory<T, R, Answer<'static, super::paths::session_get::Response>>,
+            F: Handler<T, R>,
             T: FromRequest + 'static,
             R: Future<Output = Answer<'static, super::paths::session_get::Response>> + 'static,
         {
@@ -128,7 +129,10 @@ pub mod components {
                 message: format!("header '{}' is required", name),
             };
 
-            let header = req.headers().get(name).ok_or(header_error.clone())?;
+            let header = req
+                .headers()
+                .get(name)
+                .ok_or_else(|| header_error.clone())?;
             let value = header.to_str().map_err(|_| header_error)?.to_string();
             Ok(value)
         }

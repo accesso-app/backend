@@ -7,13 +7,23 @@ version = "0.1.0"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [dependencies]
 accesso-settings = {"path" = "../settings"}
-actix-rt = "1.0.0"
-actix-swagger = "0.1.1"
-actix-web = "2.0.0"
-diesel = {version = "1.4.3", features = ["r2d2", "postgres"]}
+actix-rt = "2.2.0"
+actix-http = "3.0.0-beta.6"
+actix-swagger = { git = "https://github.com/Drevoed/actix-swagger", branch = "feature/upgrade-actix-web" }
+actix-web = "4.0.0-beta.6"
 dotenv = "0.15.0"
 env_logger = "0.7.1"
-futures = "0.3.1"
+futures = "0.3.15"
 r2d2 = "0.8.8"
 serde = {version = "1.0.104", features = ["derive"]}
-uuid = {version = "0.8.1", features = ["serde", "v4"]}
+uuid = { version = "0.8.2", features = ["v4", "serde"] }
+
+[dependencies.diesel]
+version = "1.4.6"
+features = [
+    "postgres",
+    "uuidv07",
+    "chrono",
+    "r2d2",
+    "serde_json",
+]

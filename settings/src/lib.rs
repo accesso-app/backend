@@ -1,3 +1,6 @@
+#![deny(warnings)]
+#![forbid(unsafe_code)]
+
 pub use config;
 use config::{Config, ConfigError, Environment, File};
 use serde::Deserialize;
@@ -48,7 +51,7 @@ pub struct Server {
     pub port: u16,
     pub host: String,
     pub workers: Option<u16>,
-    pub backlog: Option<i32>,
+    pub backlog: Option<u32>,
     pub keep_alive: Option<u16>,
     pub client_shutdown: Option<u64>,
 }
@@ -56,7 +59,7 @@ pub struct Server {
 impl Settings {
     pub fn new<N: AsRef<str>>(api_name: N) -> Result<Self, ConfigError> {
         let mut config = Config::new();
-        let mode = env::var("ACCESSO_MODE").unwrap_or("development".to_owned());
+        let mode = env::var("ACCESSO_MODE").unwrap_or_else(|_| "development".to_owned());
         let api = api_name.as_ref();
 
         // Load environment config

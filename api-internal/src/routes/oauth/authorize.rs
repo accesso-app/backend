@@ -4,7 +4,7 @@ use crate::generated::{
 };
 use accesso_core::models;
 use actix_swagger::Answer;
-use actix_web::{dev, web, FromRequest, HttpMessage};
+use actix_web::{dev, web, FromRequest};
 
 use responses::{
     OAuthAuthorizeDone as Success, OAuthAuthorizeRequestFailure as Failure,
@@ -63,7 +63,7 @@ pub async fn route(
         response_type: match body.response_type {
             request_bodies::OAuthAuthorizeResponseType::Code => "code".to_owned(),
         },
-        client_id: body.client_id.clone(),
+        client_id: body.client_id,
         redirect_uri: body.redirect_uri.clone(),
         scopes: body.scope.clone().map_or(vec![], |scope| {
             scope.split(' ').map(ToOwned::to_owned).collect()

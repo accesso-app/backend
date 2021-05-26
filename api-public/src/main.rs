@@ -1,7 +1,8 @@
-#[macro_use]
-extern crate diesel;
+#![deny(warnings)]
+#![forbid(unsafe_code)]
 
 use accesso_settings::Settings;
+use actix_http::Response;
 use actix_web::{middleware, web, HttpResponse, HttpServer};
 use handler::{not_found, AnswerFailure, FailureCode};
 use std::sync::RwLock;
@@ -26,9 +27,9 @@ async fn main() -> std::io::Result<()> {
     let bind_address = settings.server.bind_address();
 
     if settings.debug {
-        println!("==> api-public runned in DEVELOPMENT MODE");
+        log::info!("==> api-public running in DEVELOPMENT MODE");
     } else {
-        println!("==> PRODUCTION MODE in api-public");
+        log::info!("==> PRODUCTION MODE in api-public");
     }
 
     let db = accesso_db::Database::new(
@@ -71,10 +72,10 @@ async fn main() -> std::io::Result<()> {
                 let error_message = format!("{}", err);
                 actix_web::error::InternalError::from_response(
                     err,
-                    HttpResponse::BadRequest().json(AnswerFailure {
+                    Response::from(HttpResponse::BadRequest().json(AnswerFailure {
                         error: FailureCode::InvalidPayload,
                         message: Some(error_message),
-                    }),
+                    })),
                 )
                 .into()
             }))
@@ -82,10 +83,10 @@ async fn main() -> std::io::Result<()> {
                 let error_message = format!("{}", err);
                 actix_web::error::InternalError::from_response(
                     err,
-                    HttpResponse::BadRequest().json(AnswerFailure {
+                    Response::from(HttpResponse::BadRequest().json(AnswerFailure {
                         error: FailureCode::InvalidQueryParams,
                         message: Some(error_message),
-                    }),
+                    })),
                 )
                 .into()
             }))

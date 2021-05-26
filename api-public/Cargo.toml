@@ -2,30 +2,22 @@
 authors = ["Sergey Sova <mail@sergeysova.com>"]
 edition = "2018"
 name = "accesso-api-public"
-version = "0.4.0"
+version = "0.5.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [dependencies]
 accesso-core = {"path" = "../core"}
 accesso-db = {"path" = "../db"}
 accesso-settings = {"path" = "../settings"}
-actix-http = {version = "1.0.1", features = ["failure"]}
-actix-router = "0.2.4"
-actix-rt = "1.1.1"
-actix-swagger = "0.2.0"
-actix-web = "2.0.0"
-awc = {version = "2.0.0-alpha.1", features = ["openssl", "compress"]}
+actix-http = "3.0.0-beta.6"
+actix-router = "0.2.7"
+actix-rt = "2.2.0"
+actix-swagger = { git = "https://github.com/Drevoed/actix-swagger", branch = "feature/upgrade-actix-web" }
+actix-web = "4.0.0-beta.6"
+awc = {version = "3.0.0-beta.5", features = ["openssl", "compress"]}
 chrono = {version = "0.4.10", features = ["serde"]}
-diesel = {version = "1.4.3", features = [
-  "postgres",
-  "uuidv07",
-  "chrono",
-  "r2d2",
-  "serde_json",
-]}
 dotenv = "0.15.0"
 env_logger = "0.7.1"
-failure = "0.1.6"
 futures = "0.3.1"
 lazy_static = "1.4.0"
 log = "0.4"
@@ -36,4 +28,14 @@ serde_json = "1.0"
 serde_plain = "0.3.0"
 sha2 = "0.8.1"
 # reqwest = { version = "0.10", features = ["blocking", "json"] }
-uuid = {version = "0.7.4", features = ["serde", "v4"]}
+uuid = { version = "0.8.2", features = ["v4", "serde"] }
+
+[dependencies.diesel]
+version = "1.4.6"
+features = [
+  "postgres",
+  "uuid",
+  "chrono",
+  "r2d2",
+  "serde_json",
+]

@@ -114,7 +114,7 @@ where
         if !client.is_allowed_response(&form.response_type) {
             return Err(RequestAuthCodeFailed::UnsupportedResponseType {
                 redirect_uri: form.redirect_uri.clone(),
-                state: form.state.clone(),
+                state: form.state,
             });
         }
 
@@ -135,7 +135,7 @@ where
         Ok(AuthCodeCreated {
             code: created.code,
             redirect_uri: created.redirect_uri,
-            state: form.state.clone(),
+            state: form.state,
         })
     }
 }

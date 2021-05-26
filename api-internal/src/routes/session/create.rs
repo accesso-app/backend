@@ -41,14 +41,13 @@ pub async fn route(
             .cookie(
                 CookieBuilder::new(session_config.name.clone(), session_token.token)
                     // TODO: extract to function or Trait
-                    .expires(time::at(time::Timespec::new(
+                    .expires(time::OffsetDateTime::from_unix_timestamp(
                         chrono::DateTime::<chrono::Utc>::from_utc(
                             session_token.expires_at,
                             chrono::Utc,
                         )
                         .timestamp(),
-                        0,
-                    )))
+                    ))
                     .path(session_config.path.clone())
                     .secure(session_config.secure)
                     .http_only(session_config.http_only)

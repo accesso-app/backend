@@ -20,43 +20,38 @@ impl EmailNotification for Email {
     fn send(&mut self, email: String, message: EmailMessage) -> bool {
         println!("EMAIL: send {:?} to {}", message, email);
 
-        match message {
-            EmailMessage::RegisterConfirmation { code } => {
-                let client = awc::Client::default();
+        if let EmailMessage::RegisterConfirmation { code } = message {
+            let client = awc::Client::default();
 
-                let req = client
-                    .post("https://api.sendgrid.com/v3/mail/send")
-                    .header("Authorization", format!("Bearer {}", self.api_key.clone()))
-                    .send_json(&sg::MailSend {
-                        subject: "Confirm registration at Accesso".to_owned(),
-                        template_id: self.email_confirm_template.clone(),
-                        from: sg::Sender {
-                            email: self.sender_email.clone(),
-                            name: "Accesso".to_owned(),
+            let req = client
+                .post("https://api.sendgrid.com/v3/mail/send")
+                .append_header(("Authorization", format!("Bearer {}", self.api_key.clone())))
+                .send_json(&sg::MailSend {
+                    subject: "Confirm registration at Accesso".to_owned(),
+                    template_id: self.email_confirm_template.clone(),
+                    from: sg::Sender {
+                        email: self.sender_email.clone(),
+                        name: "Accesso".to_owned(),
+                    },
+                    personalizations: vec![sg::Personalization {
+                        dynamic_template_data: sg::TemplateData {
+                            application_host: self.application_host.clone(),
+                            confirm_registration_url: format!(
+                                "https://{host}{prefix}{code}",
+                                host = self.application_host,
+                                prefix = self.email_confirm_url_prefix,
+                                code = code
+                            ),
                         },
-                        personalizations: vec![sg::Personalization {
-                            dynamic_template_data: sg::TemplateData {
-                                application_host: self.application_host.clone(),
-                                confirm_registration_url: format!(
-                                    "https://{host}{prefix}{code}",
-                                    host = self.application_host,
-                                    prefix = self.email_confirm_url_prefix,
-                                    code = code
-                                ),
-                            },
-                            to: vec![sg::Target {
-                                email: email.clone(),
-                            }],
-                        }],
-                    });
-
-                actix_rt::spawn(async {
-                    let resp = req.await;
-                    println!("Email confirmation sent {:#?}", resp);
+                        to: vec![sg::Target { email }],
+                    }],
                 });
-            }
-            _ => {}
-        };
+
+            actix_rt::spawn(async {
+                let resp = req.await;
+                println!("Email confirmation sent {:#?}", resp);
+            });
+        }
 
         true
     }

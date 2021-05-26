@@ -121,7 +121,7 @@ where
                     expires_at: chrono::Utc::now().naive_utc() + AccessToken::lifetime(),
                     token: self.generator.generate_token_long(),
                     user_id: authorization_code.user_id,
-                    scopes: authorization_code.scopes.clone(),
+                    scopes: authorization_code.scopes,
                 };
 
                 let created = self.db.access_token_create(access_token)?;

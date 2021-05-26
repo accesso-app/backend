@@ -313,7 +313,7 @@ impl Into<models::AuthorizationCode> for AuthorizationCode {
             code: self.code,
             created_at: self.created_at,
             redirect_uri: self.redirect_uri,
-            scopes: self.scope.unwrap_or(vec![]),
+            scopes: self.scope.unwrap_or_default(),
             user_id: self.user_id,
         }
     }
