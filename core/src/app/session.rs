@@ -100,7 +100,7 @@ where
         let hashed_input_password = self.generator.password_hash(form.password.clone());
 
         let found_user = self.db.user_find_by_credentials(UserCredentials {
-            email: form.email.clone(),
+            email: form.email,
             password_hash: hashed_input_password,
         })?;
 
@@ -112,7 +112,7 @@ where
 
                 let token = self.generator.generate_token();
                 let result = self.db.session_create(SessionToken {
-                    user_id: user.id.clone(),
+                    user_id: user.id,
                     token,
                     expires_at: chrono::Utc::now().naive_utc()
                         + chrono::Duration::days(SESSION_TOKEN_LIVE_DAYS as i64),

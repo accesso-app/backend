@@ -33,7 +33,7 @@ pub async fn route(
         grant_type,
         code: body.code.clone(),
         redirect_uri: body.redirect_uri.clone(),
-        client_id: body.client_id.clone(),
+        client_id: body.client_id,
         client_secret: body.client_secret.clone(),
     };
 

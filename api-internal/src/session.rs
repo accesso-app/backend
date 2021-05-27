@@ -1,4 +1,3 @@
-use actix_http::HttpMessage;
 use actix_web::{
     error::{ErrorInternalServerError, ErrorUnauthorized},
     web,

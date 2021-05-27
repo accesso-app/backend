@@ -100,6 +100,13 @@ pub struct MockDb {
 }
 
 #[cfg(test)]
+impl Default for MockDb {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[cfg(test)]
 impl MockDb {
     pub fn new() -> Self {
         Self {

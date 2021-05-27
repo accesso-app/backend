@@ -1,4 +1,5 @@
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+
 pub struct AccessToken {
     pub client_id: uuid::Uuid,
     pub token: String,

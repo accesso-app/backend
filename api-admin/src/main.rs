@@ -1,10 +1,13 @@
+#![deny(warnings)]
+#![forbid(unsafe_code)]
+
 use accesso_settings::Settings;
-use actix_swagger::{Answer, ContentType, StatusCode};
-use actix_web::{middleware, web, App, Error, HttpRequest, HttpResponse, HttpServer, Responder};
+use actix_swagger::{Answer, StatusCode};
+use actix_web::{middleware, web, App, HttpRequest, HttpResponse, HttpServer, Responder};
+use actix_http::Response;
 use diesel::pg::PgConnection;
 use diesel::r2d2::{self, ConnectionManager};
 use serde::{Deserialize, Serialize};
-use uuid::Uuid;
 
 type DbPool = r2d2::Pool<ConnectionManager<PgConnection>>;
 
@@ -32,8 +35,8 @@ impl SigninResponse {
 }
 
 async fn admin_signin(
-    pool: web::Data<DbPool>,
-    payload: web::Json<SigninPayload>,
+    _pool: web::Data<DbPool>,
+    _payload: web::Json<SigninPayload>,
 ) -> Answer<'static, SigninResponse> {
     SigninResponse::Ok.answer()
 }
@@ -81,10 +84,10 @@ async fn main() -> std::io::Result<()> {
             .app_data(web::JsonConfig::default().error_handler(|err, _| {
                 actix_web::error::InternalError::from_response(
                     err,
-                    HttpResponse::BadRequest().json(AnswerFailure {
+                    Response::from(HttpResponse::BadRequest().json(AnswerFailure {
                         code: FailureCode::InvalidPayload,
                         message: None,
-                    }),
+                    })),
                 )
                 .into()
             }))

@@ -7,10 +7,10 @@ lazy_static::lazy_static! {
     };
 }
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct Generator {}
 
-static HARDCODED_SALT: &'static str = "ACCESSO_SALT";
+static HARDCODED_SALT: &str = "ACCESSO_SALT";
 const TOKEN_LENGTH: u8 = 28;
 const TOKEN_LONG_LENGTH: usize = 52;
 

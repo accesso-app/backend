@@ -27,11 +27,11 @@ impl UserRepo for DbMock {
             Err(RegisterUserError::EmailAlreadyExists)
         } else {
             let user = User {
-                id: form.id.clone(),
-                email: form.email.clone(),
-                password_hash: form.password_hash.clone(),
-                first_name: form.first_name.clone(),
-                last_name: form.last_name.clone(),
+                id: form.id,
+                email: form.email,
+                password_hash: form.password_hash,
+                first_name: form.first_name,
+                last_name: form.last_name,
             };
             self.users.push(user.clone());
             Ok(user)
@@ -45,8 +45,8 @@ impl UserRepo for DbMock {
         Ok(self
             .users
             .iter()
-            .find(|u| u.email == creds.email && u.password_hash == creds.password_hash)
-            .map(|u| u.clone()))
+            .cloned()
+            .find(|u| u.email == creds.email && u.password_hash == creds.password_hash))
     }
 }
 
@@ -76,8 +76,8 @@ impl RequestsRepo for DbMock {
         Ok(self
             .register_requests
             .iter()
-            .find(|r| r.code == code)
-            .map(|r| r.clone()))
+            .cloned()
+            .find(|r| r.code == code))
     }
 
     fn register_requests_delete_all_for_email(
@@ -87,8 +87,8 @@ impl RequestsRepo for DbMock {
         self.register_requests = self
             .register_requests
             .iter()
+            .cloned()
             .filter(|r| r.email != email)
-            .map(|r| r.clone())
             .collect();
 
         Ok(self.register_requests.len())
@@ -100,8 +100,8 @@ impl SessionRepo for DbMock {
         let token = self
             .session_tokens
             .iter()
-            .find(|t| t.token == token)
-            .map(|t| t.clone());
+            .cloned()
+            .find(|t| t.token == token);
 
         if let Some(token) = token {
             let user = self.users.iter().find(|u| u.id == token.user_id);
@@ -120,8 +120,8 @@ impl SessionRepo for DbMock {
         let token = self
             .access_tokens
             .iter()
-            .find(|t| t.token == token)
-            .map(|t| t.clone());
+            .cloned()
+            .find(|t| t.token == token);
 
         if let Some(token) = token {
             let user = self.users.iter().find(|u| u.id == token.user_id);
@@ -159,13 +159,16 @@ impl SessionRepo for DbMock {
         }
     }
 
-    fn session_delete_token(&mut self, session_token: &str) -> Result<(), UnexpectedDatabaseError> {
+    fn session_delete_token(
+        &mut self,
+        _session_token: &str,
+    ) -> Result<(), UnexpectedDatabaseError> {
         unimplemented!()
     }
 
     fn session_delete_by_user_id(
         &mut self,
-        user_id: uuid::Uuid,
+        _user_id: uuid::Uuid,
     ) -> Result<(), UnexpectedDatabaseError> {
         unimplemented!()
     }

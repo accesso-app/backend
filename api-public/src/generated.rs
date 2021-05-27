@@ -3,7 +3,7 @@
 pub mod api {
     use actix_swagger::{Answer, Api, Method};
     use actix_web::{
-        dev::{AppService, Factory, HttpServiceFactory},
+        dev::{AppService, Handler, HttpServiceFactory},
         FromRequest,
     };
     use std::future::Future;
@@ -25,7 +25,7 @@ pub mod api {
     impl AccessoPublicApi {
         pub fn bind_oauth_token<F, T, R>(mut self, handler: F) -> Self
         where
-            F: Factory<T, R, Answer<'static, super::paths::oauth_token::Response>>,
+            F: Handler<T, R>,
             T: FromRequest + 'static,
             R: Future<Output = Answer<'static, super::paths::oauth_token::Response>> + 'static,
         {
@@ -37,9 +37,9 @@ pub mod api {
 
         pub fn bind_viewer_get<F, T, R>(mut self, handler: F) -> Self
         where
-            F: Factory<T, R, super::paths::viewer_get::Answer>,
+            F: Handler<T, R>,
             T: FromRequest + 'static,
-            R: Future<Output = super::paths::viewer_get::Answer> + 'static,
+            R: Future<Output = Answer<'static, super::paths::viewer_get::Response>> + 'static,
         {
             self.api = self.api.bind("/viewer".to_owned(), Method::GET, handler);
             self
@@ -64,7 +64,7 @@ pub mod components {
                 message: format!("header '{}' is required", name),
             };
 
-            let header = req.headers().get(name).ok_or(header_error.clone())?;
+            let header = req.headers().get(name).ok_or_else(|| header_error.clone())?;
             let value = header.to_str().map_err(|_| header_error)?.to_string();
             Ok(value)
         }

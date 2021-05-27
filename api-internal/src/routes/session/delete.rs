@@ -25,10 +25,7 @@ pub async fn route(
         Ok(()) => Response::Ok.answer().cookie(
             CookieBuilder::new(session_config.name.to_owned(), "")
                 // TODO: extract to function or Trait
-                .expires(time::at(time::Timespec::new(
-                    chrono::Utc::now().timestamp(),
-                    0,
-                )))
+                .expires(time::OffsetDateTime::now_utc())
                 .path(session_config.path.to_owned())
                 .secure(session_config.secure)
                 .http_only(session_config.http_only)

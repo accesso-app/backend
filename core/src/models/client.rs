@@ -17,10 +17,7 @@ impl Client {
     /// https://www.oauth.com/oauth2-servers/redirect-uris/redirect-uri-validation/
     /// The server should reject any authorization requests with redirect URLs that are not an exact match of a registered URL.
     pub fn is_allowed_redirect(&self, redirect_uri: &str) -> bool {
-        self.redirect_uri
-            .iter()
-            .find(|uri| *uri == redirect_uri)
-            .is_some()
+        self.redirect_uri.iter().any(|uri| uri == redirect_uri)
     }
 
     /// https://www.oauth.com/oauth2-servers/access-tokens/authorization-code-request/
