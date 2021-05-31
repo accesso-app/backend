@@ -52,6 +52,7 @@ table! {
         password_hash -> Varchar,
         first_name -> Varchar,
         last_name -> Varchar,
+        canonical_email -> Varchar,
     }
 }
 

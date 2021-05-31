@@ -64,7 +64,10 @@ pub mod components {
                 message: format!("header '{}' is required", name),
             };
 
-            let header = req.headers().get(name).ok_or_else(|| header_error.clone())?;
+            let header = req
+                .headers()
+                .get(name)
+                .ok_or_else(|| header_error.clone())?;
             let value = header.to_str().map_err(|_| header_error)?.to_string();
             Ok(value)
         }

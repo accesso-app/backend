@@ -18,12 +18,12 @@ r2d2 = "0.8.8"
 serde = {version = "1.0.104", features = ["derive"]}
 uuid = { version = "0.8.2", features = ["v4", "serde"] }
 
-[dependencies.diesel]
-version = "1.4.6"
-features = [
-    "postgres",
-    "uuidv07",
-    "chrono",
-    "r2d2",
-    "serde_json",
-]
+#[dependencies.diesel]
+#version = "1.4.6"
+#features = [
+#    "postgres",
+#    "uuidv07",
+#    "chrono",
+#    "r2d2",
+#    "serde_json",
+#]

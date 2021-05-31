@@ -11,5 +11,6 @@ pub trait SecureGenerator {
     fn generate_token(&self) -> String;
     fn generate_token_long(&self) -> String;
 
-    fn password_hash(&self, password: String) -> String;
+    fn password_hash(&self, password: String) -> (String, Vec<u8>);
+    fn verify_hash(&self, hash: &[u8], password: &str) -> bool;
 }

@@ -10,7 +10,6 @@ lazy_static::lazy_static! {
 #[derive(Clone, Default)]
 pub struct Generator {}
 
-static HARDCODED_SALT: &str = "ACCESSO_SALT";
 const TOKEN_LENGTH: u8 = 28;
 const TOKEN_LONG_LENGTH: usize = 52;
 
@@ -25,8 +24,30 @@ impl SecureGenerator for Generator {
         create_words_password(length, "-")
     }
 
-    fn password_hash(&self, password: String) -> String {
-        password_hash(&password, &HARDCODED_SALT)
+    fn password_hash(&self, password: String) -> (String, Vec<u8>) {
+        use sodiumoxide::crypto::pwhash::argon2id13;
+        sodiumoxide::init().unwrap();
+
+        let hash = argon2id13::pwhash(
+            password.as_bytes(),
+            argon2id13::OPSLIMIT_INTERACTIVE,
+            argon2id13::MEMLIMIT_INTERACTIVE,
+        )
+        .unwrap();
+
+        let texthash = std::str::from_utf8(&hash.0).unwrap().to_owned();
+
+        (texthash, hash.0.to_vec())
+    }
+
+    fn verify_hash(&self, hash: &[u8], password: &str) -> bool {
+        use sodiumoxide::crypto::pwhash::argon2id13;
+        sodiumoxide::init().unwrap();
+
+        match argon2id13::HashedPassword::from_slice(&hash) {
+            Some(hp) => argon2id13::pwhash_verify(&hp, password.as_bytes()),
+            _ => false,
+        }
     }
 
     fn generate_token(&self) -> String {
@@ -52,14 +73,6 @@ fn create_words_password(length: u8, separator: &str) -> String {
     words.join(separator)
 }
 
-fn password_hash(original_password: &str, salt: &str) -> String {
-    use sha2::{Digest, Sha256};
-
-    let string = format!("{}:{}", original_password, salt);
-
-    format!("{:x}", Sha256::digest(string.as_bytes()))
-}
-
 fn random_string(length: usize) -> String {
     use rand::distributions::Alphanumeric;
     use rand::{thread_rng, Rng};
@@ -68,14 +81,4 @@ fn random_string(length: usize) -> String {
         .sample_iter(&Alphanumeric)
         .take(length)
         .collect()
-}
-
-mod tests {
-    #[test]
-    fn password_hash_is_correct_sha256() {
-        assert_eq!(
-            "bc705a6e854fd4d7911a032a1678a0e06150d4bb5205bb6926b3342e71264f9d",
-            super::password_hash("123456789", "SALT")
-        );
-    }
 }

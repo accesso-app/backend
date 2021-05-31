@@ -46,7 +46,7 @@ impl UserRepo for Database {
         let conn = self.conn();
 
         Ok(users::table
-            .filter(users::email.eq(email))
+            .filter(users::canonical_email.eq(email.to_lowercase()))
             .count()
             .get_result::<i64>(&conn)
             .map_err(diesel_error_to_unexpected)?
@@ -58,10 +58,11 @@ impl UserRepo for Database {
 
         let user = User {
             id: uuid::Uuid::new_v4(),
-            email: form.email,
+            email: form.email.clone(),
+            canonical_email: form.email.to_lowercase(),
             first_name: form.first_name,
             last_name: form.last_name,
-            password_hash: form.password_hash,
+            password_hash: form.password_hash.trim_end_matches('\u{0}').to_owned(),
         };
 
         diesel::insert_into(users::table)
@@ -76,8 +77,7 @@ impl UserRepo for Database {
         creds: UserCredentials,
     ) -> Result<Option<models::User>, UnexpectedDatabaseError> {
         users::table
-            .filter(users::email.eq(creds.email))
-            .filter(users::password_hash.eq(creds.password_hash))
+            .filter(users::canonical_email.eq(creds.email.to_lowercase()))
             .get_result::<User>(&self.conn())
             .map(Into::into)
             .optional()
@@ -354,14 +354,27 @@ struct User {
     pub password_hash: String,
     pub first_name: String,
     pub last_name: String,
+    pub canonical_email: String,
 }
 
 impl Into<models::User> for User {
     fn into(self) -> models::User {
+        // We need this because we strip NULL chars from the string before sending to database,
+        // thus to verify correctly we need to pad with zeroes
+        let mut padded = [0u8; 128];
+        self.password_hash
+            .as_bytes()
+            .iter()
+            .enumerate()
+            .for_each(|(i, val)| {
+                padded[i] = *val;
+            });
+
         models::User {
             id: self.id,
             email: self.email,
-            password_hash: self.password_hash,
+            canonical_email: self.canonical_email,
+            password_hash: String::from_utf8(padded.to_vec()).unwrap(),
             first_name: self.first_name,
             last_name: self.last_name,
         }

@@ -10,7 +10,7 @@ pub struct AccessToken {
 
 impl AccessToken {
     /// https://www.oauth.com/oauth2-servers/access-tokens/access-token-lifetime/
-    pub fn lifetime() -> time::Duration {
-        time::Duration::days(1)
+    pub fn lifetime() -> chrono::Duration {
+        chrono::Duration::days(1)
     }
 }
