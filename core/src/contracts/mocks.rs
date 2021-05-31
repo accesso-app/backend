@@ -28,7 +28,8 @@ impl UserRepo for DbMock {
         } else {
             let user = User {
                 id: form.id,
-                email: form.email,
+                email: form.email.clone(),
+                canonical_email: form.email.to_lowercase(),
                 password_hash: form.password_hash,
                 first_name: form.first_name,
                 last_name: form.last_name,

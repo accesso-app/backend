@@ -112,7 +112,7 @@ where
 
         match self.db.register_request_get_by_code(code)? {
             Some(request) => {
-                let password_hash = self.generator.password_hash(form.password);
+                let password_hash = self.generator.password_hash(form.password).0;
 
                 let created_user = self.db.user_register(UserRegisterForm {
                     id: uuid::Uuid::new_v4(),

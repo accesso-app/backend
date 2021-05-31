@@ -13,10 +13,10 @@ accesso-settings = {"path" = "../settings"}
 actix-http = "3.0.0-beta.6"
 actix-router = "0.2.7"
 actix-rt = "2.2.0"
-actix-swagger = { git = "https://github.com/Drevoed/actix-swagger", branch = "feature/upgrade-actix-web" }
+actix-swagger = "0.3.0"
 actix-web = "4.0.0-beta.6"
 awc = {version = "3.0.0-beta.5", features = ["openssl", "compress"]}
-chrono = {version = "0.4.10", features = ["serde"]}
+chrono = { version = "0.4.19", default-features = false, features = ["serde", "std", "clock"] }
 dotenv = "0.15.0"
 env_logger = "0.7.1"
 futures = "0.3.15"
@@ -31,7 +31,7 @@ sha2 = "0.8.1"
 time = "0.2.26"
 # reqwest = { version = "0.10", features = ["blocking", "json"] }
 uuid = { version = "0.8.2", features = ["v4", "serde"] }
-
+sodiumoxide = "0.2.6"
 [dependencies.diesel]
 version = "1.4.6"
 features = [

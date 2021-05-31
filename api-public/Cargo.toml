@@ -6,27 +6,27 @@ version = "0.5.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [dependencies]
-accesso-core = {"path" = "../core"}
-accesso-db = {"path" = "../db"}
-accesso-settings = {"path" = "../settings"}
+accesso-core = { "path" = "../core" }
+accesso-db = { "path" = "../db" }
+accesso-settings = { "path" = "../settings" }
 actix-http = "3.0.0-beta.6"
 actix-router = "0.2.7"
 actix-rt = "2.2.0"
 actix-swagger = "0.3.0"
 actix-web = "4.0.0-beta.6"
-awc = {version = "3.0.0-beta.5", features = ["openssl", "compress"]}
-chrono = {version = "0.4.10", features = ["serde"]}
+awc = { version = "3.0.0-beta.5", features = ["openssl", "compress"] }
+chrono = { version = "0.4.19", default-features = false, features = ["serde", "std", "clock"] }
 dotenv = "0.15.0"
-env_logger = "0.7.1"
-futures = "0.3.1"
-lazy_static = "1.4.0"
+env_logger = "0.8.3"
+futures = "0.3.15"
 log = "0.4"
 r2d2 = "0.8.6"
-rand = "0.7.3"
-serde = {version = "1.0", features = ["derive"]}
+rand = "0.8.3"
+serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 serde_plain = "0.3.0"
-sha2 = "0.8.1"
+lazy_static = "1.4.0"
+sodiumoxide = "0.2.6"
 # reqwest = { version = "0.10", features = ["blocking", "json"] }
 uuid = { version = "0.8.2", features = ["v4", "serde"] }
 

@@ -101,10 +101,17 @@ where
 
         let found_user = self.db.user_find_by_credentials(UserCredentials {
             email: form.email,
-            password_hash: hashed_input_password,
+            password_hash: hashed_input_password.0,
         })?;
 
         if let Some(user) = found_user {
+            if !self
+                .generator
+                .verify_hash(user.password_hash.as_bytes(), &form.password)
+            {
+                return Err(SessionCreateError::InvalidCredentials);
+            }
+
             let mut insert_attempt = 0u8;
 
             let session: SessionToken = loop {
