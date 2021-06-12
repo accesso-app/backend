@@ -15,7 +15,7 @@ jobs:
 
     strategy:
       matrix:
-        api: [internal, public] # admin, private
+        api: [admin, internal, public] # private
 
     name: build docs for api-${{ matrix.api }}
 
