@@ -1,10 +1,10 @@
-#![deny(warnings)]
+// temporary #![deny(warnings)]
 #![forbid(unsafe_code)]
 
 use accesso_settings::Settings;
+use actix_http::Response;
 use actix_swagger::{Answer, StatusCode};
 use actix_web::{middleware, web, App, HttpRequest, HttpResponse, HttpServer, Responder};
-use actix_http::Response;
 use diesel::pg::PgConnection;
 use diesel::r2d2::{self, ConnectionManager};
 use serde::{Deserialize, Serialize};

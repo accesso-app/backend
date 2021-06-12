@@ -77,7 +77,7 @@ jobs:
     strategy:
       matrix:
         # api: [admin, internal, private, public]
-        api: [internal, public]
+        api: [admin, internal, public]
 
     name: api-${{ matrix.api }}
     needs: [builder-image, start-tools-image]
