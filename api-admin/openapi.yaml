@@ -24,6 +24,23 @@ paths:
         500:
           description: Something goes wrong
 
+  "/user/delete":
+    post:
+      operationId: userDeleteRequest
+      tags: [ User, Delete ]
+      description: Delete user request
+      requestBody:
+        $ref: "#/components/requestBodies/UserDelete"
+      responses:
+        200:
+          $ref: "#/components/responses/UserDeleteDone"
+        400:
+          $ref: "#/components/responses/UserDeletFailure"
+        404:
+          $ref: "#/components/responses/UserDeletFailure"
+        500:
+          description: Something went wrong
+
 components:
   responses:
     OAuthAuthorizeDone:
@@ -91,7 +108,81 @@ components:
                   The client will be using this to associate this response with the initial request.
                 type: string
 
+    UserDeleteDone:
+      description: User was deleted successful.
+      content:
+        application/json:
+          schema:
+            required:
+              - success
+            properties:
+              success:
+                description: It is the flag which say that user was deleted or something went wrong duiring delete proccess.
+                type: boolean
+
+    UserDeletFailure:
+      description:
+        There are two different kinds of errors to handle. The first kind of error is when the developer did something wrong when creating the request.
+        <br/>
+        If there is something wrong with the syntax of the request, such as the client_id or user_id is invalid, then it’s important to to ignore attempt to delete user from application.
+        <br/>
+        If the client_id and user_id are both valid, but there is still some other problem, user won't be deleted and actor will have to get error with description.
+      content:
+        application/json:
+          schema:
+            required:
+              - error
+            properties:
+              error:
+                description: |
+                  Possible errors: <br/>
+                  `invalid_request` — The request is missing a required parameter, includes an invalid parameter value, or is otherwise malformed.<br/>
+                  `client_not_found` — Occure when client_Id was not found.<br/>
+                  `user_not_found` — Occure when user_id was not found.<br/>
+                  `server_error` — Something went wrong during user delete operation.<br/>
+                  `temporarily_unavailable` — The server is currently unable to handle the request due to a temporary overloading or maintenance of the server.<br/>
+                type: string
+                enum:
+                  - access_denied
+                  - invalid_request
+                  - server_error
+                  - temporarily_unavailable
+                  - client_not_found
+                  - user_not_found
+                  - unauthenticated_user
+                  - unauthorized_client
+              redirectUri:
+                description: User should be redirected to if passed redirectUri and clientId is correct
+                type: string
+                format: url
+              state:
+                description:
+                  If the initial request contained a state parameter, the response must also include the exact value from the request.
+                  The client will be using this to associate this response with the initial request.
+                type: string
+
   requestBodies:
+    UserDelete:
+      required: true
+      content:
+        application/json:
+          schema:
+            required:
+              - clientId
+              - userId
+            properties:
+              clientId:
+                description: The clientId is the identifier of your app.
+                type: string
+                format: uuid
+                example: 41190cee-5231-4dcc-8167-ebf798b55ce3
+              userId:
+                description: The userId is the identifier of user.
+                type: string
+                format: uuid
+                example: 41190cee-5231-4dcc-8167-ebf798b55ce3
+
+
     OAuthAuthorize:
       required: true
       content:
