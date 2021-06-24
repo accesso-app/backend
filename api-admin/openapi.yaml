@@ -24,6 +24,21 @@ paths:
         500:
           description: Something goes wrong
 
+  "/applications/key.gen":
+    post:
+      operationId: applicationsKeyGen
+      tags: [ Applications ]
+      description: Create new app request
+      requestBody:
+        $ref: "#/components/requestBodies/ApplicationKeyGen"
+      responses:
+        200:
+          $ref: "#/components/responses/ApplicationKeyGenDone"
+        400:
+          $ref: "#/components/responses/ApplicationKeyGenFailure"
+        500:
+          description: Something went wrong
+
 components:
   responses:
     OAuthAuthorizeDone:
@@ -91,7 +106,67 @@ components:
                   The client will be using this to associate this response with the initial request.
                 type: string
 
+    ApplicationKeyGenDone:
+      description: New app key was generated.
+      content:
+        application/json:
+          schema:
+            required:
+              - appKey
+            properties:
+              appKey:
+                description: New app key
+                type: string
+                example: 41190cee52314dcc8167_ebf798b55ce3
+
+    ApplicationKeyGenFailure:
+      description:
+        There are two different kinds of errors to handle. The first kind of error is when the developer did something wrong when creating the request.
+        <br/>
+        If there is something wrong with the syntax of the request
+      content:
+        application/json:
+          schema:
+            required:
+              - error
+            properties:
+              code:
+                description: |
+                  Possible errors: <br/>
+                  `invalid_request` — The request is missing a required parameter, includes an invalid parameter value, or is otherwise malformed.<br/>
+                  `temporarily_unavailable` — The server is currently unable to handle the request due to a temporary overloading or maintenance of the server.<br/>
+                type: string
+                enum:
+                  - access_denied
+                  - invalid_request
+                  - temporarily_unavailable
+                  - unauthenticated_user
+                  - unauthorized_client
+              redirectUri:
+                description: User should be redirected to if temporarily_unavailable, unauthenticated_user or unauthorized_client errors occure
+                type: string
+                format: url
+              state:
+                description:
+                  If the initial request contained a state parameter, the response must also include the exact value from the request.
+                  The client will be using this to associate this response with the initial request.
+                type: string
+
   requestBodies:
+    ApplicationKeyGen:
+      required: true
+      content:
+        application/json:
+          schema:
+            required:
+              - appId
+            properties:
+              appId:
+                description: The appId is the unique identifier of your new app.
+                type: string
+                format: uuid
+                example: 41190cee-5231-4dcc-8167-ebf798b55ce3
+
     OAuthAuthorize:
       required: true
       content:
