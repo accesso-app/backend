@@ -24,6 +24,19 @@ paths:
         500:
           description: Something goes wrong
 
+  "/users/regUsers.get":
+    get:
+      operationId: usersGetRegisteredUsers
+      tags: [ Users ]
+      description: Get all registered users
+      responses:
+        200:
+          $ref: "#/components/responses/ApplicationGetRegisteredUsersDone"
+        400:
+          $ref: "#/components/responses/ApplicationGetRegisteredUsersFailure"
+        500:
+          description: Something went wrong
+
 components:
   responses:
     OAuthAuthorizeDone:
@@ -91,6 +104,44 @@ components:
                   The client will be using this to associate this response with the initial request.
                 type: string
 
+    ApplicationGetRegisteredUsersDone:
+      description: Get registered users
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ArrayOfUsers'
+          example:
+            - userId: 41190cee-5231-4dcc-8167-ebf798b55ce3
+              name: user-1
+              appIds: [41190cee-5231-4dcc-8167-ebf798b55ce3, 41190cee-5231-4dcc-8167-ebf798b55ce4]
+
+            - userId: 41190cee-5231-55gg-8167-ebf798b55ce3
+              name: user-2
+              appIds: [41190cee-5231-4dcc-8167-ebf798b55ce3, 41190cee-5231-4dcc-8167-ebf798b55ce4]
+
+    ApplicationGetRegisteredUsersFailure:
+      description:
+        There are two different kinds of errors to handle. The first kind of error is when the developer did something wrong when creating the request.
+        <br/>
+        If there is something wrong with the syntax of the request
+      content:
+        application/json:
+          schema:
+            required:
+              - error
+            properties:
+              code:
+                description: |
+                  Possible errors: <br/>
+                  `invalid_request` — The request is missing a required parameter, includes an invalid parameter value, or is otherwise malformed.<br/>
+                  `temporarily_unavailable` — The server is currently unable to handle the request due to a temporary overloading or maintenance of the server.<br/>
+                type: string
+                enum:
+                  - invalid_request
+                  - temporarily_unavailable
+                  - unauthenticated_user
+                  - unauthorized_client
+
   requestBodies:
     OAuthAuthorize:
       required: true
@@ -133,3 +184,22 @@ components:
                   When the user is redirected back to your app, double check that the state value matches what you set it to originally.
                   This will ensure an attacker can’t intercept the authorization flow.
                 type: string
+
+  schemas:
+    ArrayOfUsers:
+      type: array
+      items:
+        type: object
+        properties:
+          userId:
+            type: string
+            format: uuid
+          name:
+            type: string
+          appIds:
+            type: array
+            items:
+              description: applications id which related to user
+              type: string
+              format: uuid
+              example: 41190cee-5231-4dcc-8167-ebf798b55ce3
