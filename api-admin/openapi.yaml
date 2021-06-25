@@ -24,18 +24,18 @@ paths:
         500:
           description: Something goes wrong
 
-  "/applications/app.registration":
+  "/applications.registration":
     post:
-      operationId: applicationsAppRegistration
+      operationId: appReg
       tags: [ Applications ]
       description: Create new app request
       requestBody:
-        $ref: "#/components/requestBodies/ApplicationAppRegistration"
+        $ref: "#/components/requestBodies/AppReg"
       responses:
         200:
-          $ref: "#/components/responses/ApplicationAppRegistrationDone"
+          $ref: "#/components/responses/AppRegDone"
         400:
-          $ref: "#/components/responses/ApplicationAppRegistrationFailure"
+          $ref: "#/components/responses/AppRegFailure"
         500:
           description: Something went wrong
 
@@ -106,7 +106,7 @@ components:
                   The client will be using this to associate this response with the initial request.
                 type: string
 
-    ApplicationAppRegistrationDone:
+    AppRegDone:
       description: New app was created and attached to user.
       content:
         application/json:
@@ -121,50 +121,33 @@ components:
                 format: uuid
                 example: 41190cee-5231-4dcc-8167-ebf798b55ce3
               appKey:
-                description: The appKey .
                 type: string
                 example: 41190cee52314dcc8167_ebf798b55ce3
-              # appInfo:
-              #   description: Info about app.
-              #   type: string
 
-    ApplicationAppRegistrationFailure:
+    AppRegFailure:
       description:
-        There are two different kinds of errors to handle. The first kind of error is when the developer did something wrong when creating the request.
-        <br/>
-        If there is something wrong with the syntax of the request, such as the client_id or user_id is invalid, then it’s important to ignore attempt to add user to application.
-        <br/>
-        If the client_id and user_id are both valid, but there is still some other problem, user won't be added and actor will have to get error with description.
+        Happens when something went wrong after attemp to register new application.
       content:
         application/json:
           schema:
             required:
-              - error
-            properties:
+              - code
+             properties:
               code:
                 description: |
                   Possible errors: <br/>
-                  `invalid_request` — The request is missing a required parameter, includes an invalid parameter value, or is otherwise malformed.<br/>
-                  `temporarily_unavailable` — The server is currently unable to handle the request due to a temporary overloading or maintenance of the server.<br/>
+                  `access_denied` — This error occures when user's session was expired | user doesn't have enough permission | or user unauthorized.<br>
+                  `invalid_request` — Something was wrong with user request.<br/>
                 type: string
                 enum:
                   - access_denied
                   - invalid_request
-                  - temporarily_unavailable
-                  - unauthenticated_user
-                  - unauthorized_client
               redirectUri:
-                description: User should be redirected to if passed redirectUri and clientId is correct
                 type: string
                 format: url
-              state:
-                description:
-                  If the initial request contained a state parameter, the response must also include the exact value from the request.
-                  The client will be using this to associate this response with the initial request.
-                type: string
 
   requestBodies:
-    ApplicationAppRegistration:
+    AppReg:
       required: true
       content:
         application/json:
@@ -185,11 +168,8 @@ components:
                 format: uri
                 example: https://example-app.com/oauth/callback
               hasRegPermissions:
-                description: This flag shows that user have permissions on registration new apps
+                description: This flag shows that user have permissions on registration new apps.
                 type: boolean
-              state:
-                description: Optional parameter which can help user to fetch data after redirect
-                type: string
 
     OAuthAuthorize:
       required: true
