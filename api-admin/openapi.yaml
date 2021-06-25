@@ -26,14 +26,14 @@ paths:
 
   "/users.get":
     get:
-      operationId: usersGetRegisteredUsers
+      operationId: usersList
       tags: [ Users ]
       description: Get all registered users
       responses:
         200:
-          $ref: "#/components/responses/ApplicationGetRegisteredUsersDone"
+          $ref: "#/components/responses/UsersListDone"
         400:
-          $ref: "#/components/responses/ApplicationGetRegisteredUsersFailure"
+          $ref: "#/components/responses/UsersListFailure"
         500:
           description: Something went wrong
 
@@ -104,12 +104,12 @@ components:
                   The client will be using this to associate this response with the initial request.
                 type: string
 
-    ApplicationGetRegisteredUsersDone:
+    UsersListDone:
       description: Get registered users
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/ArrayOfUsers'
+            $ref: '#/components/schemas/Users'
           example:
             - userId: 41190cee-5231-4dcc-8167-ebf798b55ce3
               name: user-1
@@ -119,28 +119,24 @@ components:
               name: user-2
               appIds: [41190cee-5231-4dcc-8167-ebf798b55ce3, 41190cee-5231-4dcc-8167-ebf798b55ce4]
 
-    ApplicationGetRegisteredUsersFailure:
+    UsersListFailure:
       description:
-        There are two different kinds of errors to handle. The first kind of error is when the developer did something wrong when creating the request.
-        <br/>
-        If there is something wrong with the syntax of the request
+        Happens when something went wrong after attemp to get registered users list
       content:
         application/json:
           schema:
             required:
-              - error
+              - code
             properties:
               code:
                 description: |
                   Possible errors: <br/>
-                  `invalid_request` — The request is missing a required parameter, includes an invalid parameter value, or is otherwise malformed.<br/>
-                  `temporarily_unavailable` — The server is currently unable to handle the request due to a temporary overloading or maintenance of the server.<br/>
+                  `access_denied` — This error occures when user's session was expired | user doesn't have enough permission | or user unauthorized
+                  `invalid_request` — Something was wrong with user request.<br/>
                 type: string
                 enum:
+                  - access_denied
                   - invalid_request
-                  - temporarily_unavailable
-                  - unauthenticated_user
-                  - unauthorized_client
 
   requestBodies:
     OAuthAuthorize:
@@ -186,7 +182,7 @@ components:
                 type: string
 
   schemas:
-    ArrayOfUsers:
+    Users:
       type: array
       items:
         type: object
