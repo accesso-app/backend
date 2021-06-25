@@ -131,7 +131,7 @@ components:
               code:
                 description: |
                   Possible errors: <br/>
-                  `access_denied` — This error occures when user's session was expired | user doesn't have enough permission | or user unauthorized
+                  `access_denied` — This error occures when user's session was expired | user doesn't have enough permission | or user unauthorized.<br/>
                   `invalid_request` — Something was wrong with user request.<br/>
                 type: string
                 enum:
