@@ -137,6 +137,9 @@ components:
                 enum:
                   - access_denied
                   - invalid_request
+              redirectUri:
+                type: string
+                format: url
 
   requestBodies:
     OAuthAuthorize:
