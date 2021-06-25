@@ -131,15 +131,13 @@ components:
                 description: |
                   Variants: <br/>
                   `access_denied` — This error occures when user's session was expired | user doesn't have enough permission | or user unauthorized
-                  `invalid_request` — Somethis wrong with user request
+                  `invalid_request` — Something was wrong with user request
                   `application_not_found` — Occure when application_id was not found.<br/>
                   `user_not_found` — Occure when user_id was not found.<br/>
-                  `temporarily_unavailable` — The server is currently unable to handle the request due to a temporary overloading or maintenance of the server.<br/>
                 type: string
                 enum:
                   - access_denied
                   - invalid_request
-                  - temporarily_unavailable
                   - application_not_found
                   - user_not_found
               redirectUri:
