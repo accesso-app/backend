@@ -24,18 +24,18 @@ paths:
         500:
           description: Something goes wrong
 
-  "/applications/app.remove":
+  "/applications.remove":
     post:
-      operationId: applicationsAppRemove
+      operationId: appRemove
       tags: [ Applications ]
       description: Create new app request
       requestBody:
-        $ref: "#/components/requestBodies/ApplicationAppRemove"
+        $ref: "#/components/requestBodies/AppRemove"
       responses:
         200:
-          $ref: "#/components/responses/ApplicationAppRemoveDone"
+          $ref: "#/components/responses/AppRemoveDone"
         400:
-          $ref: "#/components/responses/ApplicationAppRemoveFailure"
+          $ref: "#/components/responses/AppRemoveFailure"
         500:
           description: Something went wrong
 
@@ -106,7 +106,7 @@ components:
                   The client will be using this to associate this response with the initial request.
                 type: string
 
-    ApplicationAppRemoveDone:
+    AppRemoveDone:
       description: App was deleted.
       content:
         application/json:
@@ -117,31 +117,30 @@ components:
               success:
                 type: boolean
 
-    ApplicationAppRemoveFailure:
+    AppRemoveFailure:
       description:
-        There are two different kinds of errors to handle. The first kind of error is when the developer did something wrong when creating the request.
-        <br/>
-        If there is something wrong with the syntax of the request
+        Happens when something went wrong after attemp to remove application
       content:
         application/json:
           schema:
             required:
-              - error
-            properties:
+              - code
+             properties:
               code:
                 description: |
                   Possible errors: <br/>
-                  `invalid_request` — The request is missing a required parameter, includes an invalid parameter value, or is otherwise malformed.<br/>
-                  `temporarily_unavailable` — The server is currently unable to handle the request due to a temporary overloading or maintenance of the server.<br/>
+                  `access_denied` — This error occures when user's session was expired | user doesn't have enough permission | or user unauthorized
+                  `invalid_request` — Something was wrong with user request.<br/>
                 type: string
                 enum:
+                  - access_denied
                   - invalid_request
-                  - temporarily_unavailable
-                  - unauthenticated_user
-                  - unauthorized_client
+              redirectUri:
+                type: string
+                format: url
 
   requestBodies:
-    ApplicationAppRemove:
+    AppRemove:
       required: true
       content:
         application/json:
@@ -150,7 +149,7 @@ components:
               - appId
             properties:
               appId:
-                description: The appId is the unique identifier of your new app.
+                description: The unique identifier of your app.
                 type: string
                 format: uuid
                 example: 41190cee-5231-4dcc-8167-ebf798b55ce3
