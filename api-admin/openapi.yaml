@@ -130,8 +130,8 @@ components:
               code:
                 description: |
                   Variants: <br/>
-                  `access_denied` — This error occures when user's session was expired | user doesn't have enough permission | or user unauthorized
-                  `invalid_request` — Something was wrong with user request
+                  `access_denied` — This error occures when user's session was expired | user doesn't have enough permission | or user unauthorized.<br/>
+                  `invalid_request` — Something was wrong with user request.<br/>
                   `application_not_found` — Occure when application_id was not found.<br/>
                   `user_not_found` — Occure when user_id was not found.<br/>
                 type: string
