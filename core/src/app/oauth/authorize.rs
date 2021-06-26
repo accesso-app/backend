@@ -1,13 +1,9 @@
-use crate::contracts::{
-    AuthCodeRepo, ClientRepo, EmailNotification, SecureGenerator, UnexpectedDatabaseError,
-};
-use crate::models::{AuthorizationCode, User};
-use crate::App;
-use validator::Validate;
+use crate::contracts::UnexpectedDatabaseError;
+use crate::models::User;
 
 pub trait OAuthAuthorize {
     fn oauth_request_authorize_code(
-        &mut self,
+        &self,
         actor: Option<User>,
         form: RequestAuthCode,
     ) -> Result<AuthCodeCreated, RequestAuthCodeFailed>;
@@ -78,66 +74,6 @@ pub enum RequestAuthCodeFailed {
 
     /// The authorization server is currently unable to handle the request due to a temporary overloading or maintenance of the server
     TemporarilyUnavailable,
-}
-
-impl<Db, Email, Gen> OAuthAuthorize for App<Db, Email, Gen>
-where
-    Db: ClientRepo + AuthCodeRepo,
-    Gen: SecureGenerator,
-    Email: EmailNotification,
-{
-    fn oauth_request_authorize_code(
-        &mut self,
-        actor: Option<User>,
-        form: RequestAuthCode,
-    ) -> Result<AuthCodeCreated, RequestAuthCodeFailed> {
-        let actor = actor.ok_or(RequestAuthCodeFailed::Unauthenticated)?;
-
-        form.validate()?;
-
-        let client = self
-            .db
-            .client_find_by_id(form.client_id)?
-            .ok_or(RequestAuthCodeFailed::InvalidRequest)?;
-
-        // TODO: register or login?
-        // If user already registered in application, just transaprently check
-        // If user not registered, show confirmation dialog
-
-        // TODO: check `client.allowed_registrations` when user registers
-        // If not allowed reject authorization request
-
-        if !client.is_allowed_redirect(&form.redirect_uri) {
-            return Err(RequestAuthCodeFailed::InvalidRequest);
-        }
-
-        if !client.is_allowed_response(&form.response_type) {
-            return Err(RequestAuthCodeFailed::UnsupportedResponseType {
-                redirect_uri: form.redirect_uri.clone(),
-                state: form.state,
-            });
-        }
-
-        // Check if actor already authorized with client
-        // TODO: think about authorize confirmation
-
-        let code = AuthorizationCode {
-            client_id: client.id,
-            code: self.generator.generate_token(),
-            created_at: chrono::Utc::now().naive_utc(),
-            redirect_uri: form.redirect_uri.clone(),
-            scopes: form.scopes.clone(),
-            user_id: actor.id,
-        };
-
-        let created = self.db.auth_code_create(code)?;
-
-        Ok(AuthCodeCreated {
-            code: created.code,
-            redirect_uri: created.redirect_uri,
-            state: form.state,
-        })
-    }
 }
 
 impl From<validator::ValidationErrors> for RequestAuthCodeFailed {

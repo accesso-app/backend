@@ -5,7 +5,7 @@ use actix_web::web;
 
 pub async fn route(
     body: web::Json<request_bodies::Register>,
-    app: web::Data<crate::App>,
+    app: web::Data<accesso_app::App>,
 ) -> Answer<'static, register_request::Response> {
     use accesso_core::app::registrator::{
         CreateRegisterRequest,
@@ -13,8 +13,6 @@ pub async fn route(
         Registrator,
     };
     use register_request::Response;
-
-    let mut app = app.write().unwrap();
 
     match app.registrator_create_request(CreateRegisterRequest::from_email(&body.email)) {
         Err(EmailAlreadyRegistered) => Response::BadRequest(responses::RegisterFailed {

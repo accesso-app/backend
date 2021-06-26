@@ -6,7 +6,7 @@ use actix_web::{cookie::CookieBuilder, web};
 pub async fn route(
     body: web::Json<request_bodies::SessionCreate>,
     session_config: web::Data<crate::cookie::SessionCookieConfig>,
-    app: web::Data<crate::App>,
+    app: web::Data<accesso_app::App>,
 ) -> Answer<'static, Response> {
     use accesso_core::app::session::{
         Session,
@@ -18,8 +18,6 @@ pub async fn route(
         email: body.email.clone(),
         password: body.password.clone(),
     };
-
-    let mut app = app.write().unwrap();
 
     match app.session_create(form) {
         Err(Unexpected) => Response::Unexpected.answer(),

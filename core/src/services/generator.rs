@@ -1,4 +1,4 @@
-use accesso_core::contracts::SecureGenerator;
+use crate::contracts::SecureGenerator;
 
 lazy_static::lazy_static! {
     static ref WORDS: Vec<&'static str> = {
@@ -44,7 +44,7 @@ impl SecureGenerator for Generator {
         use sodiumoxide::crypto::pwhash::argon2id13;
         sodiumoxide::init().unwrap();
 
-        match argon2id13::HashedPassword::from_slice(&hash) {
+        match argon2id13::HashedPassword::from_slice(hash) {
             Some(hp) => argon2id13::pwhash_verify(&hp, password.as_bytes()),
             _ => false,
         }
@@ -66,7 +66,7 @@ fn create_words_password(length: u8, separator: &str) -> String {
     let mut words = vec![];
 
     for _ in 0..length {
-        let pos = rng.gen_range(0, WORDS.len() - 1);
+        let pos = rng.gen_range(0..WORDS.len());
         words.push(WORDS[pos].to_owned());
     }
 
@@ -80,5 +80,6 @@ fn random_string(length: usize) -> String {
     thread_rng()
         .sample_iter(&Alphanumeric)
         .take(length)
+        .map(char::from)
         .collect()
 }

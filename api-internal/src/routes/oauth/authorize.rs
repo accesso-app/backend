@@ -30,15 +30,13 @@ impl FromRequest for Auth {
             .expect("SessionCookieConfig not provided");
 
         if let Some(cookie) = req.cookie(&session_config.name) {
-            if let Some(app) = req.app_data::<web::Data<crate::App>>() {
-                let app = app.read().unwrap();
-
+            if let Some(app) = req.app_data::<web::Data<accesso_app::App>>() {
                 return match app.session_resolve_by_cookie(cookie.value().to_owned()) {
                     Err(_) => futures::future::ok(Auth { user: None }),
                     Ok(user) => futures::future::ok(Auth { user }),
                 };
             } else {
-                eprintln!("[Auth FromRequest] cannot resolve app data");
+                tracing::error!("[Auth FromRequest] cannot resolve app data");
             }
         }
 
@@ -49,7 +47,7 @@ impl FromRequest for Auth {
 pub async fn route(
     auth: Auth,
     body: web::Json<request_bodies::OAuthAuthorize>,
-    app: web::Data<crate::App>,
+    app: web::Data<accesso_app::App>,
 ) -> Answer<'static, Response> {
     use accesso_core::app::oauth::authorize::{
         OAuthAuthorize, RequestAuthCode,
@@ -70,8 +68,6 @@ pub async fn route(
         }),
         state: body.state.clone(),
     };
-
-    let mut app = app.write().unwrap();
 
     match app.oauth_request_authorize_code(auth.user, form) {
         Err(ServerError) => Response::BadRequest(Failure {

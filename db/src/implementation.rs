@@ -53,7 +53,7 @@ impl UserRepo for Database {
             > 0)
     }
 
-    fn user_register(&mut self, form: UserRegisterForm) -> Result<models::User, RegisterUserError> {
+    fn user_register(&self, form: UserRegisterForm) -> Result<models::User, RegisterUserError> {
         let conn = self.conn();
 
         let user = User {
@@ -87,7 +87,7 @@ impl UserRepo for Database {
 
 impl RequestsRepo for Database {
     fn register_request_save(
-        &mut self,
+        &self,
         request: models::RegisterRequest,
     ) -> Result<models::RegisterRequest, SaveRegisterRequestError> {
         let conn = self.conn();
@@ -115,7 +115,7 @@ impl RequestsRepo for Database {
     }
 
     fn register_requests_delete_all_for_email(
-        &mut self,
+        &self,
         email: String,
     ) -> Result<usize, UnexpectedDatabaseError> {
         let conn = self.conn();
@@ -161,7 +161,7 @@ impl SessionRepo for Database {
     }
 
     fn session_create(
-        &mut self,
+        &self,
         session: models::SessionToken,
     ) -> Result<models::SessionToken, SessionCreateError> {
         let conn = self.conn();
@@ -173,7 +173,7 @@ impl SessionRepo for Database {
             .map_err(diesel_error_to_session_create_error)
     }
 
-    fn session_delete_token(&mut self, session_token: &str) -> Result<(), UnexpectedDatabaseError> {
+    fn session_delete_token(&self, session_token: &str) -> Result<(), UnexpectedDatabaseError> {
         let conn = self.conn();
 
         diesel::delete(session_tokens::table)
@@ -184,7 +184,7 @@ impl SessionRepo for Database {
     }
 
     fn session_delete_by_user_id(
-        &mut self,
+        &self,
         user_id: uuid::Uuid,
     ) -> Result<(), UnexpectedDatabaseError> {
         let conn = self.conn();

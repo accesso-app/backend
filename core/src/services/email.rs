@@ -1,4 +1,4 @@
-use accesso_core::contracts::{EmailMessage, EmailNotification};
+use crate::contracts::{EmailMessage, EmailNotification};
 
 #[derive(Clone)]
 pub struct Email {
@@ -17,7 +17,7 @@ pub struct Email {
 }
 
 impl EmailNotification for Email {
-    fn send(&mut self, email: String, message: EmailMessage) -> bool {
+    fn send(&self, email: String, message: EmailMessage) -> bool {
         println!("EMAIL: send {:?} to {}", message, email);
 
         if let EmailMessage::RegisterConfirmation { code } = message {

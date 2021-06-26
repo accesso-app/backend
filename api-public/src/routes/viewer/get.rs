@@ -7,12 +7,13 @@ use responses::{
     ViewerGetFailure as Failure, ViewerGetFailureError as FailureError, ViewerGetSuccess as Success,
 };
 
-pub async fn route(access_token: parameters::AccessToken, app: web::Data<crate::App>) -> Answer {
+pub async fn route(
+    access_token: parameters::AccessToken,
+    app: web::Data<accesso_app::App>,
+) -> Answer {
     use accesso_core::app::session::{Session, SessionResolveError::Unexpected};
 
     blocking(Response::Unexpected.answer(), move || {
-        let app = app.read().unwrap();
-
         match app.session_resolve_by_access_token(access_token.0) {
             Err(Unexpected) => Response::Unexpected,
             Ok(None) => Response::BadRequest(Failure {

@@ -21,7 +21,7 @@ use accesso_core::app::oauth::exchange::{
 
 pub async fn route(
     body: web::Json<request_bodies::OAuthAccessTokenExchange>,
-    app: web::Data<crate::App>,
+    app: web::Data<accesso_app::App>,
 ) -> Answer<'static, Response> {
     let grant_type = match body.grant_type {
         request_bodies::OAuthAccessTokenExchangeGrantType::AuthorizationCode => {
@@ -38,8 +38,6 @@ pub async fn route(
     };
 
     blocking(Response::InternalServerError.answer(), move || {
-        let mut app = app.write().unwrap();
-
         match app.oauth_exchange_access_token(form) {
             Err(InvalidRequest) => Response::BadRequest(Failure {
                 error: FailureError::InvalidRequest,

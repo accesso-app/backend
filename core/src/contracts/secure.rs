@@ -1,8 +1,8 @@
-#[cfg(test)]
+#[cfg(feature = "testing")]
 use mockall::*;
 
-#[cfg_attr(test, automock)]
-pub trait SecureGenerator {
+#[cfg_attr(feature = "testing", automock)]
+pub trait SecureGenerator: Send + Sync {
     fn secure_words(&self, length: u8) -> String;
     fn confirmation_code(&self) -> String {
         self.secure_words(4)
