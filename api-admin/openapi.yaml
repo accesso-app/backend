@@ -84,7 +84,7 @@ components:
                 type: string
                 example: 41190cee52314dcc8167_ebf798b55ce3
   
-    ApplicationsUserAddFailure:
+    ApplicationsSecretRegenerateFailure:
       description:
         Happens when something went wrong after attemp to regenerate application key
       content:
