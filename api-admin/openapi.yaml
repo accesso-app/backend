@@ -39,6 +39,21 @@ paths:
         500:
           description: Something went wrong
 
+  "/applications/user.remove":
+    post:
+      operationId: applicationsUserRemove
+      tags: [ Applications ]
+      description: Remove user from application
+      requestBody:
+        $ref: "#/components/requestBodies/ApplicationsUserRemove"
+      responses:
+        200:
+          $ref: "#/components/responses/ApplicationsUserRemoveSuccess"
+        400:
+          $ref: "#/components/responses/ApplicationsUserRemoveFailure"
+        500:
+          description: Something went wrong
+
 components:
   responses:
     ApplicationsUserAddSuccess:
@@ -70,7 +85,7 @@ components:
                   - invalid_request
                   - application_not_found
                   - user_not_found
-  
+
     ApplicationsSecretRegenerateSuccess:
       description: New app secret was generated.
       content:
@@ -83,7 +98,7 @@ components:
                 description: New secret key
                 type: string
                 example: 41190cee52314dcc8167_ebf798b55ce3
-  
+
     ApplicationsSecretRegenerateFailure:
       description:
         Happens when something went wrong after attemp to regenerate application key
@@ -102,7 +117,37 @@ components:
                 enum:
                   - access_denied
                   - invalid_request
-  
+
+    ApplicationsUserRemoveSuccess:
+      description: User was deleted successful.
+      content:
+        application/json:
+          schema:
+            type: object
+
+    ApplicationsUserRemoveFailure:
+      description:
+        Happens when something went wrong after attemp to delete application
+      content:
+        application/json:
+          schema:
+            required:
+              - code
+            properties:
+              code:
+                description: |
+                  Possible errors: <br/>
+                  `access_denied` — This error occures when user's session was expired | user doesn't have enough permission | or user unauthorized.<br/>
+                  `invalid_request` — Something was wrong with user request.<br/>
+                  `application_not_found` — Occure when application_id was not found.<br/>
+                  `user_not_found` — Occure when user_id was not found.<br/>
+                type: string
+                enum:
+                  - access_denied
+                  - invalid_request
+                  - application_not_found
+                  - user_not_found
+
   requestBodies:
     ApplicationsUserAdd:
       required: true
@@ -110,7 +155,7 @@ components:
         application/json:
           schema:
             required:
-              - appId
+              - applicationId
               - userId
             properties:
               applicationId:
@@ -122,7 +167,7 @@ components:
                 type: string
                 format: uuid
                 example: 41190cee-5231-4dcc-8167-ebf798b55ce3
-      
+
     ApplicationsSecretRegenerate:
       required: true
       content:
@@ -137,3 +182,21 @@ components:
                 format: uuid
                 example: 41190cee-5231-4dcc-8167-ebf798b55ce3
 
+    ApplicationsUserRemove:
+      required: true
+      content:
+        application/json:
+          schema:
+            required:
+              - applicationId
+              - userId
+            properties:
+              applicationId:
+                description: The identifier of your app.
+                type: string
+                format: uuid
+                example: 41190cee-5231-4dcc-8167-ebf798b55ce3
+              userId:
+                type: string
+                format: uuid
+                example: 41190cee-5231-4dcc-8167-ebf798b55ce3
