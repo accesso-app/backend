@@ -13,7 +13,7 @@ paths:
     post:
       operationId: applicationsUserAdd
       tags: [ Applications ]
-      description: Add user request
+      description: Add user to application
       requestBody:
         $ref: "#/components/requestBodies/ApplicationsUserAdd"
       responses:
@@ -21,6 +21,21 @@ paths:
           $ref: "#/components/responses/ApplicationsUserAddSuccess"
         400:
           $ref: "#/components/responses/ApplicationsUserAddFailure"
+        500:
+          description: Something went wrong
+
+  "/applications/secret.regenerate":
+    post:
+      operationId: applicationsSecretRegenerate
+      tags: [ Applications ]
+      description: create new secret key
+      requestBody:
+        $ref: "#/components/requestBodies/ApplicationsSecretRegenerate"
+      responses:
+        200:
+          $ref: "#/components/responses/ApplicationsSecretRegenerateSuccess"
+        400:
+          $ref: "#/components/responses/ApplicationsSecretRegenerateFailure"
         500:
           description: Something went wrong
 
@@ -56,6 +71,38 @@ components:
                   - application_not_found
                   - user_not_found
   
+    ApplicationsSecretRegenerateSuccess:
+      description: New app secret was generated.
+      content:
+        application/json:
+          schema:
+            required:
+              - secretKey
+            properties:
+              secretKey:
+                description: New secret key
+                type: string
+                example: 41190cee52314dcc8167_ebf798b55ce3
+  
+    ApplicationsUserAddFailure:
+      description:
+        Happens when something went wrong after attemp to regenerate application key
+      content:
+        application/json:
+          schema:
+            required:
+              - code
+            properties:
+              code:
+                description: |
+                  Possible errors: <br/>
+                  `access_denied` -- This error occures when user's session was expired | user doesn't have enough permission | or user unauthorized.<br/>
+                  `invalid_request` -- Something was wrong with user request.<br/>
+                type: string
+                enum:
+                  - access_denied
+                  - invalid_request
+  
   requestBodies:
     ApplicationsUserAdd:
       required: true
@@ -75,3 +122,18 @@ components:
                 type: string
                 format: uuid
                 example: 41190cee-5231-4dcc-8167-ebf798b55ce3
+      
+    ApplicationsSecretRegenerate:
+      required: true
+      content:
+        application/json:
+          schema:
+            required:
+              - applicationId
+            properties:
+              applicationId:
+                description: ID if the application need to regenerate the secret key.
+                type: string
+                format: uuid
+                example: 41190cee-5231-4dcc-8167-ebf798b55ce3
+
