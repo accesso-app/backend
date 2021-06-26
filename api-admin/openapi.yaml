@@ -24,6 +24,21 @@ paths:
         500:
           description: Something goes wrong
 
+  "/applications/user.add":
+    post:
+      operationId: applicationsUserAdd
+      tags: [ Applications ]
+      description: Add user request
+      requestBody:
+        $ref: "#/components/requestBodies/ApplicationUserAdd"
+      responses:
+        200:
+          $ref: "#/components/responses/ApplicationUserAddDone"
+        400:
+          $ref: "#/components/responses/ApplicationUserAddFailure"
+        500:
+          description: Something went wrong
+
 components:
   responses:
     OAuthAuthorizeDone:
@@ -91,7 +106,65 @@ components:
                   The client will be using this to associate this response with the initial request.
                 type: string
 
+    ApplicationUserAddDone:
+      description: User was added successful.
+      content:
+        application/json:
+          schema:
+            required:
+              - success
+            properties:
+              success:
+                description: It is the flag which say that user was added or something went wrong duiring delete proccess.
+                type: boolean
+
+    ApplicationUserAddFailure:
+      description:
+        Happens when something went wrong after attemp to connect user with application
+      content:
+        application/json:
+          schema:
+            required:
+              - code
+            properties:
+              code:
+                description: |
+                  Possible errors: <br/>
+                  `access_denied` — This error occures when user's session was expired | user doesn't have enough permission | or user unauthorized.<br/>
+                  `invalid_request` — Something was wrong with user request.<br/>
+                  `application_not_found` — Occure when application_id was not found.<br/>
+                  `user_not_found` — Occure when user_id was not found.<br/>
+                type: string
+                enum:
+                  - access_denied
+                  - invalid_request
+                  - application_not_found
+                  - user_not_found
+              redirectUri:
+                description: User should be redirected to if passed redirectUri and clientId is correct
+                type: string
+                format: url
+
   requestBodies:
+    ApplicationUserAdd:
+      required: true
+      content:
+        application/json:
+          schema:
+            required:
+              - appId
+              - userId
+            properties:
+              appId:
+                description: The identifier of application.
+                type: string
+                format: uuid
+                example: 41190cee-5231-4dcc-8167-ebf798b55ce3
+              userId:
+                type: string
+                format: uuid
+                example: 41190cee-5231-4dcc-8167-ebf798b55ce3
+
     OAuthAuthorize:
       required: true
       content:
