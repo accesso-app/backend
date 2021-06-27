@@ -24,18 +24,18 @@ paths:
         500:
           description: Something goes wrong
 
-  "/applications.registration":
+  "/applications.create":
     post:
-      operationId: appReg
+      operationId: applicationsCreate
       tags: [ Applications ]
-      description: Create new app request
+      description: Create new applications
       requestBody:
-        $ref: "#/components/requestBodies/AppReg"
+        $ref: "#/components/requestBodies/ApplicationsCreate"
       responses:
         200:
-          $ref: "#/components/responses/AppRegDone"
+          $ref: "#/components/responses/ApplicationsCreateDone"
         400:
-          $ref: "#/components/responses/AppRegFailure"
+          $ref: "#/components/responses/ApplicationsCreateFailure"
         500:
           description: Something went wrong
 
@@ -106,25 +106,20 @@ components:
                   The client will be using this to associate this response with the initial request.
                 type: string
 
-    AppRegDone:
+    ApplicationsCreateDone:
       description: New app was created and attached to user.
       content:
         application/json:
           schema:
             required:
               - appId
-              - appKey
             properties:
               appId:
-                description: The appId is the unique identifier of your new app.
                 type: string
                 format: uuid
                 example: 41190cee-5231-4dcc-8167-ebf798b55ce3
-              appKey:
-                type: string
-                example: 41190cee52314dcc8167_ebf798b55ce3
 
-    AppRegFailure:
+    ApplicationsCreateFailure:
       description:
         Happens when something went wrong after attemp to register new application.
       content:
@@ -132,7 +127,7 @@ components:
           schema:
             required:
               - code
-             properties:
+            properties:
               code:
                 description: |
                   Possible errors: <br/>
@@ -142,33 +137,26 @@ components:
                 enum:
                   - access_denied
                   - invalid_request
-              redirectUri:
-                type: string
-                format: url
 
   requestBodies:
-    AppReg:
+    ApplicationsCreate:
       required: true
       content:
         application/json:
           schema:
             required:
-              - appName
+              - title
               - redirectUri
-              - hasRegPermissions
+              - requireRegistration
             properties:
-              appName:
+              title:
                 description: Application name.
                 type: string
-                format: uuid
-                example: Cardbox
               redirectUri:
-                description: This is the URL to which you want the user to be redirected after new application will be registered.
                 type: string
                 format: uri
                 example: https://example-app.com/oauth/callback
-              hasRegPermissions:
-                description: This flag shows that user have permissions on registration new apps.
+              requireRegistration:
                 type: boolean
 
     OAuthAuthorize:
