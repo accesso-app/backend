@@ -12,7 +12,7 @@ use std::hash::{BuildHasherDefault, Hasher};
 use std::ops::Deref;
 use std::sync::Arc;
 
-type ServiceMap = HashMap<TypeId, Arc<dyn Any + Send + Sync>, BuildHasherDefault<TypeIdHasher>>;
+type ServiceMap = HashMap<TypeId, Box<dyn Any + Send + Sync>, BuildHasherDefault<TypeIdHasher>>;
 
 #[derive(Debug, Clone, Default)]
 struct TypeIdHasher(u64);
@@ -82,9 +82,8 @@ impl AppBuilder {
         }
     }
 
-    pub fn with_service<T: 'static + Send + Sync + ?Sized>(mut self, service: Service<T>) -> Self {
-        self.services
-            .insert(TypeId::of::<Service<T>>(), Arc::new(service));
+    pub fn with_service<T: 'static + Send + Sync>(mut self, service: T) -> Self {
+        self.services.insert(TypeId::of::<T>(), Box::new(service));
         self
     }
 
@@ -95,7 +94,7 @@ impl AppBuilder {
     }
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Default)]
 pub struct App {
     services: ServiceMap,
 }

@@ -83,25 +83,24 @@ async fn main() -> anyhow::Result<()> {
         tracing::info!("==> PRODUCTION MODE in api-admin");
     }
 
-    let db: Arc<Box<dyn Repository>> = Arc::new(Box::new(
+    let db: Arc<dyn Repository> = Arc::new(
         accesso_db::Database::new(
             settings.database.connection_url(),
             settings.database.pool_size,
         )
         .expect("Failed to create database"),
-    ));
+    );
 
-    let generator: Arc<Box<dyn SecureGenerator>> =
-        Arc::new(Box::new(accesso_core::services::generator::Generator::new()));
+    let generator: Arc<dyn SecureGenerator> =
+        Arc::new(accesso_core::services::generator::Generator::new());
 
-    let emailer: Arc<Box<dyn EmailNotification>> =
-        Arc::new(Box::new(accesso_core::services::email::Email {
-            api_key: settings.sendgrid.api_key,
-            sender_email: settings.sendgrid.sender_email,
-            application_host: settings.sendgrid.application_host,
-            email_confirm_url_prefix: settings.sendgrid.email_confirm_url_prefix,
-            email_confirm_template: settings.sendgrid.email_confirm_template,
-        }));
+    let emailer: Arc<dyn EmailNotification> = Arc::new(accesso_core::services::email::Email {
+        api_key: settings.sendgrid.api_key,
+        sender_email: settings.sendgrid.sender_email,
+        application_host: settings.sendgrid.application_host,
+        email_confirm_url_prefix: settings.sendgrid.email_confirm_url_prefix,
+        email_confirm_template: settings.sendgrid.email_confirm_template,
+    });
 
     let session_cookie_config = cookie::SessionCookieConfig {
         http_only: settings.cookies.http_only,
@@ -110,17 +109,19 @@ async fn main() -> anyhow::Result<()> {
         name: settings.cookies.name.clone(),
     };
 
-    let app = accesso_app::App::builder()
-        .with_service(Service::from(db))
-        .with_service(Service::from(generator))
-        .with_service(Service::from(emailer))
-        .build();
+    let app = Arc::new(
+        accesso_app::App::builder()
+            .with_service(Service::from(db))
+            .with_service(Service::from(emailer))
+            .with_service(Service::from(generator))
+            .build(),
+    );
 
     let bind = settings.server.bind_address();
 
     HttpServer::new(move || {
         App::new()
-            .app_data(Data::new(app.clone()))
+            .app_data(Data::from(app.clone()))
             .app_data(Data::new(session_cookie_config.clone()))
             .app_data(web::JsonConfig::default().error_handler(|err, _| {
                 actix_web::error::InternalError::from_response(
