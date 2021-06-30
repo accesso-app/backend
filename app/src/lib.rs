@@ -75,6 +75,11 @@ pub struct AppBuilder {
     services: ServiceMap,
 }
 
+#[derive(Debug, Default)]
+pub struct App {
+    services: ServiceMap,
+}
+
 impl AppBuilder {
     pub fn new() -> Self {
         Self {
@@ -92,11 +97,6 @@ impl AppBuilder {
             services: self.services,
         }
     }
-}
-
-#[derive(Debug, Default)]
-pub struct App {
-    services: ServiceMap,
 }
 
 impl App {
