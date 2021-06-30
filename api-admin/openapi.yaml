@@ -54,6 +54,21 @@ paths:
         500:
           description: Something went wrong
 
+  "/applications/users.list":
+    post:
+      operationId: applicationsUsersList
+      tags: [ Users ]
+      description: Get all registered users
+      requestBody:
+        $ref: "#/components/requestBodies/ApplicationsUsersList"
+      responses:
+        200:
+          $ref: "#/components/responses/ApplicationsUsersListSuccess"
+        400:
+          $ref: "#/components/responses/ApplicationsUsersListFailure"
+        500:
+          description: Something went wrong
+
 components:
   responses:
     ApplicationsUserAddSuccess:
@@ -148,6 +163,40 @@ components:
                   - application_not_found
                   - user_not_found
 
+    ApplicationsUsersListSuccess:
+      description: Get registered users
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Users'
+          example:
+            - userId: 41190cee-5231-4dcc-8167-ebf798b55ce3
+              name: user-1
+              appIds: [41190cee-5231-4dcc-8167-ebf798b55ce3, 41190cee-5231-4dcc-8167-ebf798b55ce4]
+
+            - userId: 41190cee-5231-55gg-8167-ebf798b55ce3
+              name: user-2
+              appIds: [41190cee-5231-4dcc-8167-ebf798b55ce3, 41190cee-5231-4dcc-8167-ebf798b55ce4]
+
+    ApplicationsUsersListFailure:
+      description:
+        Happens when something went wrong after attemp to get registered users list
+      content:
+        application/json:
+          schema:
+            required:
+              - code
+            properties:
+              code:
+                description: |
+                  Possible errors: <br/>
+                  `access_denied` — This error occures when user's session was expired | user doesn't have enough permission | or user unauthorized.<br/>
+                  `invalid_request` — Something was wrong with user request.<br/>
+                type: string
+                enum:
+                  - access_denied
+                  - invalid_request
+
   requestBodies:
     ApplicationsUserAdd:
       required: true
@@ -200,3 +249,35 @@ components:
                 type: string
                 format: uuid
                 example: 41190cee-5231-4dcc-8167-ebf798b55ce3
+
+    ApplicationsUsersList:
+      required: true
+      content:
+        application/json:
+          schema:
+            required:
+              - applicationId
+            properties:
+              applicationId:
+                type: string
+                format: uuid
+                example: 41190cee-5231-4dcc-8167-ebf798b55ce3
+
+  schemas:
+    Users:
+      type: array
+      items:
+        type: object
+        properties:
+          userId:
+            type: string
+            format: uuid
+          name:
+            type: string
+          appIds:
+            type: array
+            items:
+              description: applications id which related to user
+              type: string
+              format: uuid
+              example: 41190cee-5231-4dcc-8167-ebf798b55ce3
