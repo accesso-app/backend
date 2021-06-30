@@ -22,11 +22,10 @@ impl actix_web::FromRequest for Session {
         use accesso_core::app::session::{Session, SessionResolveError::Unexpected};
 
         let session_config = req.app_data::<web::Data<crate::cookie::SessionCookieConfig>>();
-        let app = req.app_data::<web::Data<crate::App>>();
+        let app = req.app_data::<web::Data<accesso_app::App>>();
 
         if let (Some(session_config), Some(app)) = (session_config, app) {
             if let Some(ref cookie) = req.cookie(&session_config.name) {
-                let app = app.read().unwrap();
                 let token = cookie.value().to_owned();
 
                 match app.session_resolve_by_cookie(token.clone()) {

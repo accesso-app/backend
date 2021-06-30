@@ -8,7 +8,7 @@ use actix_web::web;
 
 pub async fn route(
     body: web::Json<request_bodies::RegisterConfirmation>,
-    app: web::Data<crate::App>,
+    app: web::Data<accesso_app::App>,
 ) -> Answer<'static, confirm::Response> {
     use accesso_core::app::registrator::{
         RegisterConfirmError::{AlreadyActivated, CodeNotFound, InvalidForm, Unexpected},
@@ -22,8 +22,6 @@ pub async fn route(
         last_name: body.last_name.clone(),
         password: body.password.clone(),
     };
-
-    let mut app = app.write().unwrap();
 
     match app.registrator_confirm(form) {
         Err(Unexpected) => Response::Unexpected,

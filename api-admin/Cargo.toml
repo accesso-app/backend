@@ -7,19 +7,27 @@ version = "0.1.0"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [dependencies]
 accesso-settings = {"path" = "../settings"}
+accesso-core = {"path" = "../core"}
+accesso-db = {"path" = "../db"}
+accesso-app = { "path" = "../app" }
+actix-http = "3.0.0-beta.8"
+tokio = "1.7.1"
+actix-router = "0.4.0"
 actix-rt = "2.2.0"
-actix-http = "3.0.0-beta.6"
-actix-swagger = "0.3.0"
-actix-web = "4.0.0-beta.6"
+actix-swagger = "=0.3.0-beta.1"
+actix-web = "4.0.0-beta.8"
 dotenv = "0.15.0"
-env_logger = "0.7.1"
 futures = "0.3.15"
 r2d2 = "0.8.8"
 serde = {version = "1.0.104", features = ["derive"]}
 uuid = { version = "0.8.2", features = ["v4", "serde"] }
+tracing = "0.1.26"
+tracing-subscriber = { version = "0.2.18", features = ["env-filter", "tracing-log"] }
+anyhow = "1.0.41"
 
 [dependencies.diesel]
 version = "1.4.6"
+default-features = false
 features = [
     "postgres",
     "uuidv07",

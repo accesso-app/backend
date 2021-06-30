@@ -1,11 +1,7 @@
-use crate::contracts::repo::{
-    GetUserBySessionError, SessionCreateError as RepoError, SessionRepo, UnexpectedDatabaseError,
-    UserCredentials, UserRepo,
-};
-use crate::contracts::secure::SecureGenerator;
+use crate::contracts::repo::UnexpectedDatabaseError;
 use crate::models::{SessionToken, User};
-use crate::App;
-use validator::Validate;
+
+pub use crate::contracts::repo::SessionCreateError as RepoError;
 
 pub trait Session {
     fn session_resolve_by_cookie(
@@ -19,12 +15,12 @@ pub trait Session {
     ) -> Result<Option<User>, SessionResolveError>;
 
     fn session_create(
-        &mut self,
+        &self,
         form: SessionCreateForm,
     ) -> Result<(SessionToken, User), SessionCreateError>;
 
     fn session_delete(
-        &mut self,
+        &self,
         user: &User,
         strategy: SessionDeleteStrategy,
     ) -> Result<(), SessionDeleteError>;
@@ -59,104 +55,6 @@ pub enum SessionCreateError {
 #[derive(Debug, PartialEq, Eq, Hash)]
 pub enum SessionDeleteError {
     Unexpected,
-}
-
-const MAX_TOKEN_CREATE_ATTEMPTS: u8 = 10;
-const SESSION_TOKEN_LIVE_DAYS: u8 = 14;
-
-impl<DB, E, G> Session for App<DB, E, G>
-where
-    DB: SessionRepo + UserRepo,
-    G: SecureGenerator,
-{
-    fn session_resolve_by_cookie(
-        &self,
-        cookie: String,
-    ) -> Result<Option<User>, SessionResolveError> {
-        match self.db.get_user_by_session_token(cookie) {
-            Err(GetUserBySessionError::Unexpected) => Err(SessionResolveError::Unexpected),
-            Err(GetUserBySessionError::NotFound) => Ok(None),
-            Ok(user) => Ok(Some(user)),
-        }
-    }
-
-    fn session_resolve_by_access_token(
-        &self,
-        access_token: String,
-    ) -> Result<Option<User>, SessionResolveError> {
-        match self.db.get_user_by_access_token(access_token) {
-            Err(GetUserBySessionError::Unexpected) => Err(SessionResolveError::Unexpected),
-            Err(GetUserBySessionError::NotFound) => Ok(None),
-            Ok(user) => Ok(Some(user)),
-        }
-    }
-
-    fn session_create(
-        &mut self,
-        form: SessionCreateForm,
-    ) -> Result<(SessionToken, User), SessionCreateError> {
-        form.validate()?;
-
-        let hashed_input_password = self.generator.password_hash(form.password.clone());
-
-        let found_user = self.db.user_find_by_credentials(UserCredentials {
-            email: form.email,
-            password_hash: hashed_input_password.0,
-        })?;
-
-        if let Some(user) = found_user {
-            if !self
-                .generator
-                .verify_hash(user.password_hash.as_bytes(), &form.password)
-            {
-                return Err(SessionCreateError::InvalidCredentials);
-            }
-
-            let mut insert_attempt = 0u8;
-
-            let session: SessionToken = loop {
-                insert_attempt += 1;
-
-                let token = self.generator.generate_token();
-                let result = self.db.session_create(SessionToken {
-                    user_id: user.id,
-                    token,
-                    expires_at: chrono::Utc::now().naive_utc()
-                        + chrono::Duration::days(SESSION_TOKEN_LIVE_DAYS as i64),
-                });
-
-                if let Err(RepoError::TokenAlreadyExists) = result {
-                    if insert_attempt <= MAX_TOKEN_CREATE_ATTEMPTS {
-                        continue;
-                    }
-                }
-
-                break result;
-            }?;
-
-            Ok((session, user))
-        } else {
-            Err(SessionCreateError::InvalidCredentials)
-        }
-    }
-
-    fn session_delete(
-        &mut self,
-        user: &User,
-        strategy: SessionDeleteStrategy,
-    ) -> Result<(), SessionDeleteError> {
-        match strategy {
-            SessionDeleteStrategy::All => self
-                .db
-                .session_delete_by_user_id(user.id)
-                .map_err(|_unexpected| SessionDeleteError::Unexpected),
-
-            SessionDeleteStrategy::Single(token) => self
-                .db
-                .session_delete_token(token.as_ref())
-                .map_err(|_unexpected| SessionDeleteError::Unexpected),
-        }
-    }
 }
 
 impl From<validator::ValidationErrors> for SessionCreateError {

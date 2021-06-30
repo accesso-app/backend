@@ -14,6 +14,7 @@ COPY ./api-admin ./api-admin
 COPY ./api-public ./api-public
 COPY ./api-internal ./api-internal
 COPY ./core ./core
+COPY ./app ./app
 
 ARG API_NAME
 
