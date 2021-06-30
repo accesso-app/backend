@@ -54,6 +54,21 @@ paths:
         500:
           description: Something went wrong
 
+  "/applications.remove":
+    post:
+      operationId: applicationsRemove
+      tags: [ Applications ]
+      description: Remove application request
+      requestBody:
+        $ref: "#/components/requestBodies/ApplicationsRemove"
+      responses:
+        200:
+          $ref: "#/components/responses/ApplicationsRemoveSuccess"
+        400:
+          $ref: "#/components/responses/ApplicationsRemoveFailure"
+        500:
+          description: Something went wrong
+
 components:
   responses:
     ApplicationsUserAddSuccess:
@@ -148,7 +163,49 @@ components:
                   - application_not_found
                   - user_not_found
 
+    ApplicationsRemoveSuccess:
+      description: Applicatoion was deleted.
+      content:
+        application/json:
+          schema:
+            type: object
+
+    ApplicationsRemoveFailure:
+      description:
+        Happens when something went wrong after attemp to remove application
+      content:
+        application/json:
+          schema:
+            required:
+              - code
+            properties:
+              code:
+                description: |
+                  Possible errors: <br/>
+                  `access_denied` — This error occures when user's session was expired | user doesn't have enough permission | or user unauthorized.<br/>
+                  `invalid_request` — Something was wrong with user request.<br/>
+                  `application_not_found` — Occure when application_id was not found.<br/>
+                type: string
+                enum:
+                  - access_denied
+                  - invalid_request
+                  - application_not_found
+
   requestBodies:
+    ApplicationsRemove:
+      required: true
+      content:
+        application/json:
+          schema:
+            required:
+              - applicationId
+            properties:
+              applicationId:
+                description: The identifier of your app.
+                type: string
+                format: uuid
+                example: 41190cee-5231-4dcc-8167-ebf798b55ce3
+
     ApplicationsUserAdd:
       required: true
       content:
