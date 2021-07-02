@@ -1,10 +1,9 @@
 table! {
     access_tokens (token) {
-        client_id -> Uuid,
         token -> Varchar,
-        user_id -> Uuid,
         scopes -> Array<Text>,
         expires_at -> Timestamptz,
+        registration_id -> Uuid,
     }
 }
 
@@ -16,6 +15,7 @@ table! {
         redirect_uri -> Varchar,
         scope -> Nullable<Array<Text>>,
         user_id -> Uuid,
+        state -> Nullable<Varchar>,
     }
 }
 
@@ -46,6 +46,15 @@ table! {
 }
 
 table! {
+    user_registrations (id) {
+        id -> Uuid,
+        client_id -> Uuid,
+        created_at -> Timestamp,
+        user_id -> Uuid,
+    }
+}
+
+table! {
     users (id) {
         id -> Uuid,
         email -> Varchar,
@@ -56,11 +65,12 @@ table! {
     }
 }
 
-joinable!(access_tokens -> clients (client_id));
-joinable!(access_tokens -> users (user_id));
+joinable!(access_tokens -> user_registrations (registration_id));
 joinable!(authorization_codes -> clients (client_id));
 joinable!(authorization_codes -> users (user_id));
 joinable!(session_tokens -> users (user_id));
+joinable!(user_registrations -> clients (client_id));
+joinable!(user_registrations -> users (user_id));
 
 allow_tables_to_appear_in_same_query!(
     access_tokens,
@@ -68,5 +78,6 @@ allow_tables_to_appear_in_same_query!(
     clients,
     registration_requests,
     session_tokens,
+    user_registrations,
     users,
 );

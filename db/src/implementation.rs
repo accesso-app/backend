@@ -151,7 +151,10 @@ impl SessionRepo for Database {
         let conn = self.conn();
 
         users::table
+            .inner_join(user_registrations::table)
+            .filter(user_registrations::user_id.eq(users::id))
             .inner_join(access_tokens::table)
+            .filter(user_registrations::id.eq(access_tokens::registration_id))
             .select(users::all_columns)
             .filter(access_tokens::token.eq(token))
             .filter(access_tokens::expires_at.gt(chrono::Utc::now().naive_utc()))
@@ -287,6 +290,7 @@ struct AuthorizationCode {
     redirect_uri: String,
     scope: Option<Vec<String>>,
     user_id: uuid::Uuid,
+    state: Option<String>,
 }
 
 impl From<models::AuthorizationCode> for AuthorizationCode {
@@ -302,6 +306,7 @@ impl From<models::AuthorizationCode> for AuthorizationCode {
                 Some(authorization_code.scopes)
             },
             user_id: authorization_code.user_id,
+            state: authorization_code.state,
         }
     }
 }
@@ -315,6 +320,7 @@ impl Into<models::AuthorizationCode> for AuthorizationCode {
             redirect_uri: self.redirect_uri,
             scopes: self.scope.unwrap_or_default(),
             user_id: self.user_id,
+            state: self.state,
         }
     }
 }
@@ -409,24 +415,23 @@ impl Into<models::SessionToken> for SessionToken {
     }
 }
 
-#[derive(Identifiable, Insertable, Queryable)]
+#[derive(Identifiable, Insertable, Queryable, Associations)]
 #[primary_key(token)]
+#[belongs_to(UserRegistration, foreign_key = "registration_id")]
 pub struct AccessToken {
-    pub client_id: uuid::Uuid,
     pub token: String,
-    pub user_id: uuid::Uuid,
     pub scopes: Vec<String>,
     pub expires_at: chrono::NaiveDateTime,
+    pub registration_id: uuid::Uuid,
 }
 
 impl From<models::AccessToken> for AccessToken {
     fn from(token: models::AccessToken) -> Self {
         Self {
-            client_id: token.client_id,
             token: token.token,
-            user_id: token.user_id,
             scopes: token.scopes,
             expires_at: token.expires_at,
+            registration_id: token.registration_id,
         }
     }
 }
@@ -434,13 +439,23 @@ impl From<models::AccessToken> for AccessToken {
 impl Into<models::AccessToken> for AccessToken {
     fn into(self) -> models::AccessToken {
         models::AccessToken {
-            client_id: self.client_id,
             token: self.token,
-            user_id: self.user_id,
             scopes: self.scopes,
             expires_at: self.expires_at,
+            registration_id: self.registration_id,
         }
     }
+}
+
+#[derive(Identifiable, Insertable, Queryable, Associations)]
+#[primary_key(id)]
+#[belongs_to(User)]
+#[belongs_to(Client)]
+pub struct UserRegistration {
+    pub id: uuid::Uuid,
+    pub client_id: uuid::Uuid,
+    pub created_at: chrono::NaiveDateTime,
+    pub user_id: uuid::Uuid,
 }
 
 fn diesel_error_to_unexpected(error: diesel::result::Error) -> UnexpectedDatabaseError {

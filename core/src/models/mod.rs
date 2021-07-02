@@ -3,6 +3,7 @@ pub use client::*;
 
 mod access_token;
 mod client;
+mod user_registration;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct RegisterRequest {

@@ -38,6 +38,7 @@ pub struct AuthorizationCode {
     pub redirect_uri: String,
     pub scopes: Vec<String>,
     pub user_id: uuid::Uuid,
+    pub state: Option<String>,
 }
 
 impl AuthorizationCode {

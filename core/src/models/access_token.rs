@@ -1,11 +1,9 @@
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-
 pub struct AccessToken {
-    pub client_id: uuid::Uuid,
     pub token: String,
-    pub user_id: uuid::Uuid,
     pub scopes: Vec<String>,
     pub expires_at: chrono::NaiveDateTime,
+    pub registration_id: uuid::Uuid,
 }
 
 impl AccessToken {
