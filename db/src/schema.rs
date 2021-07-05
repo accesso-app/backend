@@ -45,6 +45,16 @@ table! {
     }
 }
 
+
+table! {
+    user_registrations (id) {
+        id -> Uuid,
+        client_id -> Uuid,
+        created_at -> Timestamp,
+        user_id -> Uuid,
+    }
+}
+
 table! {
     users (id) {
         id -> Uuid,
@@ -61,6 +71,8 @@ joinable!(access_tokens -> users (user_id));
 joinable!(authorization_codes -> clients (client_id));
 joinable!(authorization_codes -> users (user_id));
 joinable!(session_tokens -> users (user_id));
+joinable!(user_registrations -> clients (client_id));
+joinable!(user_registrations -> users (user_id));
 
 allow_tables_to_appear_in_same_query!(
     access_tokens,
@@ -68,5 +80,6 @@ allow_tables_to_appear_in_same_query!(
     clients,
     registration_requests,
     session_tokens,
+    user_registrations,
     users,
 );
