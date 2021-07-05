@@ -150,14 +150,18 @@ impl SessionRepo for Database {
     ) -> Result<models::User, GetUserBySessionError> {
         let conn = self.conn();
 
-        users::table
-            .inner_join(user_registrations::table)
-            .filter(user_registrations::user_id.eq(users::id))
+        let registration: models::UserRegistration = user_registrations::table
             .inner_join(access_tokens::table)
             .filter(user_registrations::id.eq(access_tokens::registration_id))
-            .select(users::all_columns)
+            .select(user_registrations::all_columns)
             .filter(access_tokens::token.eq(token))
             .filter(access_tokens::expires_at.gt(chrono::Utc::now().naive_utc()))
+            .first::<UserRegistration>(&conn)
+            .map(Into::into)
+            .map_err(diesel_error_to_get_user_by_session_error)?;
+
+        users::table
+            .filter(users::id.eq(registration.user_id))
             .first::<User>(&conn)
             .map(Into::into)
             .map_err(diesel_error_to_get_user_by_session_error)
@@ -456,6 +460,28 @@ pub struct UserRegistration {
     pub client_id: uuid::Uuid,
     pub created_at: chrono::NaiveDateTime,
     pub user_id: uuid::Uuid,
+}
+
+impl From<models::UserRegistration> for UserRegistration {
+    fn from(registration: models::UserRegistration) -> Self {
+        Self {
+            id: registration.id,
+            client_id: registration.client_id,
+            created_at: registration.created_at,
+            user_id: registration.user_id,
+        }
+    }
+}
+
+impl Into<models::UserRegistration> for UserRegistration {
+    fn into(self) -> models::UserRegistration {
+        models::UserRegistration {
+            id: self.id,
+            client_id: self.client_id,
+            created_at: self.created_at,
+            user_id: self.user_id,
+        }
+    }
 }
 
 fn diesel_error_to_unexpected(error: diesel::result::Error) -> UnexpectedDatabaseError {

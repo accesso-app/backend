@@ -1,5 +1,6 @@
 pub use access_token::*;
 pub use client::*;
+pub use user_registration::*;
 
 mod access_token;
 mod client;
