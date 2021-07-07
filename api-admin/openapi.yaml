@@ -169,9 +169,9 @@ components:
         application/json:
           schema:
             required:
-              - appId
+              - applicationId
             properties:
-              appId:
+              applicationId:
                 type: string
                 format: uuid
                 example: 41190cee-5231-4dcc-8167-ebf798b55ce3
@@ -203,7 +203,7 @@ components:
           schema:
             required:
               - title
-              - requireRegistration
+              - allowRegistrations
             properties:
               title:
                 type: string
@@ -211,7 +211,7 @@ components:
                 type: string
                 format: uri
                 example: https://example-app.com/oauth/callback
-              requireRegistration:
+              allowRegistrations:
                 type: boolean
 
     ApplicationsUserAdd:
