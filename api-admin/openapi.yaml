@@ -54,6 +54,21 @@ paths:
         500:
           description: Something went wrong
 
+  "/applications.create":
+    post:
+      operationId: applicationsCreate
+      tags: [ Applications ]
+      description: Create new applications
+      requestBody:
+        $ref: "#/components/requestBodies/ApplicationsCreate"
+      responses:
+        200:
+          $ref: "#/components/responses/ApplicationsCreateSuccess"
+        400:
+          $ref: "#/components/responses/ApplicationsCreateFailure"
+        500:
+          description: Something went wrong
+
   "/session/create":
     post:
       operationId: sessionCreate
@@ -197,6 +212,34 @@ components:
                   - application_not_found
                   - user_not_found
 
+    ApplicationsCreateSuccess:
+      description: New app was created and attached to user.
+      content:
+        application/json:
+          schema:
+            required:
+              - applicationId
+            properties:
+              applicationId:
+                type: string
+                format: uuid
+                example: 41190cee-5231-4dcc-8167-ebf798b55ce3
+
+    ApplicationsCreateFailure:
+      description: Happens when something went wrong after attemp to register new application.
+      content:
+        application/json:
+          schema:
+            required:
+              - error
+            properties:
+              error:
+                type: string
+                enum:
+                  - "invalid_payload"
+                  - "redirect_uri_claimed"
+            
+            
     SessionCreateSucceeded:
       description: Session created, token wrote to cookies
       content:
@@ -244,14 +287,37 @@ components:
         application/json:
           schema:
             required:
-              - error
+              - code
             properties:
-              error:
+              code:
+                description: |
+                  Possible errors: <br/>
+                  `access_denied` — This error occures when user's session was expired | user doesn't have enough permission | or user unauthorized.<br>
+                  `invalid_request` — Something was wrong with user request.<br/>
                 type: string
                 enum:
-                  - "invalid_payload"
+                  - access_denied
+                  - invalid_request
 
   requestBodies:
+    ApplicationsCreate:
+      required: true
+      content:
+        application/json:
+          schema:
+            required:
+              - title
+              - allowRegistrations
+            properties:
+              title:
+                type: string
+              redirectUri:
+                type: string
+                format: uri
+                example: https://example-app.com/oauth/callback
+              allowRegistrations:
+                type: boolean
+
     ApplicationsUserAdd:
       required: true
       content:
