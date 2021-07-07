@@ -9,12 +9,10 @@ use actix_web::{cookie::CookieBuilder, web};
 pub async fn route(
     body: web::Json<request_bodies::SessionDelete>,
     session_config: web::Data<SessionCookieConfig>,
-    app: web::Data<crate::App>,
+    app: web::Data<accesso_app::App>,
     session: Session,
 ) -> Answer {
     use accesso_core::app::session::{Session, SessionDeleteError, SessionDeleteStrategy};
-    let mut app = app.write().unwrap();
-
     let strategy = match body.delete_all_sessions {
         true => SessionDeleteStrategy::All,
         false => SessionDeleteStrategy::Single(session.token.to_owned()),

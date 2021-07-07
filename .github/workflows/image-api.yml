@@ -96,6 +96,7 @@ jobs:
               - 'api-${{ matrix.api }}/**'
               - 'core/**'
               - 'db/**'
+              - 'app/**'
               - 'resources/**'
               - 'Cargo.lock'
               - 'Cargo.toml'

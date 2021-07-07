@@ -146,7 +146,7 @@ pub mod components {
 
             #[inline]
             fn from_request(req: &HttpRequest, _: &mut actix_web::dev::Payload) -> Self::Future {
-                match extract_header(&req, "X-Access-Token".to_string()) {
+                match extract_header(req, "X-Access-Token".to_string()) {
                     Ok(value) => futures::future::ok(AccessToken(value)),
                     Err(reason) => match serde_json::to_string(&reason) {
                         Ok(json) => futures::future::err(actix_web::error::ErrorBadRequest(json)),

@@ -1,14 +1,12 @@
 #![deny(warnings)]
 #![forbid(unsafe_code)]
 
+use accesso_app::Service;
+use accesso_core::contracts::{EmailNotification, Repository, SecureGenerator};
 use accesso_settings::Settings;
-use actix_http::Response;
 use actix_web::{middleware, web, HttpResponse, HttpServer};
 use handler::{not_found, AnswerFailure, FailureCode};
-use std::sync::RwLock;
-
-pub type App =
-    RwLock<accesso_core::App<accesso_db::Database, services::Email, services::Generator>>;
+use std::sync::Arc;
 
 mod cookie;
 mod generated;
@@ -16,12 +14,11 @@ mod handler;
 mod health;
 mod lib;
 mod routes;
-mod services;
 
 #[actix_rt::main]
-async fn main() -> std::io::Result<()> {
+async fn main() -> anyhow::Result<()> {
     dotenv::dotenv().ok();
-    env_logger::init();
+    tracing_subscriber::fmt::init();
 
     let settings = Settings::new("public").expect("failed to parse settings");
     let bind_address = settings.server.bind_address();
@@ -32,19 +29,24 @@ async fn main() -> std::io::Result<()> {
         log::info!("==> PRODUCTION MODE in api-public");
     }
 
-    let db = accesso_db::Database::new(
-        settings.database.connection_url(),
-        settings.database.pool_size,
-    )
-    .expect("Failed to create database");
-    let generator = services::Generator::new();
-    let emailer = services::Email {
+    let db: Arc<dyn Repository> = Arc::new(
+        accesso_db::Database::new(
+            settings.database.connection_url(),
+            settings.database.pool_size,
+        )
+        .expect("Failed to create database"),
+    );
+
+    let generator: Arc<dyn SecureGenerator> =
+        Arc::new(accesso_core::services::generator::Generator::new());
+
+    let emailer: Arc<dyn EmailNotification> = Arc::new(accesso_core::services::email::Email {
         api_key: settings.sendgrid.api_key,
         sender_email: settings.sendgrid.sender_email,
         application_host: settings.sendgrid.application_host,
         email_confirm_url_prefix: settings.sendgrid.email_confirm_url_prefix,
         email_confirm_template: settings.sendgrid.email_confirm_template,
-    };
+    });
 
     let session_cookie_config = cookie::SessionCookieConfig {
         http_only: settings.cookies.http_only,
@@ -53,29 +55,28 @@ async fn main() -> std::io::Result<()> {
         name: settings.cookies.name.clone(),
     };
 
-    let app = accesso_core::App {
-        db,
-        emailer,
-        generator,
-    };
-
-    let app_lock = std::sync::RwLock::new(app);
-    let app_data = web::Data::new(app_lock);
+    let app = Arc::new(
+        accesso_app::App::builder()
+            .with_service(Service::from(db))
+            .with_service(Service::from(emailer))
+            .with_service(Service::from(generator))
+            .build(),
+    );
 
     let mut server = HttpServer::new(move || {
         actix_web::App::new()
-            .app_data(app_data.clone())
-            .data(session_cookie_config.clone())
-            .wrap(middleware::Compress::default())
+            .app_data(web::Data::from(app.clone()))
+            .app_data(web::Data::new(session_cookie_config.clone()))
+            //.wrap(middleware::Compress::default())
             .wrap(middleware::Logger::default())
             .app_data(web::JsonConfig::default().error_handler(|err, _| {
                 let error_message = format!("{}", err);
                 actix_web::error::InternalError::from_response(
                     err,
-                    Response::from(HttpResponse::BadRequest().json(AnswerFailure {
+                    HttpResponse::BadRequest().json(AnswerFailure {
                         error: FailureCode::InvalidPayload,
                         message: Some(error_message),
-                    })),
+                    }),
                 )
                 .into()
             }))
@@ -83,10 +84,10 @@ async fn main() -> std::io::Result<()> {
                 let error_message = format!("{}", err);
                 actix_web::error::InternalError::from_response(
                     err,
-                    Response::from(HttpResponse::BadRequest().json(AnswerFailure {
+                    HttpResponse::BadRequest().json(AnswerFailure {
                         error: FailureCode::InvalidQueryParams,
                         message: Some(error_message),
-                    })),
+                    }),
                 )
                 .into()
             }))
@@ -118,5 +119,7 @@ async fn main() -> std::io::Result<()> {
         server = server.client_shutdown(client_shutdown);
     }
 
-    server.bind(bind_address)?.run().await
+    server.bind(bind_address)?.run().await?;
+
+    Ok(())
 }

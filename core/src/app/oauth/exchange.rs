@@ -1,16 +1,9 @@
-use crate::contracts::{
-    AccessTokenRepo, AuthCodeRepo, ClientRepo, EmailNotification, SecureGenerator,
-    UnexpectedDatabaseError,
-};
-use crate::models::AccessToken;
-use crate::App;
-use chrono::offset::TimeZone;
-use validator::Validate;
+use crate::contracts::UnexpectedDatabaseError;
 
 pub trait OAuthExchange {
     /// https://www.oauth.com/oauth2-servers/access-tokens/authorization-code-request/
     fn oauth_exchange_access_token(
-        &mut self,
+        &self,
         form: ExchangeAccessTokenForm,
     ) -> Result<AccessTokenCreated, ExchangeFailed>;
 }
@@ -62,80 +55,6 @@ pub enum ExchangeFailed {
     InvalidScope,
     UnauthorizedClient,
     Unexpected,
-}
-
-impl<Db, EMail, Gen> OAuthExchange for App<Db, EMail, Gen>
-where
-    Db: AuthCodeRepo + ClientRepo + AccessTokenRepo,
-    Gen: SecureGenerator,
-    EMail: EmailNotification,
-{
-    /// https://www.oauth.com/oauth2-servers/access-tokens/authorization-code-request/
-    fn oauth_exchange_access_token(
-        &mut self,
-        form: ExchangeAccessTokenForm,
-    ) -> Result<AccessTokenCreated, ExchangeFailed> {
-        form.validate()?;
-
-        let ExchangeAccessTokenForm {
-            grant_type,
-            code,
-            redirect_uri,
-            client_id,
-            client_secret,
-        } = form;
-
-        match grant_type {
-            // exchange authorization_code to access_token
-            // https://www.oauth.com/oauth2-servers/access-tokens/access-token-response/
-            GrantType::AuthorizationCode => {
-                let authorization_code = self
-                    .db
-                    .auth_code_read(code.to_string())?
-                    .ok_or(ExchangeFailed::InvalidClient)?;
-
-                if !authorization_code.is_code_correct(&code)
-                    || !authorization_code.is_expired()
-                    || !authorization_code.is_redirect_same(&redirect_uri)
-                {
-                    return Err(ExchangeFailed::InvalidGrant);
-                }
-                let client = self
-                    .db
-                    .client_find_by_id(authorization_code.client_id)?
-                    .ok_or(ExchangeFailed::InvalidClient)?;
-
-                if !client.is_enabled() || !client.is_allowed_secret(&client_id, &client_secret) {
-                    return Err(ExchangeFailed::InvalidClient);
-                }
-
-                // TODO: Check scopes
-                // if !authorization_code.is_same_valid_scopes(&scopes) {
-                //     return Err(ExchangeFailed::InvalidScope)
-                // }
-
-                // TODO: Check for grant types
-
-                let access_token = AccessToken {
-                    client_id: client.id,
-                    expires_at: chrono::Utc::now().naive_utc() + AccessToken::lifetime(),
-                    token: self.generator.generate_token_long(),
-                    user_id: authorization_code.user_id,
-                    scopes: authorization_code.scopes,
-                };
-
-                let created = self.db.access_token_create(access_token)?;
-
-                // https://www.oauth.com/oauth2-servers/access-tokens/access-token-response/
-                // TODO: add headers Cache-Control and Pragma
-                Ok(AccessTokenCreated {
-                    access_token: created.token.clone(),
-                    token_type: TokenType::Bearer,
-                    expires_in: chrono::Utc.from_utc_datetime(&created.expires_at),
-                })
-            }
-        }
-    }
 }
 
 impl From<validator::ValidationErrors> for ExchangeFailed {

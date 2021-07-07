@@ -2,15 +2,15 @@ use super::UnexpectedDatabaseError;
 use crate::models::{AccessToken, AuthorizationCode, Client};
 use uuid::Uuid;
 
-#[cfg(test)]
+#[cfg(feature = "testing")]
 use mockall::*;
 
-#[cfg_attr(test, automock)]
+#[cfg_attr(feature = "testing", automock)]
 pub trait ClientRepo {
     fn client_find_by_id(&self, id: Uuid) -> Result<Option<Client>, UnexpectedDatabaseError>;
 }
 
-#[cfg_attr(test, automock)]
+#[cfg_attr(feature = "testing", automock)]
 pub trait AuthCodeRepo {
     fn auth_code_create(
         &self,
@@ -23,7 +23,7 @@ pub trait AuthCodeRepo {
     ) -> Result<Option<AuthorizationCode>, UnexpectedDatabaseError>;
 }
 
-#[cfg_attr(test, automock)]
+#[cfg_attr(feature = "testing", automock)]
 pub trait AccessTokenRepo {
     fn access_token_create(
         &self,

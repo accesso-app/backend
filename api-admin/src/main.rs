@@ -1,13 +1,21 @@
 // temporary #![deny(warnings)]
 #![forbid(unsafe_code)]
 
+mod cookie;
+mod routes;
+mod services;
+
 use accesso_settings::Settings;
-use actix_http::Response;
+
+use accesso_app::Service;
+use accesso_core::contracts::{EmailNotification, Repository, SecureGenerator};
 use actix_swagger::{Answer, StatusCode};
+use actix_web::web::Data;
 use actix_web::{middleware, web, App, HttpRequest, HttpResponse, HttpServer, Responder};
 use diesel::pg::PgConnection;
 use diesel::r2d2::{self, ConnectionManager};
 use serde::{Deserialize, Serialize};
+use std::sync::Arc;
 
 type DbPool = r2d2::Pool<ConnectionManager<PgConnection>>;
 
@@ -63,34 +71,70 @@ async fn not_found(_req: HttpRequest) -> impl Responder {
 }
 
 #[actix_rt::main]
-async fn main() -> std::io::Result<()> {
-    env_logger::init();
-    dotenv::dotenv().ok();
+async fn main() -> anyhow::Result<()> {
+    dotenv::dotenv()?;
+    tracing_subscriber::fmt::init();
 
     let settings = Settings::new("admin").expect("failed to parse settings");
 
-    let manager = ConnectionManager::<PgConnection>::new(settings.database.connection_url());
-    let pool = r2d2::Pool::builder()
-        .build(manager)
-        .expect("Failed to create pool");
+    if settings.debug {
+        tracing::info!("==> api-admin running in DEVELOPMENT MODE");
+    } else {
+        tracing::info!("==> PRODUCTION MODE in api-admin");
+    }
+
+    let db: Arc<dyn Repository> = Arc::new(
+        accesso_db::Database::new(
+            settings.database.connection_url(),
+            settings.database.pool_size,
+        )
+        .expect("Failed to create database"),
+    );
+
+    let generator: Arc<dyn SecureGenerator> =
+        Arc::new(accesso_core::services::generator::Generator::new());
+
+    let emailer: Arc<dyn EmailNotification> = Arc::new(accesso_core::services::email::Email {
+        api_key: settings.sendgrid.api_key,
+        sender_email: settings.sendgrid.sender_email,
+        application_host: settings.sendgrid.application_host,
+        email_confirm_url_prefix: settings.sendgrid.email_confirm_url_prefix,
+        email_confirm_template: settings.sendgrid.email_confirm_template,
+    });
+
+    let session_cookie_config = cookie::SessionCookieConfig {
+        http_only: settings.cookies.http_only,
+        secure: settings.cookies.secure,
+        path: settings.cookies.path.clone(),
+        name: settings.cookies.name.clone(),
+    };
+
+    let app = Arc::new(
+        accesso_app::App::builder()
+            .with_service(Service::from(db))
+            .with_service(Service::from(emailer))
+            .with_service(Service::from(generator))
+            .build(),
+    );
 
     let bind = settings.server.bind_address();
 
     HttpServer::new(move || {
         App::new()
-            .data(pool.clone())
-            .wrap(middleware::Logger::default())
-            .wrap(middleware::Compress::default())
+            .app_data(Data::from(app.clone()))
+            .app_data(Data::new(session_cookie_config.clone()))
             .app_data(web::JsonConfig::default().error_handler(|err, _| {
                 actix_web::error::InternalError::from_response(
                     err,
-                    Response::from(HttpResponse::BadRequest().json(AnswerFailure {
+                    HttpResponse::BadRequest().json(AnswerFailure {
                         code: FailureCode::InvalidPayload,
                         message: None,
-                    })),
+                    }),
                 )
                 .into()
             }))
+            //.wrap(middleware::Logger::default())
+            .wrap(middleware::Compress::default())
             .wrap(
                 middleware::DefaultHeaders::new()
                     .header("X-Frame-Options", "deny")
@@ -102,5 +146,7 @@ async fn main() -> std::io::Result<()> {
     })
     .bind(&bind)?
     .run()
-    .await
+    .await?;
+
+    Ok(())
 }

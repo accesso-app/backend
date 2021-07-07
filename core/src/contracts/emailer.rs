@@ -1,10 +1,10 @@
-#[cfg(test)]
+#[cfg(feature = "testing")]
 use mockall::*;
 use serde::Serialize;
 
-#[cfg_attr(test, automock)]
-pub trait EmailNotification {
-    fn send(&mut self, email: String, content: EmailMessage) -> bool;
+#[cfg_attr(feature = "testing", automock)]
+pub trait EmailNotification: Send + Sync {
+    fn send(&self, email: String, content: EmailMessage) -> bool;
 }
 
 #[derive(Debug, Serialize)]
