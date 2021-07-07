@@ -23,7 +23,7 @@ pub async fn route(
         password: body.password.clone(),
     };
 
-    match app.registrator_confirm(form) {
+    match app.registrator_confirm(form).await {
         Err(Unexpected) => Response::Unexpected,
         Err(CodeNotFound) => Response::BadRequest(RegisterConfirmationFailed {
             error: RegisterConfirmationFailedError::CodeInvalidOrExpired,

@@ -10,4 +10,4 @@ until PGPASSWORD=${ACCESSO_DATABASE__PASSWORD} psql -h ${ACCESSO_DATABASE__HOST}
 done
 
 >&2 echo "Postgres is up - executing command"
-cd /app && diesel migration run && exec $@
+cd /app && sqlx migrate run && exec $@

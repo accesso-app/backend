@@ -13,9 +13,11 @@ tracing = "0.1.26"
 accesso-core = { path = "../core" }
 validator = "0.13.0"
 uuid = { version = "0.8.2", features = ["v4"]}
+async-trait = "0.1.50"
 
 [dev-dependencies]
 accesso-app = { path = ".", features = ["testing"] }
+actix-rt = "2.2.0"
 
 [features]
 testing = ["accesso-core/testing"]

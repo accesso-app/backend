@@ -6,10 +6,12 @@ use accesso_core::contracts::{Repository, SecureGenerator};
 use accesso_core::models::{AuthorizationCode, User};
 
 use accesso_db::chrono;
+use async_trait::async_trait;
 use validator::Validate;
 
+#[async_trait]
 impl OAuthAuthorize for App {
-    fn oauth_request_authorize_code(
+    async fn oauth_request_authorize_code(
         &self,
         actor: Option<User>,
         form: RequestAuthCode,
@@ -21,7 +23,8 @@ impl OAuthAuthorize for App {
         form.validate()?;
 
         let client = db
-            .client_find_by_id(form.client_id)?
+            .client_find_by_id(form.client_id)
+            .await?
             .ok_or(RequestAuthCodeFailed::InvalidRequest)?;
 
         // TODO: register or login?
@@ -48,13 +51,13 @@ impl OAuthAuthorize for App {
         let code = AuthorizationCode {
             client_id: client.id,
             code: generator.generate_token(),
-            created_at: chrono::Utc::now().naive_utc(),
+            created_at: chrono::Utc::now(),
             redirect_uri: form.redirect_uri.clone(),
             scopes: form.scopes.clone(),
             user_id: actor.id,
         };
 
-        let created = db.auth_code_create(code)?;
+        let created = db.auth_code_create(code).await?;
 
         Ok(AuthCodeCreated {
             code: created.code,

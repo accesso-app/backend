@@ -1,4 +1,5 @@
 pub use access_token::*;
+use chrono::Utc;
 pub use client::*;
 
 mod access_token;
@@ -8,7 +9,7 @@ mod client;
 pub struct RegisterRequest {
     pub email: String,
     pub code: String,
-    pub expires_at: chrono::NaiveDateTime,
+    pub expires_at: chrono::DateTime<Utc>,
 }
 
 impl RegisterRequest {
@@ -16,7 +17,7 @@ impl RegisterRequest {
         Self {
             email,
             code,
-            expires_at: chrono::Utc::now().naive_utc() + chrono::Duration::days(1),
+            expires_at: chrono::Utc::now() + chrono::Duration::days(1),
         }
     }
 }
@@ -35,5 +36,5 @@ pub struct User {
 pub struct SessionToken {
     pub user_id: uuid::Uuid,
     pub token: String,
-    pub expires_at: chrono::NaiveDateTime,
+    pub expires_at: chrono::DateTime<Utc>,
 }

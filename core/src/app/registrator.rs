@@ -1,12 +1,15 @@
 use crate::contracts::{RegisterUserError, SaveRegisterRequestError, UnexpectedDatabaseError};
+use async_trait::async_trait;
+use chrono::Utc;
 
+#[async_trait]
 pub trait Registrator {
-    fn registrator_create_request(
+    async fn registrator_create_request(
         &self,
         form: CreateRegisterRequest,
     ) -> Result<RequestCreated, RegisterRequestError>;
 
-    fn registrator_confirm(&self, form: RegisterForm) -> Result<(), RegisterConfirmError>;
+    async fn registrator_confirm(&self, form: RegisterForm) -> Result<(), RegisterConfirmError>;
 }
 
 #[derive(Debug, Clone, Validate, PartialEq, Eq, Hash)]
@@ -32,7 +35,7 @@ pub struct RegisterForm {
 
 #[derive(Debug, PartialEq, Eq, Hash)]
 pub struct RequestCreated {
-    pub expires_at: chrono::NaiveDateTime,
+    pub expires_at: chrono::DateTime<Utc>,
 }
 #[derive(Debug, PartialEq, Eq, Hash)]
 pub enum RegisterRequestError {

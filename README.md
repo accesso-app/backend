@@ -21,10 +21,10 @@ Install PostgreSQL:
 brew install postgresql
 ```
 
-Install diesel_cli:
+Install sqlx_cli:
 
 ```sh
-cargo install diesel_cli --no-default-features --features postgres
+cargo install sqlx-cli --no-default-features --features postgres
 ```
 
 Run postgresql service:
@@ -71,7 +71,7 @@ cp .config.toml.sample .config.toml
 Migrate database:
 
 ```sh
-diesel migration run
+sqlx migrate run
 ```
 
 Finally, [install just and run](#development).

@@ -34,6 +34,7 @@ async fn main() -> anyhow::Result<()> {
             settings.database.connection_url(),
             settings.database.pool_size,
         )
+        .await
         .expect("Failed to create database"),
     );
 

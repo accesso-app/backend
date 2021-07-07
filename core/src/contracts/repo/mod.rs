@@ -1,6 +1,7 @@
 #[cfg(feature = "testing")]
 use crate::models::{AccessToken, AuthorizationCode, Client};
 use crate::models::{RegisterRequest, SessionToken, User};
+use async_trait::async_trait;
 
 pub use client::*;
 
@@ -13,42 +14,54 @@ use mockall::*;
 pub struct UnexpectedDatabaseError;
 
 #[cfg_attr(feature = "testing", automock)]
+#[async_trait]
 pub trait UserRepo {
-    fn user_has_with_email(&self, email: String) -> Result<bool, UnexpectedDatabaseError>;
-    fn user_register(&self, form: UserRegisterForm) -> Result<User, RegisterUserError>;
-    fn user_find_by_credentials(
+    async fn user_has_with_email(&self, email: String) -> Result<bool, UnexpectedDatabaseError>;
+    async fn user_register(&self, form: UserRegisterForm) -> Result<User, RegisterUserError>;
+    async fn user_find_by_credentials(
         &self,
         creds: UserCredentials,
     ) -> Result<Option<User>, UnexpectedDatabaseError>;
 }
 
 #[cfg_attr(feature = "testing", automock)]
+#[async_trait]
 pub trait SessionRepo {
-    fn get_user_by_session_token(&self, token: String) -> Result<User, GetUserBySessionError>;
-    fn get_user_by_access_token(&self, token: String) -> Result<User, GetUserBySessionError>;
-    fn session_create(&self, session: SessionToken) -> Result<SessionToken, SessionCreateError>;
-    fn session_delete_token(&self, session_token: &str) -> Result<(), UnexpectedDatabaseError>;
-    fn session_delete_by_user_id(&self, user_id: uuid::Uuid)
-        -> Result<(), UnexpectedDatabaseError>;
+    async fn get_user_by_session_token(&self, token: String)
+        -> Result<User, GetUserBySessionError>;
+    async fn get_user_by_access_token(&self, token: String) -> Result<User, GetUserBySessionError>;
+    async fn session_create(
+        &self,
+        session: SessionToken,
+    ) -> Result<SessionToken, SessionCreateError>;
+    async fn session_delete_token(
+        &self,
+        session_token: &str,
+    ) -> Result<(), UnexpectedDatabaseError>;
+    async fn session_delete_by_user_id(
+        &self,
+        user_id: uuid::Uuid,
+    ) -> Result<(), UnexpectedDatabaseError>;
 }
 
 #[cfg_attr(feature = "testing", automock)]
+#[async_trait]
 pub trait RequestsRepo {
-    fn register_request_save(
+    async fn register_request_save(
         &self,
         request: RegisterRequest,
     ) -> Result<RegisterRequest, SaveRegisterRequestError>;
 
     /// Find actual register request by its code
-    fn register_request_get_by_code(
+    async fn register_request_get_by_code(
         &self,
         code: String,
     ) -> Result<Option<RegisterRequest>, UnexpectedDatabaseError>;
 
-    fn register_requests_delete_all_for_email(
+    async fn register_requests_delete_all_for_email(
         &self,
         email: String,
-    ) -> Result<usize, UnexpectedDatabaseError>;
+    ) -> Result<u64, UnexpectedDatabaseError>;
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -123,99 +136,119 @@ impl MockDb {
 }
 
 #[cfg(feature = "testing")]
+#[async_trait]
 impl UserRepo for MockDb {
-    fn user_has_with_email(&self, email: String) -> Result<bool, UnexpectedDatabaseError> {
-        self.users.user_has_with_email(email)
+    async fn user_has_with_email(&self, email: String) -> Result<bool, UnexpectedDatabaseError> {
+        self.users.user_has_with_email(email).await
     }
-    fn user_register(&self, form: UserRegisterForm) -> Result<User, RegisterUserError> {
-        self.users.user_register(form)
+    async fn user_register(&self, form: UserRegisterForm) -> Result<User, RegisterUserError> {
+        self.users.user_register(form).await
     }
-    fn user_find_by_credentials(
+    async fn user_find_by_credentials(
         &self,
         creds: UserCredentials,
     ) -> Result<Option<User>, UnexpectedDatabaseError> {
-        self.users.user_find_by_credentials(creds)
+        self.users.user_find_by_credentials(creds).await
     }
 }
 
 #[cfg(feature = "testing")]
+#[async_trait]
 impl RequestsRepo for MockDb {
-    fn register_request_save(
+    async fn register_request_save(
         &self,
         request: RegisterRequest,
     ) -> Result<RegisterRequest, SaveRegisterRequestError> {
-        self.requests.register_request_save(request)
+        self.requests.register_request_save(request).await
     }
 
     /// Find actual register request by its code
-    fn register_request_get_by_code(
+    async fn register_request_get_by_code(
         &self,
         code: String,
     ) -> Result<Option<RegisterRequest>, UnexpectedDatabaseError> {
-        self.requests.register_request_get_by_code(code)
+        self.requests.register_request_get_by_code(code).await
     }
 
-    fn register_requests_delete_all_for_email(
+    async fn register_requests_delete_all_for_email(
         &self,
         email: String,
-    ) -> Result<usize, UnexpectedDatabaseError> {
-        self.requests.register_requests_delete_all_for_email(email)
+    ) -> Result<u64, UnexpectedDatabaseError> {
+        self.requests
+            .register_requests_delete_all_for_email(email)
+            .await
     }
 }
 
 #[cfg(feature = "testing")]
+#[async_trait]
 impl SessionRepo for MockDb {
-    fn get_user_by_session_token(&self, token: String) -> Result<User, GetUserBySessionError> {
-        self.session.get_user_by_session_token(token)
+    async fn get_user_by_session_token(
+        &self,
+        token: String,
+    ) -> Result<User, GetUserBySessionError> {
+        self.session.get_user_by_session_token(token).await
     }
-    fn get_user_by_access_token(&self, token: String) -> Result<User, GetUserBySessionError> {
-        self.session.get_user_by_access_token(token)
+    async fn get_user_by_access_token(&self, token: String) -> Result<User, GetUserBySessionError> {
+        self.session.get_user_by_access_token(token).await
     }
-    fn session_create(&self, session: SessionToken) -> Result<SessionToken, SessionCreateError> {
-        self.session.session_create(session)
+    async fn session_create(
+        &self,
+        session: SessionToken,
+    ) -> Result<SessionToken, SessionCreateError> {
+        self.session.session_create(session).await
     }
 
-    fn session_delete_token(&self, session_token: &str) -> Result<(), UnexpectedDatabaseError> {
-        self.session.session_delete_token(session_token)
+    async fn session_delete_token(
+        &self,
+        session_token: &str,
+    ) -> Result<(), UnexpectedDatabaseError> {
+        self.session.session_delete_token(session_token).await
     }
-    fn session_delete_by_user_id(
+    async fn session_delete_by_user_id(
         &self,
         user_id: uuid::Uuid,
     ) -> Result<(), UnexpectedDatabaseError> {
-        self.session.session_delete_by_user_id(user_id)
+        self.session.session_delete_by_user_id(user_id).await
     }
 }
 
 #[cfg(feature = "testing")]
+#[async_trait]
 impl ClientRepo for MockDb {
-    fn client_find_by_id(&self, id: uuid::Uuid) -> Result<Option<Client>, UnexpectedDatabaseError> {
-        self.client.client_find_by_id(id)
+    async fn client_find_by_id(
+        &self,
+        id: uuid::Uuid,
+    ) -> Result<Option<Client>, UnexpectedDatabaseError> {
+        self.client.client_find_by_id(id).await
     }
 }
 
 #[cfg(feature = "testing")]
+#[async_trait]
 impl AuthCodeRepo for MockDb {
-    fn auth_code_create(
+    async fn auth_code_create(
         &self,
         code: AuthorizationCode,
     ) -> Result<AuthorizationCode, UnexpectedDatabaseError> {
-        self.auth_code.auth_code_create(code)
+        self.auth_code.auth_code_create(code).await
     }
 
-    fn auth_code_read(
+    async fn auth_code_read(
         &self,
         code: String,
     ) -> Result<Option<AuthorizationCode>, UnexpectedDatabaseError> {
-        self.auth_code.auth_code_read(code)
+        self.auth_code.auth_code_read(code).await
     }
 }
 
 #[cfg(feature = "testing")]
+#[async_trait]
 impl AccessTokenRepo for MockDb {
-    fn access_token_create(
+    async fn access_token_create(
         &self,
         token: AccessToken,
     ) -> Result<AccessToken, UnexpectedDatabaseError> {
-        self.access_token.access_token_create(token)
+        self.access_token.access_token_create(token).await
     }
 }

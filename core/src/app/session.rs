@@ -1,25 +1,27 @@
 use crate::contracts::repo::UnexpectedDatabaseError;
 use crate::models::{SessionToken, User};
+use async_trait::async_trait;
 
 pub use crate::contracts::repo::SessionCreateError as RepoError;
 
+#[async_trait]
 pub trait Session {
-    fn session_resolve_by_cookie(
+    async fn session_resolve_by_cookie(
         &self,
         cookie: String,
     ) -> Result<Option<User>, SessionResolveError>;
 
-    fn session_resolve_by_access_token(
+    async fn session_resolve_by_access_token(
         &self,
         access_token: String,
     ) -> Result<Option<User>, SessionResolveError>;
 
-    fn session_create(
+    async fn session_create(
         &self,
         form: SessionCreateForm,
     ) -> Result<(SessionToken, User), SessionCreateError>;
 
-    fn session_delete(
+    async fn session_delete(
         &self,
         user: &User,
         strategy: SessionDeleteStrategy,

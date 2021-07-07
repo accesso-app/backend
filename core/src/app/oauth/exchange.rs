@@ -1,8 +1,10 @@
 use crate::contracts::UnexpectedDatabaseError;
+use async_trait::async_trait;
 
+#[async_trait]
 pub trait OAuthExchange {
     /// https://www.oauth.com/oauth2-servers/access-tokens/authorization-code-request/
-    fn oauth_exchange_access_token(
+    async fn oauth_exchange_access_token(
         &self,
         form: ExchangeAccessTokenForm,
     ) -> Result<AccessTokenCreated, ExchangeFailed>;

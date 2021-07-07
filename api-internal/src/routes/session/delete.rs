@@ -18,7 +18,7 @@ pub async fn route(
         false => SessionDeleteStrategy::Single(session.token.to_owned()),
     };
 
-    match app.session_delete(&session.user, strategy) {
+    match app.session_delete(&session.user, strategy).await {
         Err(SessionDeleteError::Unexpected) => Response::Unexpected.into(),
         Ok(()) => Response::Ok.answer().cookie(
             CookieBuilder::new(session_config.name.to_owned(), "")

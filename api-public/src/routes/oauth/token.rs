@@ -2,7 +2,6 @@ use crate::generated::{
     components::{request_bodies, responses},
     paths::oauth_token::Response,
 };
-use crate::lib::{blocking, EachResult};
 use actix_swagger::Answer;
 use actix_web::web;
 
@@ -37,36 +36,32 @@ pub async fn route(
         client_secret: body.client_secret.clone(),
     };
 
-    blocking(Response::InternalServerError.answer(), move || {
-        match app.oauth_exchange_access_token(form) {
-            Err(InvalidRequest) => Response::BadRequest(Failure {
-                error: FailureError::InvalidRequest,
-            }),
-            Err(InvalidClient) => Response::BadRequest(Failure {
-                error: FailureError::InvalidClient,
-            }),
-            Err(InvalidGrant) => Response::BadRequest(Failure {
-                error: FailureError::InvalidGrant,
-            }),
-            Err(InvalidScope) => Response::BadRequest(Failure {
-                error: FailureError::InvalidScope,
-            }),
-            Err(UnauthorizedClient) => Response::BadRequest(Failure {
-                error: FailureError::UnauthorizedClient,
-            }),
-            // FailureError::UnsupportedGrantType?
-            Err(Unexpected) => Response::InternalServerError,
+    match app.oauth_exchange_access_token(form).await {
+        Err(InvalidRequest) => Response::BadRequest(Failure {
+            error: FailureError::InvalidRequest,
+        }),
+        Err(InvalidClient) => Response::BadRequest(Failure {
+            error: FailureError::InvalidClient,
+        }),
+        Err(InvalidGrant) => Response::BadRequest(Failure {
+            error: FailureError::InvalidGrant,
+        }),
+        Err(InvalidScope) => Response::BadRequest(Failure {
+            error: FailureError::InvalidScope,
+        }),
+        Err(UnauthorizedClient) => Response::BadRequest(Failure {
+            error: FailureError::UnauthorizedClient,
+        }),
+        // FailureError::UnsupportedGrantType?
+        Err(Unexpected) => Response::InternalServerError,
 
-            Ok(created) => Response::Created(Created {
-                access_token: created.access_token,
-                expires_in: created.expires_in.timestamp(),
-                token_type: match created.token_type {
-                    TokenType::Bearer => responses::OAuthAccessTokenCreatedTokenType::Bearer,
-                },
-            }),
-        }
-        .answer()
-    })
-    .await
-    .get()
+        Ok(created) => Response::Created(Created {
+            access_token: created.access_token,
+            expires_in: created.expires_in.timestamp(),
+            token_type: match created.token_type {
+                TokenType::Bearer => responses::OAuthAccessTokenCreatedTokenType::Bearer,
+            },
+        }),
+    }
+    .answer()
 }

@@ -4,7 +4,6 @@ ENV USER="root"
 WORKDIR /app
 
 COPY ./resources ./resources
-COPY ./diesel.toml ./diesel.toml
 
 COPY ./Cargo.lock ./Cargo.toml ./
 COPY ./migrations ./migrations
@@ -32,11 +31,10 @@ WORKDIR /app
 
 RUN touch .env
 
-COPY --from=build /out/diesel /bin/
+COPY --from=build /out/sqlx /bin/
 COPY --from=build /app/target/release/accesso-api-$API_NAME ./server
 
 COPY --from=build /app/migrations ./migrations
-COPY --from=build /app/diesel.toml ./
 COPY ./config ./config
 COPY ./docker-entrypoint.sh ./entrypoint.sh
 

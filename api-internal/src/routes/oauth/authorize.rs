@@ -6,10 +6,12 @@ use accesso_core::models;
 use actix_swagger::Answer;
 use actix_web::{dev, web, FromRequest};
 
+use futures::Future;
 use responses::{
     OAuthAuthorizeDone as Success, OAuthAuthorizeRequestFailure as Failure,
     OAuthAuthorizeRequestFailureError as FailureVariant,
 };
+use std::pin::Pin;
 
 #[derive(Debug)]
 pub struct Auth {
@@ -19,28 +21,37 @@ pub struct Auth {
 impl FromRequest for Auth {
     type Config = ();
     type Error = actix_web::Error;
-    type Future = futures::future::Ready<Result<Self, Self::Error>>;
+    type Future = Pin<Box<dyn Future<Output = Result<Self, Self::Error>>>>;
 
     #[inline]
     fn from_request(req: &actix_web::HttpRequest, _: &mut dev::Payload) -> Self::Future {
         use accesso_core::app::session::Session;
 
-        let session_config = req
-            .app_data::<web::Data<crate::cookie::SessionCookieConfig>>()
-            .expect("SessionCookieConfig not provided");
+        let req = req.clone();
 
-        if let Some(cookie) = req.cookie(&session_config.name) {
-            if let Some(app) = req.app_data::<web::Data<accesso_app::App>>() {
-                return match app.session_resolve_by_cookie(cookie.value().to_owned()) {
-                    Err(_) => futures::future::ok(Auth { user: None }),
-                    Ok(user) => futures::future::ok(Auth { user }),
-                };
-            } else {
-                tracing::error!("[Auth FromRequest] cannot resolve app data");
+        Box::pin(async move {
+            let req = req.clone();
+
+            let session_config = req
+                .app_data::<web::Data<crate::cookie::SessionCookieConfig>>()
+                .expect("SessionCookieConfig not provided");
+
+            if let Some(cookie) = req.cookie(&session_config.name) {
+                if let Some(app) = req.app_data::<web::Data<accesso_app::App>>() {
+                    return match app
+                        .session_resolve_by_cookie(cookie.value().to_owned())
+                        .await
+                    {
+                        Err(_) => Ok(Auth { user: None }),
+                        Ok(user) => Ok(Auth { user }),
+                    };
+                } else {
+                    tracing::error!("[Auth FromRequest] cannot resolve app data");
+                }
             }
-        }
 
-        futures::future::ok(Auth { user: None })
+            Ok(Auth { user: None })
+        })
     }
 }
 
@@ -69,7 +80,7 @@ pub async fn route(
         state: body.state.clone(),
     };
 
-    match app.oauth_request_authorize_code(auth.user, form) {
+    match app.oauth_request_authorize_code(auth.user, form).await {
         Err(ServerError) => Response::BadRequest(Failure {
             error: FailureVariant::ServerError,
             redirect_uri: None,
