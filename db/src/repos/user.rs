@@ -56,7 +56,7 @@ VALUES ($1, $2, $3, $4, $5, $6)
         Ok(Into::into(user))
     }
 
-    #[tracing::instrument(skip(self))]
+    #[tracing::instrument(skip(self, creds), fields(creds.email = %creds.email))]
     async fn user_find_by_credentials(
         &self,
         creds: UserCredentials,
