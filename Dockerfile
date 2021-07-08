@@ -1,4 +1,4 @@
-FROM docker.pkg.github.com/accesso-app/backend/builder:1.53.0-0.5.5 as build
+FROM docker.pkg.github.com/accesso-app/backend/builder:rust1.53.0-sqlx0.5.5 as build
 
 ENV USER="root"
 ENV SQLX_OFFLINE=true
