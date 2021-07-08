@@ -24,14 +24,3 @@ uuid = { version = "0.8.2", features = ["v4", "serde"] }
 tracing = "0.1.26"
 tracing-subscriber = { version = "0.2.18", features = ["env-filter", "tracing-log"] }
 anyhow = "1.0.41"
-
-[dependencies.diesel]
-version = "1.4.6"
-default-features = false
-features = [
-    "postgres",
-    "uuidv07",
-    "chrono",
-    "r2d2",
-    "serde_json",
-]

@@ -1,3 +1,5 @@
+use chrono::Utc;
+
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 
 pub struct AccessToken {
@@ -5,7 +7,7 @@ pub struct AccessToken {
     pub token: String,
     pub user_id: uuid::Uuid,
     pub scopes: Vec<String>,
-    pub expires_at: chrono::NaiveDateTime,
+    pub expires_at: chrono::DateTime<Utc>,
 }
 
 impl AccessToken {

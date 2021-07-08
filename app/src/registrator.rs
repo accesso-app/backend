@@ -8,13 +8,15 @@ use accesso_core::contracts::{
     UserRegisterForm,
 };
 use accesso_core::models::RegisterRequest;
+use async_trait::async_trait;
 
 use validator::Validate;
 
 const MAX_CODE_INSERT_ATTEMPTS: u8 = 10;
 
+#[async_trait]
 impl Registrator for App {
-    fn registrator_create_request(
+    async fn registrator_create_request(
         &self,
         form: CreateRegisterRequest,
     ) -> Result<RequestCreated, RegisterRequestError> {
@@ -23,7 +25,7 @@ impl Registrator for App {
         let emailer = self.get::<Service<dyn EmailNotification>>().unwrap();
         form.validate()?;
 
-        let user_exists = db.user_has_with_email(form.email.clone())?;
+        let user_exists = db.user_has_with_email(form.email.clone()).await?;
 
         if user_exists {
             Err(RegisterRequestError::EmailAlreadyRegistered)
@@ -35,7 +37,7 @@ impl Registrator for App {
 
                 let code = generator.confirmation_code();
                 let request = RegisterRequest::new(form.email.clone(), code.clone());
-                let result = db.register_request_save(request.clone());
+                let result = db.register_request_save(request.clone()).await;
 
                 if let Err(SaveRegisterRequestError::CodeAlreadyExists) = result {
                     if generate_count <= MAX_CODE_INSERT_ATTEMPTS {
@@ -59,7 +61,7 @@ impl Registrator for App {
         }
     }
 
-    fn registrator_confirm(&self, form: RegisterForm) -> Result<(), RegisterConfirmError> {
+    async fn registrator_confirm(&self, form: RegisterForm) -> Result<(), RegisterConfirmError> {
         let db = self.get::<Service<dyn Repository>>().unwrap();
         let generator = self.get::<Service<dyn SecureGenerator>>().unwrap();
         let emailer = self.get::<Service<dyn EmailNotification>>().unwrap();
@@ -68,17 +70,19 @@ impl Registrator for App {
 
         let code = form.confirmation_code.clone();
 
-        match db.register_request_get_by_code(code)? {
+        match db.register_request_get_by_code(code).await? {
             Some(request) => {
                 let password_hash = generator.password_hash(form.password).0;
 
-                let created_user = db.user_register(UserRegisterForm {
-                    id: uuid::Uuid::new_v4(),
-                    email: request.email,
-                    password_hash,
-                    first_name: form.first_name,
-                    last_name: form.last_name,
-                })?;
+                let created_user = db
+                    .user_register(UserRegisterForm {
+                        id: uuid::Uuid::new_v4(),
+                        email: request.email,
+                        password_hash,
+                        first_name: form.first_name,
+                        last_name: form.last_name,
+                    })
+                    .await?;
 
                 emailer.send(
                     created_user.email.clone(),
@@ -88,7 +92,8 @@ impl Registrator for App {
                     },
                 );
 
-                db.register_requests_delete_all_for_email(created_user.email)?;
+                db.register_requests_delete_all_for_email(created_user.email)
+                    .await?;
 
                 Ok(())
             }
@@ -133,8 +138,8 @@ mod tests {
             .build()
     }
 
-    #[test]
-    fn create_request_invalid_form() {
+    #[actix_rt::test]
+    async fn create_request_invalid_form() {
         let app = mock_app(
             MockDb::new(),
             MockSecureGenerator::new(),
@@ -144,13 +149,13 @@ mod tests {
             email: "demo".to_owned(),
         };
 
-        let result = app.registrator_create_request(form);
+        let result = app.registrator_create_request(form).await;
 
         assert_eq!(result, Err(RegisterRequestError::InvalidForm));
     }
 
-    #[test]
-    fn create_request_user_exists() {
+    #[actix_rt::test]
+    async fn create_request_user_exists() {
         let mut db = MockDb::new();
         db.users
             .expect_user_has_with_email()
@@ -164,7 +169,7 @@ mod tests {
             email: "demo@domain.com".to_owned(),
         };
 
-        let result = app.registrator_create_request(form);
+        let result = app.registrator_create_request(form).await;
 
         assert_eq!(result, Err(RegisterRequestError::EmailAlreadyRegistered));
     }

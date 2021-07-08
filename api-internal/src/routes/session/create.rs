@@ -19,7 +19,7 @@ pub async fn route(
         password: body.password.clone(),
     };
 
-    match app.session_create(form) {
+    match app.session_create(form).await {
         Err(Unexpected) => Response::Unexpected.answer(),
         Err(InvalidForm) => Response::BadRequest(responses::SessionCreateFailed {
             error: responses::SessionCreateFailedError::InvalidForm,
@@ -40,11 +40,7 @@ pub async fn route(
                 CookieBuilder::new(session_config.name.clone(), session_token.token)
                     // TODO: extract to function or Trait
                     .expires(time::OffsetDateTime::from_unix_timestamp(
-                        chrono::DateTime::<chrono::Utc>::from_utc(
-                            session_token.expires_at,
-                            chrono::Utc,
-                        )
-                        .timestamp(),
+                        session_token.expires_at.timestamp(),
                     ))
                     .path(session_config.path.clone())
                     .secure(session_config.secure)

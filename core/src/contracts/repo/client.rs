@@ -1,31 +1,35 @@
 use super::UnexpectedDatabaseError;
 use crate::models::{AccessToken, AuthorizationCode, Client};
+use async_trait::async_trait;
 use uuid::Uuid;
 
 #[cfg(feature = "testing")]
 use mockall::*;
 
 #[cfg_attr(feature = "testing", automock)]
+#[async_trait]
 pub trait ClientRepo {
-    fn client_find_by_id(&self, id: Uuid) -> Result<Option<Client>, UnexpectedDatabaseError>;
+    async fn client_find_by_id(&self, id: Uuid) -> Result<Option<Client>, UnexpectedDatabaseError>;
 }
 
 #[cfg_attr(feature = "testing", automock)]
+#[async_trait]
 pub trait AuthCodeRepo {
-    fn auth_code_create(
+    async fn auth_code_create(
         &self,
         code: AuthorizationCode,
     ) -> Result<AuthorizationCode, UnexpectedDatabaseError>;
 
-    fn auth_code_read(
+    async fn auth_code_read(
         &self,
         code: String,
     ) -> Result<Option<AuthorizationCode>, UnexpectedDatabaseError>;
 }
 
 #[cfg_attr(feature = "testing", automock)]
+#[async_trait]
 pub trait AccessTokenRepo {
-    fn access_token_create(
+    async fn access_token_create(
         &self,
         token: AccessToken,
     ) -> Result<AccessToken, UnexpectedDatabaseError>;

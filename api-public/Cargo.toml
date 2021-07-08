@@ -29,13 +29,3 @@ anyhow = "1.0.41"
 tracing = "0.1.26"
 tracing-subscriber = { version = "0.2.18", features = ["env-filter", "tracing-log"] }
 uuid = { version = "0.8.2", features = ["v4", "serde"] }
-
-[dependencies.diesel]
-version = "1.4.6"
-features = [
-  "postgres",
-  "uuid",
-  "chrono",
-  "r2d2",
-  "serde_json",
-]

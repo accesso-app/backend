@@ -12,12 +12,8 @@ use accesso_core::contracts::{EmailNotification, Repository, SecureGenerator};
 use actix_swagger::{Answer, StatusCode};
 use actix_web::web::Data;
 use actix_web::{middleware, web, App, HttpRequest, HttpResponse, HttpServer, Responder};
-use diesel::pg::PgConnection;
-use diesel::r2d2::{self, ConnectionManager};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
-
-type DbPool = r2d2::Pool<ConnectionManager<PgConnection>>;
 
 #[derive(Deserialize)]
 struct SigninPayload {
@@ -43,7 +39,7 @@ impl SigninResponse {
 }
 
 async fn admin_signin(
-    _pool: web::Data<DbPool>,
+    _app: web::Data<accesso_app::App>,
     _payload: web::Json<SigninPayload>,
 ) -> Answer<'static, SigninResponse> {
     SigninResponse::Ok.answer()
@@ -88,6 +84,7 @@ async fn main() -> anyhow::Result<()> {
             settings.database.connection_url(),
             settings.database.pool_size,
         )
+        .await
         .expect("Failed to create database"),
     );
 

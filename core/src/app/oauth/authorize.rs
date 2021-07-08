@@ -1,8 +1,10 @@
 use crate::contracts::UnexpectedDatabaseError;
 use crate::models::User;
+use async_trait::async_trait;
 
+#[async_trait]
 pub trait OAuthAuthorize {
-    fn oauth_request_authorize_code(
+    async fn oauth_request_authorize_code(
         &self,
         actor: Option<User>,
         form: RequestAuthCode,

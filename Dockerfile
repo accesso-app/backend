@@ -1,12 +1,12 @@
-FROM docker.pkg.github.com/accesso-app/backend/builder:1.53.0-1.4.1 as build
+FROM docker.pkg.github.com/accesso-app/backend/builder:rust1.53.0-sqlx0.5.5 as build
 
 ENV USER="root"
+ENV SQLX_OFFLINE=true
 WORKDIR /app
 
 COPY ./resources ./resources
-COPY ./diesel.toml ./diesel.toml
 
-COPY ./Cargo.lock ./Cargo.toml ./
+COPY ./Cargo.lock ./Cargo.toml ./sqlx-data.json ./
 COPY ./migrations ./migrations
 COPY ./db ./db
 COPY ./settings ./settings
@@ -32,11 +32,10 @@ WORKDIR /app
 
 RUN touch .env
 
-COPY --from=build /out/diesel /bin/
+COPY --from=build /out/sqlx /bin/
 COPY --from=build /app/target/release/accesso-api-$API_NAME ./server
 
 COPY --from=build /app/migrations ./migrations
-COPY --from=build /app/diesel.toml ./
 COPY ./config ./config
 COPY ./docker-entrypoint.sh ./entrypoint.sh
 
