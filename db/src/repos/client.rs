@@ -15,13 +15,13 @@ impl ClientRepo for Database {
             Client,
             // language=PostgreSQL
             r#"
-SELECT id,
-       redirect_uri,
-       secret_key,
-       title,
-       allowed_registrations
-FROM clients
-WHERE id = $1
+            SELECT id,
+                   redirect_uri,
+                   secret_key,
+                   title,
+                   allowed_registrations
+            FROM clients
+            WHERE id = $1
             "#,
             id
         )

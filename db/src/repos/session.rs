@@ -20,11 +20,11 @@ impl SessionRepo for Database {
             User,
             // language=PostgreSQL
             r#"
-SELECT id, email, password_hash, first_name, last_name, canonical_email
-FROM users
-         INNER JOIN session_tokens st on users.id = st.user_id
-WHERE st.token = $1
-  AND st.expires_at > $2
+            SELECT id, email, password_hash, first_name, last_name, canonical_email
+            FROM users
+                     INNER JOIN session_tokens st on users.id = st.user_id
+            WHERE st.token = $1
+              AND st.expires_at > $2
             "#,
             token,
             chrono::Utc::now()
@@ -43,11 +43,11 @@ WHERE st.token = $1
             User,
             // language=PostgreSQL
             r#"
-SELECT id, email, password_hash, first_name, last_name, canonical_email
-FROM users
-         INNER JOIN access_tokens a on users.id = a.user_id
-WHERE a.token = $1
-  AND a.expires_at > $2
+            SELECT id, email, password_hash, first_name, last_name, canonical_email
+            FROM users
+                     INNER JOIN access_tokens a on users.id = a.user_id
+            WHERE a.token = $1
+              AND a.expires_at > $2
             "#,
             token,
             chrono::Utc::now()
@@ -68,10 +68,10 @@ WHERE a.token = $1
             SessionToken,
             // language=PostgreSQL
             r#"
-INSERT INTO session_tokens
-    (user_id, token, expires_at)
-VALUES ($1, $2, $3)
-RETURNING user_id, token, expires_at
+            INSERT INTO session_tokens
+                (user_id, token, expires_at)
+            VALUES ($1, $2, $3)
+            RETURNING user_id, token, expires_at
             "#,
             session.user_id,
             session.token,
@@ -90,9 +90,9 @@ RETURNING user_id, token, expires_at
         sqlx::query!(
             // language=PostgreSQL
             r#"
-DELETE
-FROM session_tokens
-WHERE token = $1
+            DELETE
+            FROM session_tokens
+            WHERE token = $1
             "#,
             session_token
         )
@@ -109,9 +109,9 @@ WHERE token = $1
         sqlx::query!(
             // language=PostgreSQL
             r#"
-DELETE
-FROM session_tokens
-WHERE user_id = $1
+            DELETE
+            FROM session_tokens
+            WHERE user_id = $1
             "#,
             user_id
         )

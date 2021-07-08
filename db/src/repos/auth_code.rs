@@ -17,9 +17,9 @@ impl AuthCodeRepo for Database {
             AuthorizationCode,
             // language=PostgreSQL
             r#"
-INSERT INTO authorization_codes (client_id, code, created_at, redirect_uri, scope, user_id)
-VALUES ($1, $2, $3, $4, $5, $6)
-RETURNING client_id, code, created_at, redirect_uri, scope, user_id
+            INSERT INTO authorization_codes (client_id, code, created_at, redirect_uri, scope, user_id)
+            VALUES ($1, $2, $3, $4, $5, $6)
+            RETURNING client_id, code, created_at, redirect_uri, scope, user_id
             "#,
             code.client_id,
             code.code,
@@ -42,9 +42,9 @@ RETURNING client_id, code, created_at, redirect_uri, scope, user_id
             AuthorizationCode,
             // language=PostgreSQL
             r#"
-SELECT client_id, code, created_at, redirect_uri, scope, user_id
-FROM authorization_codes
-WHERE code = $1
+            SELECT client_id, code, created_at, redirect_uri, scope, user_id
+            FROM authorization_codes
+            WHERE code = $1
             "#,
             code
         )

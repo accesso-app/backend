@@ -17,10 +17,10 @@ impl RequestsRepo for Database {
             RegistrationRequest,
             // language=PostgreSQL
             r#"
-INSERT INTO registration_requests
-    (confirmation_code, email, expires_at)
-VALUES ($1, $2, $3)
-RETURNING confirmation_code, email, expires_at
+            INSERT INTO registration_requests
+                (confirmation_code, email, expires_at)
+            VALUES ($1, $2, $3)
+            RETURNING confirmation_code, email, expires_at
             "#,
             request.confirmation_code,
             request.email,
@@ -40,10 +40,10 @@ RETURNING confirmation_code, email, expires_at
             RegistrationRequest,
             // language=PostgreSQL
             r#"
-SELECT confirmation_code, email, expires_at
-FROM registration_requests
-WHERE confirmation_code = $1
-  AND expires_at > $2
+            SELECT confirmation_code, email, expires_at
+            FROM registration_requests
+            WHERE confirmation_code = $1
+              AND expires_at > $2
             "#,
             code,
             chrono::Utc::now()
@@ -61,9 +61,9 @@ WHERE confirmation_code = $1
         Ok(sqlx::query!(
             // language=PostgreSQL
             r#"
-DELETE
-FROM registration_requests
-WHERE email = $1
+            DELETE
+            FROM registration_requests
+            WHERE email = $1
             "#,
             email
         )

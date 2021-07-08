@@ -16,10 +16,10 @@ impl AccessTokenRepo for Database {
             AccessToken,
             // language=PostgreSQL
             r#"
-INSERT INTO access_tokens
-    (client_id, token, user_id, scopes, expires_at)
-VALUES ($1, $2, $3, $4, $5)
-RETURNING client_id, token, user_id, scopes, expires_at
+            INSERT INTO access_tokens
+                (client_id, token, user_id, scopes, expires_at)
+            VALUES ($1, $2, $3, $4, $5)
+            RETURNING client_id, token, user_id, scopes, expires_at
             "#,
             token.client_id,
             token.token,

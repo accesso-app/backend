@@ -1,6 +1,7 @@
 FROM docker.pkg.github.com/accesso-app/backend/builder:1.53.0-1.4.1 as build
 
 ENV USER="root"
+ENV SQLX_OFFLINE=true
 WORKDIR /app
 
 COPY ./resources ./resources

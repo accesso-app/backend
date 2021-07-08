@@ -13,7 +13,7 @@ impl UserRepo for Database {
         Ok(sqlx::query_scalar!(
             // language=PostgreSQL
             r#"
-SELECT EXISTS(SELECT 1 FROM users WHERE canonical_email = $1) AS "exists!"
+            SELECT EXISTS(SELECT 1 FROM users WHERE canonical_email = $1) AS "exists!"
             "#,
             email.to_lowercase()
         )
@@ -38,9 +38,9 @@ SELECT EXISTS(SELECT 1 FROM users WHERE canonical_email = $1) AS "exists!"
         sqlx::query!(
             // language=PostgreSQL
             r#"
-INSERT INTO users
-    (id, email, canonical_email, first_name, last_name, password_hash)
-VALUES ($1, $2, $3, $4, $5, $6)
+            INSERT INTO users
+                (id, email, canonical_email, first_name, last_name, password_hash)
+            VALUES ($1, $2, $3, $4, $5, $6)
             "#,
             user.id,
             user.email,
@@ -65,14 +65,14 @@ VALUES ($1, $2, $3, $4, $5, $6)
             User,
             // language=PostgreSQL
             r#"
-SELECT id,
-       email,
-       password_hash,
-       first_name,
-       last_name,
-       canonical_email
-FROM users
-WHERE canonical_email = $1
+            SELECT id,
+                   email,
+                   password_hash,
+                   first_name,
+                   last_name,
+                   canonical_email
+            FROM users
+            WHERE canonical_email = $1
             "#,
             creds.email.to_lowercase()
         )
