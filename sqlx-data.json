@@ -1,0 +1,526 @@
+{
+  "db": "PostgreSQL",
+  "00799f34f7f1db2c79f2346ea8a97650d24897d7c32501ade0ce3d45b5673193": {
+    "query": "\n            INSERT INTO registration_requests\n                (confirmation_code, email, expires_at)\n            VALUES ($1, $2, $3)\n            RETURNING confirmation_code, email, expires_at\n            ",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "confirmation_code",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 1,
+          "name": "email",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 2,
+          "name": "expires_at",
+          "type_info": "Timestamptz"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Varchar",
+          "Varchar",
+          "Timestamptz"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false
+      ]
+    }
+  },
+  "16d85f5ac867e85afbbdb5373de5fccdd6aae3ead1398b46dd9123758a72d0c5": {
+    "query": "\n            INSERT INTO users\n                (id, email, canonical_email, first_name, last_name, password_hash)\n            VALUES ($1, $2, $3, $4, $5, $6)\n            ",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Varchar",
+          "Varchar",
+          "Varchar",
+          "Varchar",
+          "Varchar"
+        ]
+      },
+      "nullable": []
+    }
+  },
+  "2c958929a5f89361c517b78db267122446bcde3380fece709df357cff8ceecc0": {
+    "query": "\n            INSERT INTO authorization_codes (client_id, code, created_at, redirect_uri, scope, user_id)\n            VALUES ($1, $2, $3, $4, $5, $6)\n            RETURNING client_id, code, created_at, redirect_uri, scope, user_id\n            ",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "client_id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 1,
+          "name": "code",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 2,
+          "name": "created_at",
+          "type_info": "Timestamptz"
+        },
+        {
+          "ordinal": 3,
+          "name": "redirect_uri",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 4,
+          "name": "scope",
+          "type_info": "TextArray"
+        },
+        {
+          "ordinal": 5,
+          "name": "user_id",
+          "type_info": "Uuid"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Varchar",
+          "Timestamptz",
+          "Varchar",
+          "TextArray",
+          "Uuid"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        true,
+        false
+      ]
+    }
+  },
+  "33e9e0be76b623de2ae18ab216aa62864262032008762d8b663700f1602360e6": {
+    "query": "\n            SELECT id, email, password_hash, first_name, last_name, canonical_email\n            FROM users\n                     INNER JOIN session_tokens st on users.id = st.user_id\n            WHERE st.token = $1\n              AND st.expires_at > $2\n            ",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 1,
+          "name": "email",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 2,
+          "name": "password_hash",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 3,
+          "name": "first_name",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 4,
+          "name": "last_name",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 5,
+          "name": "canonical_email",
+          "type_info": "Varchar"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Timestamptz"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    }
+  },
+  "352f773ce06401e76977da99f88211de9d4ed3b34ab705055e7968105b7f3712": {
+    "query": "\n            DELETE\n            FROM session_tokens\n            WHERE token = $1\n            ",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      },
+      "nullable": []
+    }
+  },
+  "86fa894031607e0b2e0a4ebdac4c9b668fca7e1a266b6afdd5face270041f672": {
+    "query": "\n            DELETE\n            FROM registration_requests\n            WHERE email = $1\n            ",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      },
+      "nullable": []
+    }
+  },
+  "8c589785d5e08300ec7eb125e4ea8ef6ff32be304a5f12233167f1e0bbc9f6b1": {
+    "query": "\n            SELECT EXISTS(SELECT 1 FROM users WHERE canonical_email = $1) AS \"exists!\"\n            ",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "exists!",
+          "type_info": "Bool"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      },
+      "nullable": [
+        null
+      ]
+    }
+  },
+  "8c9ef832378950f34ec3899c146f79d84c3f81c12b86b31f160d31e6ee7b3424": {
+    "query": "\n            DELETE\n            FROM session_tokens\n            WHERE user_id = $1\n            ",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      },
+      "nullable": []
+    }
+  },
+  "9a23b2d5e32fff4fb24bf70417e4ec12645c0931f7c2f3450b2482fcfbfd7713": {
+    "query": "\n            INSERT INTO access_tokens\n                (client_id, token, user_id, scopes, expires_at)\n            VALUES ($1, $2, $3, $4, $5)\n            RETURNING client_id, token, user_id, scopes, expires_at\n            ",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "client_id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 1,
+          "name": "token",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 2,
+          "name": "user_id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 3,
+          "name": "scopes",
+          "type_info": "TextArray"
+        },
+        {
+          "ordinal": 4,
+          "name": "expires_at",
+          "type_info": "Timestamptz"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Varchar",
+          "Uuid",
+          "TextArray",
+          "Timestamptz"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    }
+  },
+  "ae3a688b60703a83a710f3396865d7e7ce07317f2fe9b5c0ad3affc1fddf3af5": {
+    "query": "\n            SELECT id,\n                   email,\n                   password_hash,\n                   first_name,\n                   last_name,\n                   canonical_email\n            FROM users\n            WHERE canonical_email = $1\n            ",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 1,
+          "name": "email",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 2,
+          "name": "password_hash",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 3,
+          "name": "first_name",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 4,
+          "name": "last_name",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 5,
+          "name": "canonical_email",
+          "type_info": "Varchar"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    }
+  },
+  "b78b35db7090c2c7243c0900bfaf8f500b003da4955f6b2544a9274c7596a50a": {
+    "query": "\n            SELECT confirmation_code, email, expires_at\n            FROM registration_requests\n            WHERE confirmation_code = $1\n              AND expires_at > $2\n            ",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "confirmation_code",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 1,
+          "name": "email",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 2,
+          "name": "expires_at",
+          "type_info": "Timestamptz"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Timestamptz"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false
+      ]
+    }
+  },
+  "d43b4c94bbeb62b60c37b996dea9f7f3726bf9f9c48860493861470331e03fad": {
+    "query": "\n            INSERT INTO session_tokens\n                (user_id, token, expires_at)\n            VALUES ($1, $2, $3)\n            RETURNING user_id, token, expires_at\n            ",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "user_id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 1,
+          "name": "token",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 2,
+          "name": "expires_at",
+          "type_info": "Timestamptz"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Varchar",
+          "Timestamptz"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false
+      ]
+    }
+  },
+  "e4462f1dab26c7fbaa1e39f85ff9a1cc9ac7f8e70cf522ca9eaff88c0b6db4b2": {
+    "query": "\n            SELECT client_id, code, created_at, redirect_uri, scope, user_id\n            FROM authorization_codes\n            WHERE code = $1\n            ",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "client_id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 1,
+          "name": "code",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 2,
+          "name": "created_at",
+          "type_info": "Timestamptz"
+        },
+        {
+          "ordinal": 3,
+          "name": "redirect_uri",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 4,
+          "name": "scope",
+          "type_info": "TextArray"
+        },
+        {
+          "ordinal": 5,
+          "name": "user_id",
+          "type_info": "Uuid"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        true,
+        false
+      ]
+    }
+  },
+  "f29a5128a697e2a3a32e6836121c0254aef06ac7cd94ce71767d617b353ee846": {
+    "query": "\n            SELECT id, email, password_hash, first_name, last_name, canonical_email\n            FROM users\n                     INNER JOIN access_tokens a on users.id = a.user_id\n            WHERE a.token = $1\n              AND a.expires_at > $2\n            ",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 1,
+          "name": "email",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 2,
+          "name": "password_hash",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 3,
+          "name": "first_name",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 4,
+          "name": "last_name",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 5,
+          "name": "canonical_email",
+          "type_info": "Varchar"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Timestamptz"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    }
+  },
+  "fe1e350516766bf8397050dab593cafbe4a0ced8a07cf57ecf320dc9a879da3d": {
+    "query": "\n            SELECT id,\n                   redirect_uri,\n                   secret_key,\n                   title,\n                   allowed_registrations\n            FROM clients\n            WHERE id = $1\n            ",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 1,
+          "name": "redirect_uri",
+          "type_info": "TextArray"
+        },
+        {
+          "ordinal": 2,
+          "name": "secret_key",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 3,
+          "name": "title",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 4,
+          "name": "allowed_registrations",
+          "type_info": "Bool"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    }
+  }
+}

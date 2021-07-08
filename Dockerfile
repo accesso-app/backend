@@ -6,7 +6,7 @@ WORKDIR /app
 
 COPY ./resources ./resources
 
-COPY ./Cargo.lock ./Cargo.toml ./
+COPY ./Cargo.lock ./Cargo.toml ./sqlx-data.json ./
 COPY ./migrations ./migrations
 COPY ./db ./db
 COPY ./settings ./settings
