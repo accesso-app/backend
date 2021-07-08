@@ -7,5 +7,6 @@ CREATE TABLE "users"
     "password_hash" varchar NOT NULL,
     PRIMARY KEY ("id")
 );
-CREATE UNIQUE INDEX "users_email" ON "users" USING BTREE ("email");
-CREATE UNIQUE INDEX "users_username" ON "users" USING BTREE ("username");
+
+CREATE UNIQUE INDEX "users_email" ON "users" USING btree ("email");
+CREATE UNIQUE INDEX "users_username" ON "users" USING btree ("username");
