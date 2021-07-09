@@ -2,6 +2,7 @@ use crate::contracts::repo::UnexpectedDatabaseError;
 use crate::models::{SessionToken, User};
 use async_trait::async_trait;
 
+use crate::app::AppError;
 pub use crate::contracts::repo::SessionCreateError as RepoError;
 
 #[async_trait]
@@ -33,9 +34,18 @@ pub enum SessionDeleteStrategy {
     Single(String),
 }
 
-#[derive(Debug, PartialEq, Eq, Hash)]
+#[derive(Debug, PartialEq, Eq, Hash, Error)]
 pub enum SessionResolveError {
+    #[error("Something unexpected happened!")]
     Unexpected,
+}
+
+impl From<AppError> for SessionResolveError {
+    fn from(e: AppError) -> Self {
+        match e {
+            AppError::ServiceDoesNotExist(_) => Self::Unexpected,
+        }
+    }
 }
 
 #[derive(Debug, Validate, PartialEq, Eq, Hash)]
@@ -47,22 +57,27 @@ pub struct SessionCreateForm {
     pub password: String,
 }
 
-#[derive(Debug, PartialEq, Eq, Hash)]
+#[derive(Debug, Error)]
 pub enum SessionCreateError {
+    #[error("Unexpected error")]
     Unexpected,
-    InvalidForm,
+    #[error("Validation error: {0}")]
+    InvalidForm(#[from] validator::ValidationErrors),
+    #[error("Invalid credentials")]
     InvalidCredentials,
+}
+
+impl From<AppError> for SessionCreateError {
+    fn from(e: AppError) -> Self {
+        match e {
+            AppError::ServiceDoesNotExist(_) => Self::Unexpected,
+        }
+    }
 }
 
 #[derive(Debug, PartialEq, Eq, Hash)]
 pub enum SessionDeleteError {
     Unexpected,
-}
-
-impl From<validator::ValidationErrors> for SessionCreateError {
-    fn from(_: validator::ValidationErrors) -> Self {
-        Self::InvalidForm
-    }
 }
 
 impl From<UnexpectedDatabaseError> for SessionCreateError {

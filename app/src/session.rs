@@ -21,7 +21,7 @@ impl Session for App {
         &self,
         cookie: String,
     ) -> Result<Option<User>, SessionResolveError> {
-        let db = self.get::<Service<dyn Repository>>().unwrap();
+        let db = self.get::<Service<dyn Repository>>()?;
 
         match db.get_user_by_session_token(cookie).await {
             Err(GetUserBySessionError::Unexpected) => Err(SessionResolveError::Unexpected),
@@ -34,7 +34,7 @@ impl Session for App {
         &self,
         access_token: String,
     ) -> Result<Option<User>, SessionResolveError> {
-        let db = self.get::<Service<dyn Repository>>().unwrap();
+        let db = self.get::<Service<dyn Repository>>()?;
 
         match db.get_user_by_access_token(access_token).await {
             Err(GetUserBySessionError::Unexpected) => Err(SessionResolveError::Unexpected),

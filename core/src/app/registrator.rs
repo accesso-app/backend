@@ -44,11 +44,15 @@ pub enum RegisterRequestError {
     EmailAlreadyRegistered,
 }
 
-#[derive(Debug, PartialEq, Eq, Hash)]
+#[derive(Debug, Error)]
 pub enum RegisterConfirmError {
+    #[error("Unexpected error")]
     Unexpected,
-    InvalidForm,
+    #[error("Invalid form: {0}")]
+    InvalidForm(#[from] validator::ValidationErrors),
+    #[error("Code not found")]
     CodeNotFound,
+    #[error("Already activated")]
     AlreadyActivated,
 }
 
@@ -70,12 +74,6 @@ impl From<RegisterUserError> for RegisterConfirmError {
             RegisterUserError::Unexpected => Self::Unexpected,
             RegisterUserError::EmailAlreadyExists => Self::AlreadyActivated,
         }
-    }
-}
-
-impl From<validator::ValidationErrors> for RegisterConfirmError {
-    fn from(_: validator::ValidationErrors) -> Self {
-        Self::InvalidForm
     }
 }
 

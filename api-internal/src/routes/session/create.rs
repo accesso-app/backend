@@ -21,7 +21,7 @@ pub async fn route(
 
     match app.session_create(form).await {
         Err(Unexpected) => Response::Unexpected.answer(),
-        Err(InvalidForm) => Response::BadRequest(responses::SessionCreateFailed {
+        Err(InvalidForm(_)) => Response::BadRequest(responses::SessionCreateFailed {
             error: responses::SessionCreateFailedError::InvalidForm,
         })
         .answer(),

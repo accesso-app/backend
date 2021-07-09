@@ -1,4 +1,4 @@
-#![deny(warnings)]
+// #![deny(warnings)]
 #![forbid(unsafe_code)]
 
 use accesso_app::Service;
@@ -64,6 +64,8 @@ async fn main() -> anyhow::Result<()> {
             .build(),
     );
 
+    println!("{:?}", std::env::var("CARGO_MANIFEST_DIR"));
+
     let mut server = HttpServer::new(move || {
         actix_web::App::new()
             .app_data(web::Data::from(app.clone()))
@@ -101,6 +103,7 @@ async fn main() -> anyhow::Result<()> {
             .service(health::service())
             .default_service(web::route().to(not_found))
             .service(
+                routes::session::get::route
                 generated::api::create()
                     .bind_oauth_authorize_request(routes::oauth::authorize::route)
                     .bind_register_confirmation(routes::register::confirmation::route)

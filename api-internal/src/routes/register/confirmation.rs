@@ -31,7 +31,7 @@ pub async fn route(
         Err(AlreadyActivated) => Response::BadRequest(RegisterConfirmationFailed {
             error: RegisterConfirmationFailedError::EmailAlreadyActivated,
         }),
-        Err(InvalidForm) => Response::BadRequest(RegisterConfirmationFailed {
+        Err(InvalidForm(_)) => Response::BadRequest(RegisterConfirmationFailed {
             error: RegisterConfirmationFailedError::InvalidForm,
         }),
         Ok(()) => Response::Created,

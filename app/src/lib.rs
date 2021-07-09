@@ -9,6 +9,7 @@ use hashbrown::HashMap;
 use std::any::{Any, TypeId};
 use std::hash::{BuildHasherDefault, Hasher};
 
+use accesso_core::app::AppError;
 use std::ops::Deref;
 use std::sync::Arc;
 
@@ -104,10 +105,16 @@ impl App {
         AppBuilder::new()
     }
 
-    pub fn get<T: 'static>(&self) -> Option<&T> {
-        tracing::trace!("Trying to get {}", std::any::type_name::<T>());
+    pub fn get<T: 'static>(&self) -> Result<&T, AppError> {
+        let name = std::any::type_name::<T>();
+        tracing::trace!("Trying to get {}", name);
         self.services
             .get(&TypeId::of::<T>())
             .and_then(|rc| (&*rc).downcast_ref())
+            .map(Ok)
+            .unwrap_or_else(|| {
+                tracing::error!("Service does not exist! {}", name);
+                Err(AppError::ServiceDoesNotExist(name))
+            })
     }
 }

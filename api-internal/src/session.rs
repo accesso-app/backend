@@ -30,7 +30,7 @@ impl actix_web::FromRequest for Session {
             let app = req.app_data::<web::Data<accesso_app::App>>();
 
             if let (Some(session_config), Some(app)) = (session_config, app) {
-                if let Some(ref cookie) = req.clone().cookie(&session_config.name) {
+                if let Some(ref cookie) = req.cookie(&session_config.name) {
                     let token = cookie.value().to_owned();
 
                     match app.session_resolve_by_cookie(token.clone()).await {
