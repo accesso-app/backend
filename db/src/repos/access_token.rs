@@ -33,3 +33,14 @@ impl AccessTokenRepo for Database {
         .map_err(sqlx_error_to_unexpected)
     }
 }
+
+#[cfg(feature = "testing")]
+#[async_trait]
+impl AccessTokenRepo for accesso_core::contracts::MockDb {
+    async fn access_token_create(
+        &self,
+        token: AccessToken,
+    ) -> Result<AccessToken, UnexpectedDatabaseError> {
+        self.access_token.access_token_create(token).await
+    }
+}

@@ -84,6 +84,12 @@ Finally, [install just and run](#development).
 - `just` — to build and start `api-internal` crate (aliased to `just internal`)
 - `just public` — to build and run `api-public`
 
+After changing any sql query you need to run in root:
+
+```sh
+cargo sqlx prepare --merged
+```
+
 ## ENVs
 
 - `ACCESSO_MODE` (`"development"`, `"test"`, or `"production"`) — changes environment for config loading
