@@ -6,7 +6,7 @@ use config::{Config, ConfigError, Environment, File};
 use serde::Deserialize;
 use std::env;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct Settings {
     pub debug: bool,
     pub database: Database,
@@ -15,7 +15,7 @@ pub struct Settings {
     pub sendgrid: SendGrid,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct Cookies {
     pub http_only: bool,
     pub secure: bool,
@@ -23,7 +23,7 @@ pub struct Cookies {
     pub name: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct Database {
     pub user: String,
     pub password: String,
@@ -33,7 +33,7 @@ pub struct Database {
     pub pool_size: u32,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct SendGrid {
     pub api_key: String,
     /// with port
@@ -46,7 +46,7 @@ pub struct SendGrid {
     pub sender_email: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct Server {
     pub port: u16,
     pub host: String,

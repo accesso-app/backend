@@ -1,4 +1,4 @@
-use crate::contracts::{RegisterUserError, SaveRegisterRequestError, UnexpectedDatabaseError};
+use crate::contracts::{RegisterUserError, SendEmailError};
 use async_trait::async_trait;
 use chrono::Utc;
 
@@ -12,13 +12,13 @@ pub trait Registrator {
     async fn registrator_confirm(&self, form: RegisterForm) -> Result<(), RegisterConfirmError>;
 }
 
-#[derive(Debug, Clone, Validate, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Validate)]
 pub struct CreateRegisterRequest {
     #[validate(email)]
     pub email: String,
 }
 
-#[derive(Debug, Clone, Validate, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Validate)]
 pub struct RegisterForm {
     #[validate(length(min = 7))]
     pub confirmation_code: String,
@@ -33,63 +33,43 @@ pub struct RegisterForm {
     pub password: String,
 }
 
-#[derive(Debug, PartialEq, Eq, Hash)]
+#[derive(Debug)]
 pub struct RequestCreated {
     pub expires_at: chrono::DateTime<Utc>,
 }
-#[derive(Debug, PartialEq, Eq, Hash)]
+
+#[derive(Debug, thiserror::Error)]
 pub enum RegisterRequestError {
-    Unexpected,
-    InvalidForm,
-    EmailAlreadyRegistered,
+    #[error(transparent)]
+    InvalidForm(#[from] validator::ValidationErrors),
+    #[error("Email already registered {0}")]
+    EmailAlreadyRegistered(String),
+    #[error("Failed to send email: {0}")]
+    EmailSenderError(#[from] SendEmailError),
+    #[error(transparent)]
+    Unexpected(#[from] eyre::Report),
 }
 
-#[derive(Debug, PartialEq, Eq, Hash)]
+#[derive(Debug, thiserror::Error)]
 pub enum RegisterConfirmError {
-    Unexpected,
-    InvalidForm,
+    #[error("{0}")]
+    InvalidForm(#[from] validator::ValidationErrors),
+    #[error("Code not found")]
     CodeNotFound,
-    AlreadyActivated,
-}
-
-impl From<UnexpectedDatabaseError> for RegisterRequestError {
-    fn from(_: UnexpectedDatabaseError) -> Self {
-        RegisterRequestError::Unexpected
-    }
-}
-
-impl From<UnexpectedDatabaseError> for RegisterConfirmError {
-    fn from(_: UnexpectedDatabaseError) -> Self {
-        RegisterConfirmError::Unexpected
-    }
+    #[error("Code already activated: {0}")]
+    AlreadyActivated(#[source] RegisterUserError),
+    #[error(transparent)]
+    Unexpected(#[from] eyre::Report),
+    #[error("Failed to send email: {0}")]
+    EmailSenderError(#[from] SendEmailError),
 }
 
 impl From<RegisterUserError> for RegisterConfirmError {
-    fn from(error: RegisterUserError) -> Self {
-        match error {
-            RegisterUserError::Unexpected => Self::Unexpected,
-            RegisterUserError::EmailAlreadyExists => Self::AlreadyActivated,
+    fn from(e: RegisterUserError) -> Self {
+        match e {
+            RegisterUserError::EmailAlreadyExists => Self::AlreadyActivated(e),
+            _ => Self::Unexpected(e.into()),
         }
-    }
-}
-
-impl From<validator::ValidationErrors> for RegisterConfirmError {
-    fn from(_: validator::ValidationErrors) -> Self {
-        Self::InvalidForm
-    }
-}
-
-impl From<SaveRegisterRequestError> for RegisterRequestError {
-    fn from(_: SaveRegisterRequestError) -> Self {
-        // Now all errors from request errors converted to Unexpected
-        // Because CodeAlreadyExists is handled at create_register_request impl
-        Self::Unexpected
-    }
-}
-
-impl From<validator::ValidationErrors> for RegisterRequestError {
-    fn from(_: validator::ValidationErrors) -> Self {
-        Self::InvalidForm
     }
 }
 

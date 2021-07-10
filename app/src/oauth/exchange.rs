@@ -17,8 +17,9 @@ impl OAuthExchange for App {
         &self,
         form: ExchangeAccessTokenForm,
     ) -> Result<AccessTokenCreated, ExchangeFailed> {
-        let db = self.get::<Service<dyn Repository>>().unwrap();
-        let generator = self.get::<Service<dyn SecureGenerator>>().unwrap();
+        let db = self.get::<Service<dyn Repository>>()?;
+        let generator = self.get::<Service<dyn SecureGenerator>>()?;
+
         form.validate()?;
 
         let ExchangeAccessTokenForm {
@@ -88,7 +89,7 @@ impl OAuthExchange for App {
                 Ok(AccessTokenCreated {
                     access_token: created.token.clone(),
                     token_type: TokenType::Bearer,
-                    expires_in: created.expires_at.clone(),
+                    expires_in: created.expires_at,
                 })
             }
         }

@@ -21,10 +21,10 @@ impl Session for App {
         &self,
         cookie: String,
     ) -> Result<Option<User>, SessionResolveError> {
-        let db = self.get::<Service<dyn Repository>>().unwrap();
+        let db = self.get::<Service<dyn Repository>>()?;
 
         match db.get_user_by_session_token(cookie).await {
-            Err(GetUserBySessionError::Unexpected) => Err(SessionResolveError::Unexpected),
+            Err(GetUserBySessionError::Unexpected(e)) => Err(SessionResolveError::Unexpected(e)),
             Err(GetUserBySessionError::NotFound) => Ok(None),
             Ok(user) => Ok(Some(user)),
         }
@@ -34,10 +34,10 @@ impl Session for App {
         &self,
         access_token: String,
     ) -> Result<Option<User>, SessionResolveError> {
-        let db = self.get::<Service<dyn Repository>>().unwrap();
+        let db = self.get::<Service<dyn Repository>>()?;
 
         match db.get_user_by_access_token(access_token).await {
-            Err(GetUserBySessionError::Unexpected) => Err(SessionResolveError::Unexpected),
+            Err(GetUserBySessionError::Unexpected(e)) => Err(SessionResolveError::Unexpected(e)),
             Err(GetUserBySessionError::NotFound) => Ok(None),
             Ok(user) => Ok(Some(user)),
         }
@@ -47,8 +47,9 @@ impl Session for App {
         &self,
         form: SessionCreateForm,
     ) -> Result<(SessionToken, User), SessionCreateError> {
-        let db = self.get::<Service<dyn Repository>>().unwrap();
-        let generator = self.get::<Service<dyn SecureGenerator>>().unwrap();
+        let db = self.get::<Service<dyn Repository>>()?;
+        let generator = self.get::<Service<dyn SecureGenerator>>()?;
+
         form.validate()?;
 
         let hashed_input_password = generator.password_hash(form.password.clone());
@@ -100,17 +101,17 @@ impl Session for App {
         user: &User,
         strategy: SessionDeleteStrategy,
     ) -> Result<(), SessionDeleteError> {
-        let db = self.get::<Service<dyn Repository>>().unwrap();
+        let db = self.get::<Service<dyn Repository>>()?;
         match strategy {
             SessionDeleteStrategy::All => db
                 .session_delete_by_user_id(user.id)
                 .await
-                .map_err(|_unexpected| SessionDeleteError::Unexpected),
+                .map_err(Into::into),
 
             SessionDeleteStrategy::Single(token) => db
                 .session_delete_token(token.as_ref())
                 .await
-                .map_err(|_unexpected| SessionDeleteError::Unexpected),
+                .map_err(Into::into),
         }
     }
 }

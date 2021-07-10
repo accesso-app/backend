@@ -26,7 +26,7 @@ impl actix_web::FromRequest for Session {
 
         Box::pin(async move {
             let req = req.clone();
-            let session_config = req.app_data::<web::Data<crate::cookie::SessionCookieConfig>>();
+            let session_config = req.app_data::<web::Data<accesso_app::SessionCookieConfig>>();
             let app = req.app_data::<web::Data<accesso_app::App>>();
 
             if let (Some(session_config), Some(app)) = (session_config, app) {
@@ -34,18 +34,15 @@ impl actix_web::FromRequest for Session {
                     let token = cookie.value().to_owned();
 
                     match app.session_resolve_by_cookie(token.clone()).await {
-                        Err(Unexpected) => Err(ErrorInternalServerError(Null)),
+                        Err(Unexpected(_)) => Err(ErrorInternalServerError(Null)),
                         Ok(None) => Err(ErrorUnauthorized(Null)),
                         Ok(Some(user)) => Ok(Self { user, token }),
                     }
                 } else {
-                    log::trace!("no cookie found");
+                    tracing::warn!("No cookie found!");
                     Err(ErrorUnauthorized(Null))
                 }
             } else {
-                log::error!(
-                    "failed to resolve crate::cookie::SessionCookieConfig or/and crate::App"
-                );
                 Err(ErrorInternalServerError(Null))
             }
         })

@@ -1,7 +1,8 @@
 use crate::generated::components::{parameters, responses};
-use crate::generated::paths::viewer_get::{Answer, Response};
+use crate::generated::paths::viewer_get::{Error, Response};
 use actix_web::web;
 
+use accesso_core::app::session::{Session, SessionResolveError};
 use responses::{
     ViewerGetFailure as Failure, ViewerGetFailureError as FailureError, ViewerGetSuccess as Success,
 };
@@ -9,19 +10,29 @@ use responses::{
 pub async fn route(
     access_token: parameters::AccessToken,
     app: web::Data<accesso_app::App>,
-) -> Answer {
-    use accesso_core::app::session::{Session, SessionResolveError::Unexpected};
+) -> Result<Response, Error> {
+    let user = app
+        .session_resolve_by_access_token(access_token.0)
+        .await
+        .map_err(map_session_resolve_error)?;
 
-    match app.session_resolve_by_access_token(access_token.0).await {
-        Err(Unexpected) => Response::Unexpected,
-        Ok(None) => Response::BadRequest(Failure {
-            error: FailureError::Unauthorized,
-        }),
-        Ok(Some(user)) => Response::Ok(Success {
+    if let Some(user) = user {
+        Ok(Response::Ok(Success {
             first_name: user.first_name,
             last_name: user.last_name,
             id: user.id,
-        }),
+        }))
+    } else {
+        Err(Error::BadRequest(Failure {
+            error: FailureError::Unauthorized,
+        }))
     }
-    .answer()
+}
+
+fn map_session_resolve_error(error: SessionResolveError) -> Error {
+    use SessionResolveError::Unexpected;
+
+    match error {
+        Unexpected(e) => Error::Unexpected(e),
+    }
 }

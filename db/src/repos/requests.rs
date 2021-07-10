@@ -3,7 +3,6 @@ use accesso_core::contracts::{SaveRegisterRequestError, UnexpectedDatabaseError}
 use accesso_core::models;
 
 use crate::entities::RegistrationRequest;
-use crate::mappers::{sqlx_error_to_save_register_error, sqlx_error_to_unexpected};
 use crate::Database;
 
 #[async_trait]
@@ -14,7 +13,7 @@ impl RequestsRepo for Database {
     ) -> Result<models::RegisterRequest, SaveRegisterRequestError> {
         let request = RegistrationRequest::from(request);
 
-        sqlx::query_as!(
+        Ok(sqlx::query_as!(
             RegistrationRequest,
             // language=PostgreSQL
             r#"
@@ -29,8 +28,7 @@ impl RequestsRepo for Database {
         )
         .fetch_one(&self.pool)
         .await
-        .map(Into::into)
-        .map_err(sqlx_error_to_save_register_error)
+        .map(Into::into)?)
     }
 
     async fn register_request_get_by_code(
@@ -50,8 +48,7 @@ impl RequestsRepo for Database {
             chrono::Utc::now()
         )
         .fetch_optional(&self.pool)
-        .await
-        .map_err(sqlx_error_to_unexpected)?
+        .await?
         .map(Into::into))
     }
 
@@ -69,8 +66,7 @@ impl RequestsRepo for Database {
             email
         )
         .execute(&self.pool)
-        .await
-        .map_err(sqlx_error_to_unexpected)?
+        .await?
         .rows_affected())
     }
 }

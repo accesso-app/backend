@@ -3,17 +3,14 @@ use crate::generated::components::responses::{
     RegisterConfirmationFailed, RegisterConfirmationFailedError,
 };
 use crate::generated::paths::register_confirmation as confirm;
-use actix_swagger::Answer;
+use accesso_core::app::registrator::RegisterConfirmError;
 use actix_web::web;
 
 pub async fn route(
     body: web::Json<request_bodies::RegisterConfirmation>,
     app: web::Data<accesso_app::App>,
-) -> Answer<'static, confirm::Response> {
-    use accesso_core::app::registrator::{
-        RegisterConfirmError::{AlreadyActivated, CodeNotFound, InvalidForm, Unexpected},
-        RegisterForm, Registrator,
-    };
+) -> Result<confirm::Response, confirm::Error> {
+    use accesso_core::app::registrator::{RegisterForm, Registrator};
     use confirm::Response;
 
     let form = RegisterForm {
@@ -23,18 +20,33 @@ pub async fn route(
         password: body.password.clone(),
     };
 
-    match app.registrator_confirm(form).await {
-        Err(Unexpected) => Response::Unexpected,
-        Err(CodeNotFound) => Response::BadRequest(RegisterConfirmationFailed {
+    app.registrator_confirm(form)
+        .await
+        .map_err(map_confirmation_error)?;
+
+    Ok(Response::Created)
+}
+
+fn map_confirmation_error(error: RegisterConfirmError) -> confirm::Error {
+    use RegisterConfirmError::{
+        AlreadyActivated, CodeNotFound, EmailSenderError, InvalidForm, Unexpected,
+    };
+    use RegisterConfirmationFailed as Failure;
+
+    match error {
+        Unexpected(e) => e.into(),
+        CodeNotFound => Failure {
             error: RegisterConfirmationFailedError::CodeInvalidOrExpired,
-        }),
-        Err(AlreadyActivated) => Response::BadRequest(RegisterConfirmationFailed {
-            error: RegisterConfirmationFailedError::EmailAlreadyActivated,
-        }),
-        Err(InvalidForm) => Response::BadRequest(RegisterConfirmationFailed {
-            error: RegisterConfirmationFailedError::InvalidForm,
-        }),
-        Ok(()) => Response::Created,
+        }
+        .into(),
+        AlreadyActivated(e) => Failure {
+            error: RegisterConfirmationFailedError::EmailAlreadyActivated(e.into()),
+        }
+        .into(),
+        InvalidForm(e) => Failure {
+            error: RegisterConfirmationFailedError::InvalidForm(e),
+        }
+        .into(),
+        EmailSenderError(e) => eyre::Report::from(e).into(),
     }
-    .answer()
 }

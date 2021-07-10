@@ -1,33 +1,39 @@
 use crate::generated::components::{request_bodies, responses};
 use crate::generated::paths::register_request;
-use actix_swagger::Answer;
+use accesso_core::app::registrator::RegisterRequestError;
 use actix_web::web;
 
+#[tracing::instrument(skip(app))]
 pub async fn route(
     body: web::Json<request_bodies::Register>,
     app: web::Data<accesso_app::App>,
-) -> Answer<'static, register_request::Response> {
-    use accesso_core::app::registrator::{
-        CreateRegisterRequest,
-        RegisterRequestError::{EmailAlreadyRegistered, InvalidForm, Unexpected},
-        Registrator,
-    };
+) -> Result<register_request::Response, register_request::Error> {
+    use accesso_core::app::registrator::{CreateRegisterRequest, Registrator};
     use register_request::Response;
 
-    match app
+    let request = app
         .registrator_create_request(CreateRegisterRequest::from_email(&body.email))
         .await
-    {
-        Err(EmailAlreadyRegistered) => Response::BadRequest(responses::RegisterFailed {
-            error: responses::RegisterFailedError::EmailAlreadyRegistered,
-        }),
-        Err(InvalidForm) => Response::BadRequest(responses::RegisterFailed {
-            error: responses::RegisterFailedError::InvalidForm,
-        }),
-        Err(Unexpected) => Response::Unexpected,
-        Ok(request) => Response::Created(responses::RegistrationRequestCreated {
-            expires_at: request.expires_at.timestamp_millis(),
-        }),
+        .map_err(map_register_request_error)?;
+
+    Ok(Response::Created(responses::RegistrationRequestCreated {
+        expires_at: request.expires_at.timestamp(),
+    }))
+}
+
+fn map_register_request_error(error: RegisterRequestError) -> register_request::Error {
+    use RegisterRequestError::{EmailAlreadyRegistered, EmailSenderError, InvalidForm, Unexpected};
+
+    match error {
+        Unexpected(e) => e.into(),
+        EmailSenderError(e) => eyre::Report::from(e).into(),
+        EmailAlreadyRegistered(email) => responses::RegisterFailed {
+            error: responses::RegisterFailedError::EmailAlreadyRegistered(email),
+        }
+        .into(),
+        InvalidForm(e) => responses::RegisterFailed {
+            error: responses::RegisterFailedError::InvalidForm(e),
+        }
+        .into(),
     }
-    .answer()
 }

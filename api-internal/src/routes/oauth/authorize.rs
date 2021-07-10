@@ -1,72 +1,22 @@
 use crate::generated::{
     components::{request_bodies, responses},
-    paths::oauth_authorize_request::Response,
+    paths::oauth_authorize_request::{Error, Response},
 };
-use accesso_core::models;
-use actix_swagger::Answer;
-use actix_web::{dev, web, FromRequest};
+use actix_web::web;
 
-use futures::Future;
+use crate::session::Session;
+use accesso_core::app::oauth::authorize::RequestAuthCodeFailed;
 use responses::{
     OAuthAuthorizeDone as Success, OAuthAuthorizeRequestFailure as Failure,
     OAuthAuthorizeRequestFailureError as FailureVariant,
 };
-use std::pin::Pin;
-
-#[derive(Debug)]
-pub struct Auth {
-    user: Option<models::User>,
-}
-
-impl FromRequest for Auth {
-    type Config = ();
-    type Error = actix_web::Error;
-    type Future = Pin<Box<dyn Future<Output = Result<Self, Self::Error>>>>;
-
-    #[inline]
-    fn from_request(req: &actix_web::HttpRequest, _: &mut dev::Payload) -> Self::Future {
-        use accesso_core::app::session::Session;
-
-        let req = req.clone();
-
-        Box::pin(async move {
-            let req = req.clone();
-
-            let session_config = req
-                .app_data::<web::Data<crate::cookie::SessionCookieConfig>>()
-                .expect("SessionCookieConfig not provided");
-
-            if let Some(cookie) = req.cookie(&session_config.name) {
-                if let Some(app) = req.app_data::<web::Data<accesso_app::App>>() {
-                    return match app
-                        .session_resolve_by_cookie(cookie.value().to_owned())
-                        .await
-                    {
-                        Err(_) => Ok(Auth { user: None }),
-                        Ok(user) => Ok(Auth { user }),
-                    };
-                } else {
-                    tracing::error!("[Auth FromRequest] cannot resolve app data");
-                }
-            }
-
-            Ok(Auth { user: None })
-        })
-    }
-}
 
 pub async fn route(
-    auth: Auth,
+    auth: Session,
     body: web::Json<request_bodies::OAuthAuthorize>,
     app: web::Data<accesso_app::App>,
-) -> Answer<'static, Response> {
-    use accesso_core::app::oauth::authorize::{
-        OAuthAuthorize, RequestAuthCode,
-        RequestAuthCodeFailed::{
-            AccessDenied, InvalidRequest, InvalidScope, ServerError, TemporarilyUnavailable,
-            Unauthenticated, UnauthorizedClient, UnsupportedResponseType,
-        },
-    };
+) -> Result<Response, Error> {
+    use accesso_core::app::oauth::authorize::{OAuthAuthorize, RequestAuthCode};
 
     let form = RequestAuthCode {
         response_type: match body.response_type {
@@ -80,69 +30,81 @@ pub async fn route(
         state: body.state.clone(),
     };
 
-    match app.oauth_request_authorize_code(auth.user, form).await {
-        Err(ServerError) => Response::BadRequest(Failure {
-            error: FailureVariant::ServerError,
+    let created = app
+        .oauth_request_authorize_code(Some(auth.user), form)
+        .await
+        .map_err(map_request_auth_code_error)?;
+
+    Ok(Response::Ok(Success {
+        redirect_uri: created.redirect_uri,
+        code: created.code,
+        state: created.state,
+    }))
+}
+
+fn map_request_auth_code_error(error: RequestAuthCodeFailed) -> Error {
+    use RequestAuthCodeFailed::{
+        AccessDenied, InvalidRequest, InvalidScope, ServerError, TemporarilyUnavailable,
+        Unauthenticated, UnauthorizedClient, UnsupportedResponseType,
+    };
+
+    match error {
+        ServerError(e) => Failure {
+            error: FailureVariant::ServerError(e),
             redirect_uri: None,
             state: None,
-        }),
+        },
 
-        Err(TemporarilyUnavailable) => Response::BadRequest(Failure {
+        TemporarilyUnavailable => Failure {
             error: FailureVariant::TemporarilyUnavailable,
             redirect_uri: None,
             state: None,
-        }),
+        },
 
-        Err(InvalidScope {
+        InvalidScope {
             redirect_uri,
             state,
-        }) => Response::BadRequest(Failure {
+        } => Failure {
             error: FailureVariant::InvalidScope,
             redirect_uri: Some(redirect_uri),
             state,
-        }),
+        },
 
-        Err(UnsupportedResponseType {
+        UnsupportedResponseType {
             redirect_uri,
             state,
-        }) => Response::BadRequest(Failure {
+        } => Failure {
             error: FailureVariant::UnsupportedResponseType,
             redirect_uri: Some(redirect_uri),
             state,
-        }),
+        },
 
-        Err(UnauthorizedClient) => Response::BadRequest(Failure {
+        UnauthorizedClient => Failure {
             error: FailureVariant::UnauthorizedClient,
             redirect_uri: None,
             state: None,
-        }),
+        },
 
-        Err(AccessDenied {
+        AccessDenied {
             redirect_uri,
             state,
-        }) => Response::BadRequest(Failure {
+        } => Failure {
             error: FailureVariant::AccessDenied,
             redirect_uri: Some(redirect_uri),
             state,
-        }),
+        },
 
-        Err(InvalidRequest) => Response::BadRequest(Failure {
-            error: FailureVariant::InvalidRequest,
+        InvalidRequest(e) => Failure {
+            error: FailureVariant::InvalidRequest(e),
             redirect_uri: None,
             state: None,
-        }),
+        },
 
-        Err(Unauthenticated) => Response::BadRequest(Failure {
+        Unauthenticated => Failure {
             error: FailureVariant::UnauthenticatedUser,
             redirect_uri: None,
             state: None,
-        }),
-
-        Ok(created) => Response::Ok(Success {
-            redirect_uri: created.redirect_uri,
-            code: created.code,
-            state: created.state,
-        }),
+        },
     }
-    .answer()
+    .into()
 }

@@ -14,8 +14,11 @@ mod session;
 mod user;
 mod user_registration;
 
-#[derive(Debug)]
-pub struct UnexpectedDatabaseError;
+#[derive(Debug, thiserror::Error)]
+pub enum UnexpectedDatabaseError {
+    #[error("Unexpected database error: {0}")]
+    SqlxError(#[from] sqlx_core::error::Error),
+}
 
 #[cfg(feature = "testing")]
 pub struct MockDb {

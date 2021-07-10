@@ -48,25 +48,25 @@ pub struct AccessTokenCreated {
     pub expires_in: chrono::DateTime<chrono::Utc>,
 }
 
-#[derive(Debug, PartialEq, Eq, Hash)]
+#[derive(Debug, thiserror::Error)]
 pub enum ExchangeFailed {
-    InvalidRequest,
+    #[error("Validation error: {0}")]
+    InvalidRequest(#[from] validator::ValidationErrors),
+    #[error("Invalid client")]
     InvalidClient,
+    #[error("Invalid grant")]
     InvalidGrant,
-    // UnsupportedGrantType,
+    // UnsupportedGrantType
+    #[error("Invalid scope")]
     InvalidScope,
+    #[error("Unauthorized client")]
     UnauthorizedClient,
-    Unexpected,
-}
-
-impl From<validator::ValidationErrors> for ExchangeFailed {
-    fn from(_: validator::ValidationErrors) -> Self {
-        Self::InvalidRequest
-    }
+    #[error(transparent)]
+    Unexpected(#[from] eyre::Report),
 }
 
 impl From<UnexpectedDatabaseError> for ExchangeFailed {
-    fn from(_: UnexpectedDatabaseError) -> Self {
-        ExchangeFailed::Unexpected
+    fn from(e: UnexpectedDatabaseError) -> Self {
+        ExchangeFailed::Unexpected(e.into())
     }
 }

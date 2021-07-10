@@ -3,7 +3,6 @@ use accesso_core::contracts::UnexpectedDatabaseError;
 use accesso_core::models;
 
 use crate::entities::AccessToken;
-use crate::mappers::sqlx_error_to_unexpected;
 use crate::Database;
 
 #[async_trait]
@@ -13,7 +12,7 @@ impl AccessTokenRepo for Database {
         token: models::AccessToken,
     ) -> Result<models::AccessToken, UnexpectedDatabaseError> {
         let token = AccessToken::from(token);
-        sqlx::query_as!(
+        Ok(sqlx::query_as!(
             AccessToken,
             // language=PostgreSQL
             r#"
@@ -28,9 +27,8 @@ impl AccessTokenRepo for Database {
             token.registration_id
         )
         .fetch_one(&self.pool)
-        .await
-        .map(Into::into)
-        .map_err(sqlx_error_to_unexpected)
+        .await?
+        .into())
     }
 }
 

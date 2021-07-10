@@ -2,10 +2,10 @@
 #![allow(clippy::from_over_into)]
 
 pub mod api {
-    use actix_swagger::{Answer, Api, Method};
+    use actix_swagger::{Api, Method};
     use actix_web::{
         dev::{AppService, Handler, HttpServiceFactory},
-        FromRequest,
+        FromRequest, Responder,
     };
     use std::future::Future;
 
@@ -28,8 +28,12 @@ pub mod api {
         where
             F: Handler<T, R>,
             T: FromRequest + 'static,
-            R: Future<Output = Answer<'static, super::paths::oauth_authorize_request::Response>>
-                + 'static,
+            R: Future<
+                    Output = Result<
+                        super::paths::oauth_authorize_request::Response,
+                        super::paths::oauth_authorize_request::Error,
+                    >,
+                > + 'static,
         {
             self.api = self
                 .api
@@ -41,7 +45,12 @@ pub mod api {
         where
             F: Handler<T, R>,
             T: FromRequest + 'static,
-            R: Future<Output = Answer<'static, super::paths::oauth_token::Response>> + 'static,
+            R: Future<
+                    Output = Result<
+                        super::paths::oauth_token::Response,
+                        super::paths::oauth_token::Error,
+                    >,
+                > + 'static,
         {
             self.api = self
                 .api
@@ -53,7 +62,12 @@ pub mod api {
         where
             F: Handler<T, R>,
             T: FromRequest + 'static,
-            R: Future<Output = Answer<'static, super::paths::register_request::Response>> + 'static,
+            R: Future<
+                    Output = Result<
+                        super::paths::register_request::Response,
+                        super::paths::register_request::Error,
+                    >,
+                > + 'static,
         {
             self.api = self
                 .api
@@ -65,8 +79,12 @@ pub mod api {
         where
             F: Handler<T, R>,
             T: FromRequest + 'static,
-            R: Future<Output = Answer<'static, super::paths::register_confirmation::Response>>
-                + 'static,
+            R: Future<
+                    Output = Result<
+                        super::paths::register_confirmation::Response,
+                        super::paths::register_confirmation::Error,
+                    >,
+                > + 'static,
         {
             self.api = self
                 .api
@@ -74,11 +92,12 @@ pub mod api {
             self
         }
 
-        pub fn bind_session_create<F, T, R>(mut self, handler: F) -> Self
+        pub fn bind_session_create<F, T, R, Res>(mut self, handler: F) -> Self
         where
             F: Handler<T, R>,
             T: FromRequest + 'static,
-            R: Future<Output = Answer<'static, super::paths::session_create::Response>> + 'static,
+            Res: Responder + 'static,
+            R: Future<Output = Result<Res, super::paths::session_create::Error>> + 'static,
         {
             self.api = self
                 .api
@@ -86,11 +105,12 @@ pub mod api {
             self
         }
 
-        pub fn bind_session_delete<F, T, R>(mut self, handler: F) -> Self
+        pub fn bind_session_delete<F, T, R, Res>(mut self, handler: F) -> Self
         where
             F: Handler<T, R>,
             T: FromRequest + 'static,
-            R: Future<Output = Answer<'static, super::paths::session_delete::Response>> + 'static,
+            Res: Responder + 'static,
+            R: Future<Output = Result<Res, super::paths::session_delete::Error>> + 'static,
         {
             self.api = self
                 .api
@@ -102,7 +122,12 @@ pub mod api {
         where
             F: Handler<T, R>,
             T: FromRequest + 'static,
-            R: Future<Output = Answer<'static, super::paths::session_get::Response>> + 'static,
+            R: Future<
+                    Output = Result<
+                        super::paths::session_get::Response,
+                        super::paths::session_get::Error,
+                    >,
+                > + 'static,
         {
             self.api = self
                 .api
@@ -181,34 +206,47 @@ pub mod components {
             pub expires_at: i64,
         }
 
-        #[derive(Debug, Serialize, Deserialize)]
+        #[derive(Debug, Serialize, thiserror::Error)]
         pub enum RegisterFailedError {
             #[serde(rename = "email_already_registered")]
-            EmailAlreadyRegistered,
+            #[error("Email already registered: {0}")]
+            EmailAlreadyRegistered(#[serde(skip)] String),
 
             #[serde(rename = "invalid_form")]
-            InvalidForm,
+            #[error(transparent)]
+            InvalidForm(#[serde(skip)] validator::ValidationErrors),
         }
 
-        #[derive(Debug, Serialize, Deserialize)]
+        #[derive(Debug, Serialize, thiserror::Error)]
+        #[error(transparent)]
         pub struct RegisterFailed {
+            #[from]
             pub error: RegisterFailedError,
         }
 
-        #[derive(Debug, Serialize, Deserialize)]
+        #[derive(Debug, Serialize, thiserror::Error)]
         pub enum RegisterConfirmationFailedError {
             #[serde(rename = "code_invalid_or_expired")]
+            #[error("Code invalid or expired")]
             CodeInvalidOrExpired,
 
             #[serde(rename = "email_already_activated")]
-            EmailAlreadyActivated,
+            #[error(transparent)]
+            EmailAlreadyActivated(#[serde(skip)] eyre::Report),
 
             #[serde(rename = "invalid_form")]
-            InvalidForm,
+            #[error(transparent)]
+            InvalidForm(
+                #[serde(skip)]
+                #[from]
+                validator::ValidationErrors,
+            ),
         }
 
-        #[derive(Debug, Serialize, Deserialize)]
+        #[derive(Debug, Serialize, thiserror::Error)]
+        #[error(transparent)]
         pub struct RegisterConfirmationFailed {
+            #[from]
             pub error: RegisterConfirmationFailedError,
         }
 
@@ -222,33 +260,45 @@ pub mod components {
         }
 
         #[doc = "Login failed"]
-        #[derive(Debug, Serialize)]
+        #[derive(Debug, Serialize, thiserror::Error)]
+        #[error(transparent)]
         pub struct SessionCreateFailed {
+            #[from]
             pub error: SessionCreateFailedError,
         }
 
-        #[derive(Debug, Serialize)]
+        #[derive(Debug, Serialize, thiserror::Error)]
         pub enum SessionCreateFailedError {
             #[serde(rename = "invalid_credentials")]
+            #[error("Invalid credentials")]
             InvalidCredentials,
 
             #[serde(rename = "invalid_form")]
-            InvalidForm,
+            #[error(transparent)]
+            InvalidForm(
+                #[from]
+                #[serde(skip)]
+                validator::ValidationErrors,
+            ),
 
             #[serde(rename = "invalid_payload")]
+            #[error("Invalid payload")]
             InvalidPayload,
         }
 
         #[doc = "failed to delete session"]
-        #[derive(Debug, Serialize)]
+        #[derive(Debug, Serialize, thiserror::Error)]
+        #[error(transparent)]
         pub struct SessionDeleteFailure {
+            #[from]
             pub error: SessionDeleteFailureError,
         }
 
-        #[derive(Debug, Serialize)]
+        #[derive(Debug, Serialize, thiserror::Error)]
         pub enum SessionDeleteFailureError {
             #[serde(rename = "invalid_payload")]
-            InvalidPayload,
+            #[error(transparent)]
+            InvalidPayload(#[serde(skip)] eyre::Report),
         }
 
         #[derive(Debug, Serialize)]
@@ -279,38 +329,52 @@ pub mod components {
         /// - `server_error` — The authorization server encountered an unexpected condition which prevented it from fulfilling the request.
         /// - `temporarily_unavailable` — The authorization server is currently unable to handle the request due to a temporary overloading or maintenance of the server.
         /// [OAuth2 Possible Errors](https://www.oauth.com/oauth2-servers/server-side-apps/possible-errors/)
-        #[derive(Debug, Serialize)]
+        #[derive(Debug, Serialize, thiserror::Error)]
         pub enum OAuthAuthorizeRequestFailureError {
             #[serde(rename = "invalid_request")]
-            InvalidRequest,
+            #[error(transparent)]
+            InvalidRequest(#[serde(skip)] eyre::Report),
 
             #[serde(rename = "access_denied")]
+            #[error("Access denied")]
             AccessDenied,
 
             #[serde(rename = "unauthorized_client")]
+            #[error("Unauthorized client")]
             UnauthorizedClient,
 
             #[serde(rename = "unauthenticated_user")]
+            #[error("Unauthenticated user")]
             UnauthenticatedUser,
 
             #[serde(rename = "unsupported_response_type")]
+            #[error("Unsupported response type")]
             UnsupportedResponseType,
 
             #[serde(rename = "invalid_scope")]
+            #[error("Invalid scope")]
             InvalidScope,
 
             #[serde(rename = "server_error")]
-            ServerError,
+            #[error(transparent)]
+            ServerError(
+                #[serde(skip)]
+                #[from]
+                eyre::Report,
+            ),
 
             #[serde(rename = "temporarily_unavailable")]
+            #[error("Temporarily unavailable")]
             TemporarilyUnavailable,
         }
 
         /// There are two different kinds of errors to handle. The first kind of error is when the developer did something wrong when creating the authorization request. The other kind of error is when the user rejects the request (clicks the “Deny” button).
         /// If there is something wrong with the syntax of the request, such as the redirect_uri or client_id is invalid, then it’s important not to redirect the user and instead you should show the error message directly. This is to avoid letting your authorization server be used as an open redirector.
         /// If the redirect_uri and client_id are both valid, but there is still some other problem, it’s okay to redirect the user back to the redirect URI with the error in the query string.
-        #[derive(Debug, Serialize)]
+        #[derive(Debug, Serialize, thiserror::Error)]
+        #[error("{error}")]
         pub struct OAuthAuthorizeRequestFailure {
+            #[source]
             pub error: OAuthAuthorizeRequestFailureError,
 
             #[doc = "User should be redirected to if passed redirectUri and clientId is correct"]
@@ -341,29 +405,37 @@ pub mod components {
         }
 
         /// When you can't exchange authorization code to access token
-        #[derive(Debug, Serialize)]
+        #[derive(Debug, Serialize, thiserror::Error)]
+        #[error(transparent)]
         pub struct OAuthAccessTokenFailure {
+            #[from]
             pub error: OAuthAccessTokenFailureError,
         }
 
-        #[derive(Debug, Serialize)]
+        #[derive(Debug, Serialize, thiserror::Error)]
         pub enum OAuthAccessTokenFailureError {
             #[serde(rename = "invalid_request")]
+            #[error("Invalid request")]
             InvalidRequest,
 
             #[serde(rename = "invalid_client")]
+            #[error("Invalid client")]
             InvalidClient,
 
             #[serde(rename = "invalid_grant")]
+            #[error("Invalid grant")]
             InvalidGrant,
 
             #[serde(rename = "invalid_scope")]
+            #[error("Invalid scope")]
             InvalidScope,
 
             #[serde(rename = "unauthorized_client")]
+            #[error("Unauthorized client")]
             UnauthorizedClient,
 
             #[serde(rename = "unsupported_grant_type")]
+            #[error("Unsupported grant type")]
             UnsupportedGrantType,
         }
     }
@@ -477,70 +549,124 @@ pub mod paths {
         use super::responses;
         use actix_swagger::ContentType;
         use actix_web::http::StatusCode;
+        use actix_web::{HttpRequest, HttpResponse, Responder, ResponseError};
         use serde::Serialize;
-
-        pub type Answer = actix_swagger::Answer<'static, Response>;
 
         #[derive(Debug, Serialize)]
         #[serde(untagged)]
         pub enum Response {
             Created(responses::RegistrationRequestCreated),
-            BadRequest(responses::RegisterFailed),
-            Unexpected,
         }
 
-        impl Response {
-            #[inline]
-            pub fn answer<'a>(self) -> actix_swagger::Answer<'a, Self> {
-                let status = match self {
-                    Self::Created(_) => StatusCode::CREATED,
-                    Self::BadRequest(_) => StatusCode::BAD_REQUEST,
-                    Self::Unexpected => StatusCode::INTERNAL_SERVER_ERROR,
-                };
+        impl Responder for Response {
+            fn respond_to(self, _: &HttpRequest) -> HttpResponse {
+                match self {
+                    Response::Created(r) => HttpResponse::build(StatusCode::OK).json(r),
+                }
+            }
+        }
 
+        #[derive(Debug, Serialize, thiserror::Error)]
+        #[serde(untagged)]
+        pub enum Error {
+            #[error(transparent)]
+            BadRequest(#[from] responses::RegisterFailed),
+            #[error(transparent)]
+            Unexpected(
+                #[from]
+                #[serde(skip)]
+                eyre::Report,
+            ),
+        }
+
+        impl ResponseError for Error {
+            fn status_code(&self) -> StatusCode {
+                match self {
+                    Error::Unexpected(_) => StatusCode::INTERNAL_SERVER_ERROR,
+                    Error::BadRequest(_) => StatusCode::BAD_REQUEST,
+                }
+            }
+
+            fn error_response(&self) -> HttpResponse {
                 let content_type = match self {
-                    Self::Created(_) => Some(ContentType::Json),
                     Self::BadRequest(_) => Some(ContentType::Json),
-                    Self::Unexpected => None,
+                    _ => None,
                 };
 
-                actix_swagger::Answer::new(self)
-                    .status(status)
-                    .content_type(content_type)
+                let mut res = &mut HttpResponse::build(self.status_code());
+                if let Some(content_type) = content_type {
+                    res = res.content_type(content_type.to_string());
+
+                    match content_type {
+                        ContentType::Json => res.body(serde_json::to_string(self).unwrap()),
+                        ContentType::FormData => res.body(serde_plain::to_string(self).unwrap()),
+                    }
+                } else {
+                    HttpResponse::build(self.status_code()).finish()
+                }
             }
         }
     }
 
     pub mod session_create {
         use super::responses;
-        use actix_swagger::{Answer, ContentType};
+        use actix_swagger::ContentType;
         use actix_web::http::StatusCode;
+        use actix_web::{HttpRequest, HttpResponse, Responder, ResponseError};
         use serde::Serialize;
 
         #[derive(Debug, Serialize)]
         #[serde(untagged)]
         pub enum Response {
             Created(responses::SessionCreateSucceeded),
-            BadRequest(responses::SessionCreateFailed),
-            Unexpected,
         }
 
-        impl Response {
-            #[inline]
-            pub fn answer<'a>(self) -> Answer<'a, Self> {
-                let status = match self {
-                    Self::Created(_) => StatusCode::CREATED,
-                    Self::BadRequest(_) => StatusCode::BAD_REQUEST,
-                    Self::Unexpected => StatusCode::INTERNAL_SERVER_ERROR,
-                };
+        #[derive(Debug, Serialize, thiserror::Error)]
+        #[serde(untagged)]
+        pub enum Error {
+            #[error(transparent)]
+            BadRequest(#[from] responses::SessionCreateFailed),
+            #[error(transparent)]
+            Unexpected(
+                #[from]
+                #[serde(skip)]
+                eyre::Report,
+            ),
+        }
 
+        impl Responder for Response {
+            fn respond_to(self, _: &HttpRequest) -> HttpResponse {
+                match self {
+                    Response::Created(r) => HttpResponse::build(StatusCode::CREATED).json(r),
+                }
+            }
+        }
+
+        impl ResponseError for Error {
+            fn status_code(&self) -> StatusCode {
+                match self {
+                    Error::Unexpected(_) => StatusCode::INTERNAL_SERVER_ERROR,
+                    Error::BadRequest(_) => StatusCode::BAD_REQUEST,
+                }
+            }
+
+            fn error_response(&self) -> HttpResponse {
                 let content_type = match self {
-                    Self::Created(_) => Some(ContentType::Json),
                     Self::BadRequest(_) => Some(ContentType::Json),
-                    Self::Unexpected => None,
+                    _ => None,
                 };
 
-                Answer::new(self).status(status).content_type(content_type)
+                let mut res = &mut HttpResponse::build(self.status_code());
+                if let Some(content_type) = content_type {
+                    res = res.content_type(content_type.to_string());
+
+                    match content_type {
+                        ContentType::Json => res.body(serde_json::to_string(self).unwrap()),
+                        ContentType::FormData => res.body(serde_plain::to_string(self).unwrap()),
+                    }
+                } else {
+                    HttpResponse::build(self.status_code()).finish()
+                }
             }
         }
     }
@@ -549,44 +675,64 @@ pub mod paths {
         use super::responses;
         use actix_swagger::ContentType;
         use actix_web::http::StatusCode;
+        use actix_web::{HttpRequest, HttpResponse, Responder, ResponseError};
         use serde::Serialize;
-
-        pub type Answer = actix_swagger::Answer<'static, Response>;
 
         #[derive(Debug, Serialize)]
         #[serde(untagged)]
         pub enum Response {
             Ok,
-            BadRequest(responses::SessionDeleteFailure),
-            Unauthorized,
-            Unexpected,
         }
 
-        impl Response {
-            #[inline]
-            pub fn answer(self) -> Answer {
-                self.into()
+        #[derive(Debug, Serialize, thiserror::Error)]
+        #[serde(untagged)]
+        pub enum Error {
+            #[error(transparent)]
+            BadRequest(#[from] responses::SessionDeleteFailure),
+            #[error(transparent)]
+            Unauthorized(#[serde(skip)] eyre::Report),
+            #[error(transparent)]
+            Unexpected(
+                #[from]
+                #[serde(skip)]
+                eyre::Report,
+            ),
+        }
+
+        impl Responder for Response {
+            fn respond_to(self, _: &HttpRequest) -> HttpResponse {
+                match self {
+                    Response::Ok => HttpResponse::build(StatusCode::OK).finish(),
+                }
             }
         }
 
-        impl Into<Answer> for Response {
-            #[inline]
-            fn into(self) -> Answer {
-                let status = match self {
-                    Self::Ok => StatusCode::OK,
-                    Self::BadRequest(_) => StatusCode::BAD_REQUEST,
-                    Self::Unauthorized => StatusCode::UNAUTHORIZED,
-                    Self::Unexpected => StatusCode::INTERNAL_SERVER_ERROR,
-                };
+        impl ResponseError for Error {
+            fn status_code(&self) -> StatusCode {
+                match self {
+                    Error::Unexpected(_) => StatusCode::INTERNAL_SERVER_ERROR,
+                    Error::BadRequest(_) => StatusCode::BAD_REQUEST,
+                    Error::Unauthorized(_) => StatusCode::UNAUTHORIZED,
+                }
+            }
 
+            fn error_response(&self) -> HttpResponse {
                 let content_type = match self {
-                    Self::Ok => None,
                     Self::BadRequest(_) => Some(ContentType::Json),
-                    Self::Unauthorized => None,
-                    Self::Unexpected => None,
+                    _ => None,
                 };
 
-                Answer::new(self).status(status).content_type(content_type)
+                let mut res = &mut HttpResponse::build(self.status_code());
+                if let Some(content_type) = content_type {
+                    res = res.content_type(content_type.to_string());
+
+                    match content_type {
+                        ContentType::Json => res.body(serde_json::to_string(self).unwrap()),
+                        ContentType::FormData => res.body(serde_plain::to_string(self).unwrap()),
+                    }
+                } else {
+                    HttpResponse::build(self.status_code()).finish()
+                }
             }
         }
     }
@@ -595,138 +741,247 @@ pub mod paths {
         use super::responses;
         use actix_swagger::ContentType;
         use actix_web::http::StatusCode;
+        use actix_web::{HttpRequest, HttpResponse, Responder, ResponseError};
         use serde::Serialize;
-
-        pub type Answer = actix_swagger::Answer<'static, Response>;
 
         #[derive(Debug, Serialize)]
         #[serde(untagged)]
         pub enum Response {
             Ok(responses::SessionGetSuccess),
-            Unauthorized,
-            Unexpected,
         }
 
-        impl Into<Answer> for Response {
-            #[inline]
-            fn into(self) -> Answer {
-                let status = match self {
-                    Self::Ok(_) => StatusCode::OK,
-                    Self::Unauthorized => StatusCode::UNAUTHORIZED,
-                    Self::Unexpected => StatusCode::INTERNAL_SERVER_ERROR,
+        #[derive(Debug, Serialize, thiserror::Error)]
+        pub enum Error {
+            #[error(transparent)]
+            Unauthorized(#[serde(skip)] eyre::Report),
+            #[error(transparent)]
+            Unexpected(
+                #[from]
+                #[serde(skip)]
+                eyre::Report,
+            ),
+        }
+
+        impl Responder for Response {
+            fn respond_to(self, _: &HttpRequest) -> HttpResponse {
+                match self {
+                    Response::Ok(r) => HttpResponse::build(StatusCode::OK).json(r),
+                }
+            }
+        }
+
+        impl ResponseError for Error {
+            fn status_code(&self) -> StatusCode {
+                match self {
+                    Error::Unexpected(_) => StatusCode::INTERNAL_SERVER_ERROR,
+                    Error::Unauthorized(_) => StatusCode::UNAUTHORIZED,
+                }
+            }
+
+            fn error_response(&self) -> HttpResponse {
+                let content_type: Option<ContentType> = match self {
+                    _ => None,
                 };
 
-                let content_type = match self {
-                    Self::Ok(_) => Some(ContentType::Json),
-                    Self::Unauthorized => None,
-                    Self::Unexpected => None,
-                };
+                let mut res = &mut HttpResponse::build(self.status_code());
+                if let Some(content_type) = content_type {
+                    res = res.content_type(content_type.to_string());
 
-                Answer::new(self).status(status).content_type(content_type)
+                    match content_type {
+                        ContentType::Json => res.body(serde_json::to_string(self).unwrap()),
+                        ContentType::FormData => res.body(serde_plain::to_string(self).unwrap()),
+                    }
+                } else {
+                    HttpResponse::build(self.status_code()).finish()
+                }
             }
         }
     }
 
     pub mod register_confirmation {
         use super::responses;
-        use actix_swagger::{Answer, ContentType};
+        use actix_swagger::ContentType;
         use actix_web::http::StatusCode;
+        use actix_web::{HttpRequest, HttpResponse, Responder, ResponseError};
         use serde::Serialize;
 
         #[derive(Debug, Serialize)]
         #[serde(untagged)]
         pub enum Response {
             Created,
-            BadRequest(responses::RegisterConfirmationFailed),
-            Unexpected,
         }
 
-        impl Response {
-            #[inline]
-            pub fn answer<'a>(self) -> Answer<'a, Self> {
-                let status = match self {
-                    Self::Created => StatusCode::CREATED,
-                    Self::BadRequest(_) => StatusCode::BAD_REQUEST,
-                    Self::Unexpected => StatusCode::INTERNAL_SERVER_ERROR,
-                };
+        #[derive(Debug, Serialize, thiserror::Error)]
+        #[serde(untagged)]
+        pub enum Error {
+            #[error(transparent)]
+            BadRequest(#[from] responses::RegisterConfirmationFailed),
+            #[error(transparent)]
+            Unexpected(
+                #[from]
+                #[serde(skip)]
+                eyre::Report,
+            ),
+        }
 
+        impl Responder for Response {
+            fn respond_to(self, _: &HttpRequest) -> HttpResponse {
+                match self {
+                    Response::Created => HttpResponse::build(StatusCode::CREATED).finish(),
+                }
+            }
+        }
+
+        impl ResponseError for Error {
+            fn status_code(&self) -> StatusCode {
+                match self {
+                    Error::Unexpected(_) => StatusCode::INTERNAL_SERVER_ERROR,
+                    Error::BadRequest(_) => StatusCode::BAD_REQUEST,
+                }
+            }
+
+            fn error_response(&self) -> HttpResponse {
                 let content_type = match self {
-                    Self::Created => None,
                     Self::BadRequest(_) => Some(ContentType::Json),
-                    Self::Unexpected => None,
+                    _ => None,
                 };
 
-                Answer::new(self).status(status).content_type(content_type)
+                let mut res = &mut HttpResponse::build(self.status_code());
+                if let Some(content_type) = content_type {
+                    res = res.content_type(content_type.to_string());
+
+                    match content_type {
+                        ContentType::Json => res.json(self),
+                        ContentType::FormData => res.body(serde_plain::to_string(self).unwrap()),
+                    }
+                } else {
+                    HttpResponse::build(self.status_code()).finish()
+                }
             }
         }
     }
 
     pub mod oauth_authorize_request {
         use super::responses;
-        use actix_swagger::{Answer, ContentType};
+        use actix_swagger::ContentType;
         use actix_web::http::StatusCode;
+        use actix_web::{HttpRequest, HttpResponse, Responder, ResponseError};
         use serde::Serialize;
 
         #[derive(Debug, Serialize)]
         #[serde(untagged)]
         pub enum Response {
             Ok(responses::OAuthAuthorizeDone),
-
-            BadRequest(responses::OAuthAuthorizeRequestFailure),
-
-            InternalServerError,
         }
 
-        impl Response {
-            #[inline]
-            pub fn answer<'a>(self) -> Answer<'a, Self> {
-                let status = match self {
-                    Self::Ok(_) => StatusCode::OK,
-                    Self::BadRequest(_) => StatusCode::BAD_REQUEST,
-                    Self::InternalServerError => StatusCode::INTERNAL_SERVER_ERROR,
-                };
+        #[derive(Debug, Serialize, thiserror::Error)]
+        pub enum Error {
+            #[error(transparent)]
+            BadRequest(#[from] responses::OAuthAuthorizeRequestFailure),
+            #[error(transparent)]
+            InternalServerError(
+                #[from]
+                #[serde(skip)]
+                eyre::Report,
+            ),
+        }
 
+        impl Responder for Response {
+            fn respond_to(self, _: &HttpRequest) -> HttpResponse {
+                match self {
+                    Response::Ok(r) => HttpResponse::build(StatusCode::OK).json(r),
+                }
+            }
+        }
+
+        impl ResponseError for Error {
+            fn status_code(&self) -> StatusCode {
+                match self {
+                    Error::BadRequest(_) => StatusCode::BAD_REQUEST,
+                    Error::InternalServerError(_) => StatusCode::INTERNAL_SERVER_ERROR,
+                }
+            }
+
+            fn error_response(&self) -> HttpResponse {
                 let content_type = match self {
-                    Self::Ok(_) => Some(ContentType::Json),
                     Self::BadRequest(_) => Some(ContentType::Json),
-                    Self::InternalServerError => None,
+                    _ => None,
                 };
 
-                Answer::new(self).content_type(content_type).status(status)
+                let mut res = &mut HttpResponse::build(self.status_code());
+                if let Some(content_type) = content_type {
+                    res = res.content_type(content_type.to_string());
+
+                    match content_type {
+                        ContentType::Json => res.body(serde_json::to_string(self).unwrap()),
+                        ContentType::FormData => res.body(serde_plain::to_string(self).unwrap()),
+                    }
+                } else {
+                    HttpResponse::build(self.status_code()).finish()
+                }
             }
         }
     }
 
     pub mod oauth_token {
         use super::responses;
-        use actix_swagger::{Answer, ContentType};
+        use actix_swagger::ContentType;
         use actix_web::http::StatusCode;
+        use actix_web::{HttpRequest, HttpResponse, Responder, ResponseError};
         use serde::Serialize;
 
         #[derive(Debug, Serialize)]
         #[serde(untagged)]
         pub enum Response {
             Created(responses::OAuthAccessTokenCreated),
-            BadRequest(responses::OAuthAccessTokenFailure),
-            InternalServerError,
         }
 
-        impl Response {
-            #[inline]
-            pub fn answer<'a>(self) -> Answer<'a, Self> {
-                let status = match self {
-                    Self::Created(_) => StatusCode::OK,
-                    Self::BadRequest(_) => StatusCode::BAD_REQUEST,
-                    Self::InternalServerError => StatusCode::INTERNAL_SERVER_ERROR,
-                };
+        #[derive(Debug, Serialize, thiserror::Error)]
+        #[serde(untagged)]
+        pub enum Error {
+            #[error(transparent)]
+            BadRequest(#[from] responses::OAuthAccessTokenFailure),
+            #[error(transparent)]
+            InternalServerError(
+                #[from]
+                #[serde(skip)]
+                eyre::Report,
+            ),
+        }
 
+        impl Responder for Response {
+            fn respond_to(self, _: &HttpRequest) -> HttpResponse {
+                match self {
+                    Response::Created(r) => HttpResponse::build(StatusCode::CREATED).json(r),
+                }
+            }
+        }
+
+        impl ResponseError for Error {
+            fn status_code(&self) -> StatusCode {
+                match self {
+                    Error::BadRequest(_) => StatusCode::BAD_REQUEST,
+                    Error::InternalServerError(_) => StatusCode::INTERNAL_SERVER_ERROR,
+                }
+            }
+
+            fn error_response(&self) -> HttpResponse {
                 let content_type = match self {
-                    Self::Created(_) => Some(ContentType::Json),
                     Self::BadRequest(_) => Some(ContentType::Json),
-                    Self::InternalServerError => None,
+                    _ => None,
                 };
 
-                Answer::new(self).content_type(content_type).status(status)
+                let mut res = &mut HttpResponse::build(self.status_code());
+                if let Some(content_type) = content_type {
+                    res = res.content_type(content_type.to_string());
+
+                    match content_type {
+                        ContentType::Json => res.body(serde_json::to_string(self).unwrap()),
+                        ContentType::FormData => res.body(serde_plain::to_string(self).unwrap()),
+                    }
+                } else {
+                    HttpResponse::build(self.status_code()).finish()
+                }
             }
         }
     }

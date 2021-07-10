@@ -2,7 +2,6 @@ use accesso_core::contracts::{ClientRepo, UnexpectedDatabaseError};
 use accesso_core::models;
 
 use crate::entities::Client;
-use crate::mappers::sqlx_error_to_unexpected;
 use crate::Database;
 
 #[async_trait]
@@ -26,8 +25,7 @@ impl ClientRepo for Database {
             id
         )
         .fetch_optional(&self.pool)
-        .await
-        .map_err(sqlx_error_to_unexpected)?
+        .await?
         .map(Into::into))
     }
 }

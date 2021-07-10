@@ -1,6 +1,9 @@
-use crate::contracts::{EmailMessage, EmailNotification};
+use crate::contracts::{EmailMessage, EmailNotification, SendEmailError};
+use accesso_settings::SendGrid;
+use async_trait::async_trait;
+use isahc::http::StatusCode;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Email {
     /// SendGrid api_key
     pub api_key: String,
@@ -16,17 +19,28 @@ pub struct Email {
     pub email_confirm_template: String,
 }
 
+impl From<SendGrid> for Email {
+    fn from(s: SendGrid) -> Self {
+        Self {
+            api_key: s.api_key,
+            sender_email: s.sender_email,
+            application_host: s.application_host,
+            email_confirm_template: s.email_confirm_template,
+            email_confirm_url_prefix: s.email_confirm_url_prefix,
+        }
+    }
+}
+
+#[async_trait]
 impl EmailNotification for Email {
-    fn send(&self, email: String, message: EmailMessage) -> bool {
-        println!("EMAIL: send {:?} to {}", message, email);
-
+    #[tracing::instrument]
+    async fn send(&self, email: String, message: EmailMessage) -> Result<(), SendEmailError> {
         if let EmailMessage::RegisterConfirmation { code } = message {
-            let client = awc::Client::default();
+            let client = isahc::HttpClient::new()?;
 
-            let req = client
-                .post("https://api.sendgrid.com/v3/mail/send")
-                .append_header(("Authorization", format!("Bearer {}", self.api_key.clone())))
-                .send_json(&sg::MailSend {
+            let request = isahc::Request::post("https://api.sendgrid.com/v3/mail/send")
+                .header("Authorization", format!("Bearer {}", self.api_key.clone()))
+                .body(serde_json::to_vec(&sg::MailSend {
                     subject: "Confirm registration at Accesso".to_owned(),
                     template_id: self.email_confirm_template.clone(),
                     from: sg::Sender {
@@ -45,15 +59,21 @@ impl EmailNotification for Email {
                         },
                         to: vec![sg::Target { email }],
                     }],
-                });
+                })?)?;
 
-            actix_rt::spawn(async {
-                let resp = req.await;
-                println!("Email confirmation sent {:#?}", resp);
-            });
+            let resp = client.send_async(request).await?;
+
+            tracing::info!("resp: {:?}", resp);
+
+            if resp.status() != StatusCode::OK {
+                return Err(SendEmailError::Unexpected(eyre::eyre!(
+                    "Could not send email!, status: {}",
+                    resp.status()
+                )));
+            }
         }
 
-        true
+        Ok(())
     }
 }
 

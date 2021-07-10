@@ -3,10 +3,7 @@ use accesso_core::contracts::{GetUserBySessionError, SessionCreateError, Unexpec
 use accesso_core::models;
 
 use crate::entities::{SessionToken, User};
-use crate::mappers::{
-    sqlx_error_to_get_user_by_session_error, sqlx_error_to_session_create_error,
-    sqlx_error_to_unexpected,
-};
+use crate::mappers::{sqlx_error_to_get_user_by_session_error, sqlx_error_to_session_create_error};
 use crate::Database;
 
 #[async_trait]
@@ -97,9 +94,9 @@ impl SessionRepo for Database {
             session_token
         )
         .execute(&self.pool)
-        .await
-        .map(|_| ())
-        .map_err(sqlx_error_to_unexpected)
+        .await?;
+
+        Ok(())
     }
 
     async fn session_delete_by_user_id(
@@ -116,8 +113,8 @@ impl SessionRepo for Database {
             user_id
         )
         .execute(&self.pool)
-        .await
-        .map(|_| ())
-        .map_err(sqlx_error_to_unexpected)
+        .await?;
+
+        Ok(())
     }
 }

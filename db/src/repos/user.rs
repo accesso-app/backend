@@ -5,7 +5,7 @@ use accesso_core::contracts::{
 use accesso_core::models;
 
 use crate::entities::User;
-use crate::mappers::{sqlx_error_to_register_user_error, sqlx_error_to_unexpected};
+use crate::mappers::sqlx_error_to_register_user_error;
 use crate::Database;
 use sqlx::types::Uuid;
 
@@ -20,8 +20,7 @@ impl UserRepo for Database {
             email.to_lowercase()
         )
         .fetch_one(&self.pool)
-        .await
-        .map_err(sqlx_error_to_unexpected)?)
+        .await?)
     }
 
     async fn user_register(
@@ -79,8 +78,7 @@ impl UserRepo for Database {
             creds.email.to_lowercase()
         )
         .fetch_optional(&self.pool)
-        .await
-        .map_err(sqlx_error_to_unexpected)?
+        .await?
         .map(Into::into))
     }
 
