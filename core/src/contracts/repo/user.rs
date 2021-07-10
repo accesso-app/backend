@@ -57,7 +57,10 @@ impl UserRepo for crate::contracts::MockDb {
         self.users.user_find_by_credentials(creds).await
     }
 
-    async fn user_get_by_id(&self, user_id: Uuid) -> Result<Option<User>, UnexpectedDatabaseError> {
+    async fn user_get_by_id(
+        &self,
+        user_id: uuid::Uuid,
+    ) -> Result<Option<User>, UnexpectedDatabaseError> {
         self.users.user_get_by_id(user_id).await
     }
 }

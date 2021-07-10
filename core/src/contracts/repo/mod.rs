@@ -1,6 +1,3 @@
-#[cfg(feature = "testing")]
-use mockall::*;
-
 pub use access_token::*;
 pub use auth_code::*;
 pub use client::*;
