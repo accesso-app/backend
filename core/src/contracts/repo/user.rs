@@ -4,7 +4,6 @@ use mockall::*;
 
 use crate::contracts::UnexpectedDatabaseError;
 use crate::models::User;
-use uuid::Uuid;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct UserRegisterForm {

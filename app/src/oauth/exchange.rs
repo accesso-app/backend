@@ -3,8 +3,8 @@ use accesso_core::app::oauth::exchange::{
     AccessTokenCreated, ExchangeAccessTokenForm, ExchangeFailed, GrantType, OAuthExchange,
     TokenType,
 };
-use accesso_core::contracts::{Repository, SecureGenerator};
-use accesso_core::models::{AccessToken, UserRegistration};
+use accesso_core::contracts::{Repository, SecureGenerator, UserRegistrationCreateError};
+use accesso_core::models::AccessToken;
 
 use accesso_db::chrono;
 use async_trait::async_trait;
@@ -68,7 +68,10 @@ impl OAuthExchange for App {
                 let registration =
                     match db.user_registration_find_for_client(&client, &user).await? {
                         Some(registration) => registration,
-                        None => db.user_registration_create(&client, &user).await?,
+                        None => db
+                            .user_registration_create(&client, &user)
+                            .await
+                            .map_err(user_registration_error_to_exchange_failed)?,
                     };
 
                 let access_token = AccessToken {
@@ -89,5 +92,16 @@ impl OAuthExchange for App {
                 })
             }
         }
+    }
+}
+
+fn user_registration_error_to_exchange_failed(
+    error: UserRegistrationCreateError,
+) -> ExchangeFailed {
+    match error {
+        UserRegistrationCreateError::ClientDoesNotExist => ExchangeFailed::UnauthorizedClient,
+        UserRegistrationCreateError::UserDoesNotExist
+        | UserRegistrationCreateError::UserAlreadyRegistered => ExchangeFailed::InvalidRequest,
+        UserRegistrationCreateError::Unexpected => ExchangeFailed::Unexpected,
     }
 }

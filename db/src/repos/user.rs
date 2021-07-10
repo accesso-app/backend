@@ -7,6 +7,7 @@ use accesso_core::models;
 use crate::entities::User;
 use crate::mappers::{sqlx_error_to_register_user_error, sqlx_error_to_unexpected};
 use crate::Database;
+use sqlx::types::Uuid;
 
 #[async_trait]
 impl UserRepo for Database {
@@ -76,6 +77,26 @@ impl UserRepo for Database {
             WHERE canonical_email = $1
             "#,
             creds.email.to_lowercase()
+        )
+        .fetch_optional(&self.pool)
+        .await
+        .map_err(sqlx_error_to_unexpected)?
+        .map(Into::into))
+    }
+
+    async fn user_get_by_id(
+        &self,
+        user_id: Uuid,
+    ) -> Result<Option<models::User>, UnexpectedDatabaseError> {
+        Ok(sqlx::query_as!(
+            User,
+            // language=PostgreSQL
+            r#"
+            SELECT users.*
+            FROM users
+            WHERE users.id = $1
+            "#,
+            user_id
         )
         .fetch_optional(&self.pool)
         .await
