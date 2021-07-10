@@ -31,6 +31,8 @@ Run postgresql service:
 
 ```sh
 brew services start postgresql
+# or run it just once
+pg_ctl -D /usr/local/var/postgres start
 ```
 
 Enter postgres database:

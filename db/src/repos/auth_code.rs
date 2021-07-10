@@ -1,4 +1,5 @@
-use accesso_core::contracts::{AuthCodeRepo, UnexpectedDatabaseError};
+use accesso_core::contracts::repo::AuthCodeRepo;
+use accesso_core::contracts::UnexpectedDatabaseError;
 use accesso_core::models;
 
 use crate::entities::AuthorizationCode;

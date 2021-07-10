@@ -1,5 +1,6 @@
+use accesso_core::contracts::repo::UserRepo;
 use accesso_core::contracts::{
-    RegisterUserError, UnexpectedDatabaseError, UserCredentials, UserRegisterForm, UserRepo,
+    RegisterUserError, UnexpectedDatabaseError, UserCredentials, UserRegisterForm,
 };
 use accesso_core::models;
 

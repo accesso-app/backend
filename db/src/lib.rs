@@ -1,4 +1,4 @@
-#![deny(warnings)]
+// #![deny(warnings)]
 #![forbid(unsafe_code)]
 #![allow(clippy::from_over_into)]
 

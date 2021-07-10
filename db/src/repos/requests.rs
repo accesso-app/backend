@@ -1,4 +1,5 @@
-use accesso_core::contracts::{RequestsRepo, SaveRegisterRequestError, UnexpectedDatabaseError};
+use accesso_core::contracts::repo::RequestsRepo;
+use accesso_core::contracts::{SaveRegisterRequestError, UnexpectedDatabaseError};
 use accesso_core::models;
 
 use crate::entities::RegistrationRequest;
