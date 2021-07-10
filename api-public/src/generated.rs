@@ -41,7 +41,9 @@ pub mod api {
             T: FromRequest + 'static,
             R: Future<Output = Answer<'static, super::paths::viewer_get::Response>> + 'static,
         {
-            self.api = self.api.bind("/viewer".to_owned(), Method::GET, handler);
+            self.api = self
+                .api
+                .bind("/viewer.get".to_owned(), Method::POST, handler);
             self
         }
     }
@@ -81,7 +83,7 @@ pub mod components {
 
             #[inline]
             fn from_request(req: &HttpRequest, _: &mut actix_web::dev::Payload) -> Self::Future {
-                match extract_header(req, "X-Access-Token".to_string()) {
+                match extract_header(req, "Authorization".to_string()) {
                     Ok(value) => futures::future::ok(AccessToken(value)),
                     Err(reason) => match serde_json::to_string(&reason) {
                         Ok(json) => futures::future::err(actix_web::error::ErrorBadRequest(json)),

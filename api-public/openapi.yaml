@@ -24,8 +24,8 @@ paths:
         500:
           description: Something goes wrong
 
-  "/viewer":
-    get:
+  "/viewer.get":
+    post:
       operationId: viewerGet
       tags: [Viewer]
       description: Get info about viewer by access token
@@ -152,7 +152,7 @@ components:
   parameters:
     AccessToken:
       in: header
-      name: X-Access-Token
+      name: Authorization
       schema:
         type: string
       required: true
