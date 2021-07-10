@@ -4,7 +4,7 @@ use accesso_core::app::oauth::exchange::{
     TokenType,
 };
 use accesso_core::contracts::{Repository, SecureGenerator};
-use accesso_core::models::AccessToken;
+use accesso_core::models::{AccessToken, UserRegistration};
 
 use accesso_db::chrono;
 use async_trait::async_trait;
@@ -53,6 +53,11 @@ impl OAuthExchange for App {
                     return Err(ExchangeFailed::InvalidClient);
                 }
 
+                let user = db
+                    .user_get_by_id(authorization_code.user_id)
+                    .await?
+                    .ok_or(ExchangeFailed::InvalidRequest)?;
+
                 // TODO: Check scopes
                 // if !authorization_code.is_same_valid_scopes(&scopes) {
                 //     return Err(ExchangeFailed::InvalidScope)
@@ -60,11 +65,16 @@ impl OAuthExchange for App {
 
                 // TODO: Check for grant types
 
+                let registration =
+                    match db.user_registration_find_for_client(&client, &user).await? {
+                        Some(registration) => registration,
+                        None => db.user_registration_create(&client, &user).await?,
+                    };
+
                 let access_token = AccessToken {
-                    client_id: client.id,
                     expires_at: chrono::Utc::now() + AccessToken::lifetime(),
                     token: generator.generate_token_long(),
-                    user_id: authorization_code.user_id,
+                    registration_id: registration.id,
                     scopes: authorization_code.scopes,
                 };
 

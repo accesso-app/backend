@@ -4,6 +4,7 @@ use mockall::*;
 
 use crate::contracts::UnexpectedDatabaseError;
 use crate::models::User;
+use uuid::Uuid;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct UserRegisterForm {
@@ -35,6 +36,10 @@ pub trait UserRepo {
         &self,
         creds: UserCredentials,
     ) -> Result<Option<User>, UnexpectedDatabaseError>;
+    async fn user_get_by_id(
+        &self,
+        user_id: uuid::Uuid,
+    ) -> Result<Option<User>, UnexpectedDatabaseError>;
 }
 
 #[cfg(feature = "testing")]
@@ -51,5 +56,9 @@ impl UserRepo for crate::contracts::MockDb {
         creds: UserCredentials,
     ) -> Result<Option<User>, UnexpectedDatabaseError> {
         self.users.user_find_by_credentials(creds).await
+    }
+
+    async fn user_get_by_id(&self, user_id: Uuid) -> Result<Option<User>, UnexpectedDatabaseError> {
+        self.users.user_get_by_id(user_id).await
     }
 }
