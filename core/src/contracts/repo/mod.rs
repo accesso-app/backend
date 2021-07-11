@@ -18,9 +18,6 @@ mod user_registration;
 pub struct UnexpectedDatabaseError;
 
 #[cfg(feature = "testing")]
-use crate::models::{AccessToken, AuthorizationCode, Client};
-
-#[cfg(feature = "testing")]
 pub struct MockDb {
     pub users: MockUserRepo,
     pub requests: MockRequestsRepo,

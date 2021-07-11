@@ -177,6 +177,45 @@
       ]
     }
   },
+  "294dd85411bb04298a72042ebcc3979811f1993eea21fdf4a55c76cdf1c61ec9": {
+    "query": "\n            SELECT regs.*\n            FROM user_registrations regs\n            WHERE regs.client_id = $1 AND regs.user_id = $2\n            ",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 1,
+          "name": "client_id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 2,
+          "name": "created_at",
+          "type_info": "Timestamptz"
+        },
+        {
+          "ordinal": 3,
+          "name": "user_id",
+          "type_info": "Uuid"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Uuid"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false,
+        false
+      ]
+    }
+  },
   "2c958929a5f89361c517b78db267122446bcde3380fece709df357cff8ceecc0": {
     "query": "\n            INSERT INTO authorization_codes (client_id, code, created_at, redirect_uri, scope, user_id)\n            VALUES ($1, $2, $3, $4, $5, $6)\n            RETURNING client_id, code, created_at, redirect_uri, scope, user_id\n            ",
     "describe": {
@@ -280,6 +319,56 @@
         ]
       },
       "nullable": []
+    }
+  },
+  "4cde755d037b0b47cfdcba87519619752629a589f2b1173e9f1b0c85319c6bc0": {
+    "query": "\n            SELECT users.*\n            FROM users\n            WHERE users.id = $1\n            ",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 1,
+          "name": "email",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 2,
+          "name": "password_hash",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 3,
+          "name": "first_name",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 4,
+          "name": "last_name",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 5,
+          "name": "canonical_email",
+          "type_info": "Varchar"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
     }
   },
   "86fa894031607e0b2e0a4ebdac4c9b668fca7e1a266b6afdd5face270041f672": {
@@ -453,6 +542,45 @@
       "nullable": [
         false,
         false,
+        false,
+        false,
+        false,
+        false
+      ]
+    }
+  },
+  "e36bb04e8ad76b4f6650bd337525312f2b54775a960f785e671a45da545f692b": {
+    "query": "\n                INSERT INTO user_registrations (client_id, user_id)\n                VALUES ($1, $2)\n                RETURNING user_registrations.*\n                ",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 1,
+          "name": "client_id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 2,
+          "name": "created_at",
+          "type_info": "Timestamptz"
+        },
+        {
+          "ordinal": 3,
+          "name": "user_id",
+          "type_info": "Uuid"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Uuid"
+        ]
+      },
+      "nullable": [
         false,
         false,
         false,
