@@ -31,6 +31,8 @@ Run postgresql service:
 
 ```sh
 brew services start postgresql
+# or run it just once
+pg_ctl -D /usr/local/var/postgres start
 ```
 
 Enter postgres database:
@@ -81,6 +83,12 @@ Finally, [install just and run](#development).
 - Use [`just`](https://github.com/casey/just) to run commands from [`justfile`](./justfile)
 - `just` — to build and start `api-internal` crate (aliased to `just internal`)
 - `just public` — to build and run `api-public`
+
+After changing any sql query you need to run in root:
+
+```sh
+cargo sqlx prepare --merged
+```
 
 ## ENVs
 

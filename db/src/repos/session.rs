@@ -1,6 +1,5 @@
-use accesso_core::contracts::{
-    GetUserBySessionError, SessionCreateError, SessionRepo, UnexpectedDatabaseError,
-};
+use accesso_core::contracts::repo::SessionRepo;
+use accesso_core::contracts::{GetUserBySessionError, SessionCreateError, UnexpectedDatabaseError};
 use accesso_core::models;
 
 use crate::entities::{SessionToken, User};
@@ -20,11 +19,11 @@ impl SessionRepo for Database {
             User,
             // language=PostgreSQL
             r#"
-            SELECT id, email, password_hash, first_name, last_name, canonical_email
-            FROM users
-                     INNER JOIN session_tokens st on users.id = st.user_id
-            WHERE st.token = $1
-              AND st.expires_at > $2
+            SELECT users.*
+                FROM users
+                         INNER JOIN session_tokens st ON users.id = st.user_id
+                WHERE st.token = $1
+                  AND st.expires_at > $2
             "#,
             token,
             chrono::Utc::now()
@@ -43,19 +42,20 @@ impl SessionRepo for Database {
             User,
             // language=PostgreSQL
             r#"
-            SELECT id, email, password_hash, first_name, last_name, canonical_email
-            FROM users
-                     INNER JOIN access_tokens a on users.id = a.user_id
-            WHERE a.token = $1
-              AND a.expires_at > $2
+            SELECT users.*
+                FROM users
+                         INNER JOIN user_registrations ON users.id = user_registrations.user_id
+                         INNER JOIN access_tokens ON user_registrations.id = access_tokens.registration_id
+                WHERE access_tokens.token = $1
+                  AND access_tokens.expires_at > $2;
             "#,
             token,
             chrono::Utc::now()
         )
-        .fetch_one(&self.pool)
-        .await
-        .map(Into::into)
-        .map_err(sqlx_error_to_get_user_by_session_error)
+            .fetch_one(&self.pool)
+            .await
+            .map(Into::into)
+            .map_err(sqlx_error_to_get_user_by_session_error)
     }
 
     async fn session_create(
@@ -70,8 +70,8 @@ impl SessionRepo for Database {
             r#"
             INSERT INTO session_tokens
                 (user_id, token, expires_at)
-            VALUES ($1, $2, $3)
-            RETURNING user_id, token, expires_at
+                VALUES ($1, $2, $3)
+                RETURNING user_id, token, expires_at
             "#,
             session.user_id,
             session.token,

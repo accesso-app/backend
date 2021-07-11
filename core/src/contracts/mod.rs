@@ -7,17 +7,26 @@ pub mod repo;
 pub mod secure;
 
 pub trait Repository:
-    ClientRepo + SessionRepo + RequestsRepo + UserRepo + AccessTokenRepo + AuthCodeRepo + Send + Sync
+    AccessTokenRepo
+    + AuthCodeRepo
+    + ClientRepo
+    + RequestsRepo
+    + SessionRepo
+    + UserRegistrationsRepo
+    + UserRepo
+    + Send
+    + Sync
 {
 }
 
 impl<T> Repository for T where
-    T: ClientRepo
-        + SessionRepo
-        + RequestsRepo
-        + UserRepo
-        + AccessTokenRepo
+    T: AccessTokenRepo
         + AuthCodeRepo
+        + ClientRepo
+        + RequestsRepo
+        + SessionRepo
+        + UserRegistrationsRepo
+        + UserRepo
         + Send
         + Sync
 {

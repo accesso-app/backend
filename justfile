@@ -12,3 +12,6 @@ env:
 admin: (run "admin")
 public: (run "public")
 internal: (run "internal")
+
+integration:
+    cargo test --package tests

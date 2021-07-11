@@ -31,3 +31,14 @@ impl ClientRepo for Database {
         .map(Into::into))
     }
 }
+
+#[cfg(feature = "testing")]
+#[async_trait]
+impl ClientRepo for accesso_core::contracts::MockDb {
+    async fn client_find_by_id(
+        &self,
+        id: uuid::Uuid,
+    ) -> Result<Option<Client>, UnexpectedDatabaseError> {
+        self.client.client_find_by_id(id).await
+    }
+}

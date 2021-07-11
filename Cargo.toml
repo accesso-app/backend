@@ -7,4 +7,5 @@ members = [
     "db",
     "app",
     "settings",
+    "tests"
 ]
