@@ -256,7 +256,7 @@ components:
         application/json:
           schema:
             properties:
-              user:
+              settings:
                 $ref: "#/components/schemas/OauthSettings"
 
     SessionCreateSucceeded:
@@ -420,12 +420,9 @@ components:
         required:
           - redirectUri
           - clientId
-          - clientSecret
         redirectUri:
           type: string
         clientId:
-          type: string
-        clientSecret:
           type: string
 
     SessionUser:
