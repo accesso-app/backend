@@ -4,7 +4,6 @@ use mockall::*;
 use uuid::Uuid;
 
 use super::UnexpectedDatabaseError;
-use crate::contracts::MockDb;
 use crate::models::Client;
 
 #[cfg_attr(feature = "testing", automock)]
@@ -15,7 +14,7 @@ pub trait ClientRepo {
 
 #[cfg(feature = "testing")]
 #[async_trait]
-impl ClientRepo for MockDb {
+impl ClientRepo for crate::contracts::MockDb {
     async fn client_find_by_id(
         &self,
         id: uuid::Uuid,

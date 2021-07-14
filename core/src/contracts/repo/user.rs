@@ -2,7 +2,7 @@ use async_trait::async_trait;
 #[cfg(feature = "testing")]
 use mockall::*;
 
-use crate::contracts::{MockDb, UnexpectedDatabaseError};
+use crate::contracts::UnexpectedDatabaseError;
 use crate::models::User;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -45,7 +45,7 @@ pub trait UserRepo {
 
 #[cfg(feature = "testing")]
 #[async_trait]
-impl UserRepo for MockDb {
+impl UserRepo for crate::contracts::MockDb {
     async fn user_has_with_email(&self, email: String) -> Result<bool, UnexpectedDatabaseError> {
         self.users.user_has_with_email(email).await
     }

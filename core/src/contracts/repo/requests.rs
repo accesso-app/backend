@@ -2,7 +2,7 @@ use async_trait::async_trait;
 #[cfg(feature = "testing")]
 use mockall::*;
 
-use crate::contracts::{MockDb, UnexpectedDatabaseError};
+use crate::contracts::UnexpectedDatabaseError;
 use crate::models::RegisterRequest;
 
 #[derive(Debug, thiserror::Error)]
@@ -35,7 +35,7 @@ pub trait RequestsRepo {
 
 #[cfg(feature = "testing")]
 #[async_trait]
-impl RequestsRepo for MockDb {
+impl RequestsRepo for crate::contracts::MockDb {
     async fn register_request_save(
         &self,
         request: RegisterRequest,

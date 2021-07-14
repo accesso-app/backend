@@ -2,9 +2,8 @@ use async_trait::async_trait;
 #[cfg(feature = "testing")]
 use mockall::*;
 
-use crate::contracts::{MockDb, UnexpectedDatabaseError};
+use crate::contracts::UnexpectedDatabaseError;
 use crate::models::{Client, User, UserRegistration};
-use sqlx_core::types::Uuid;
 
 #[derive(Debug, thiserror::Error)]
 pub enum UserRegistrationCreateError {
@@ -42,10 +41,10 @@ pub trait UserRegistrationsRepo {
 
 #[cfg(feature = "testing")]
 #[async_trait]
-impl UserRegistrationsRepo for MockDb {
+impl UserRegistrationsRepo for crate::contracts::MockDb {
     async fn user_registration_get_by_id(
         &self,
-        id: Uuid,
+        id: sqlx_core::types::Uuid,
     ) -> Result<Option<UserRegistration>, UnexpectedDatabaseError> {
         self.user_registrations
             .user_registration_get_by_id(id)

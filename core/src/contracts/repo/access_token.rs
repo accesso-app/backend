@@ -2,7 +2,7 @@ use async_trait::async_trait;
 #[cfg(feature = "testing")]
 use mockall::*;
 
-use crate::contracts::{MockDb, UnexpectedDatabaseError};
+use crate::contracts::UnexpectedDatabaseError;
 use crate::models::AccessToken;
 
 #[cfg_attr(feature = "testing", automock)]
@@ -16,7 +16,7 @@ pub trait AccessTokenRepo {
 
 #[cfg(feature = "testing")]
 #[async_trait]
-impl AccessTokenRepo for MockDb {
+impl AccessTokenRepo for crate::contracts::MockDb {
     async fn access_token_create(
         &self,
         token: AccessToken,

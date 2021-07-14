@@ -2,7 +2,7 @@ use async_trait::async_trait;
 #[cfg(feature = "testing")]
 use mockall::*;
 
-use crate::contracts::{MockDb, UnexpectedDatabaseError};
+use crate::contracts::UnexpectedDatabaseError;
 use crate::models::{SessionToken, User};
 
 #[derive(Debug, thiserror::Error)]
@@ -45,7 +45,7 @@ pub trait SessionRepo {
 
 #[cfg(feature = "testing")]
 #[async_trait]
-impl SessionRepo for MockDb {
+impl SessionRepo for crate::contracts::MockDb {
     async fn get_user_by_session_token(
         &self,
         token: String,

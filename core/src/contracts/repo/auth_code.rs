@@ -2,7 +2,7 @@ use async_trait::async_trait;
 #[cfg(feature = "testing")]
 use mockall::*;
 
-use crate::contracts::{MockDb, UnexpectedDatabaseError};
+use crate::contracts::UnexpectedDatabaseError;
 use crate::models::AuthorizationCode;
 
 #[cfg_attr(feature = "testing", automock)]
@@ -21,7 +21,7 @@ pub trait AuthCodeRepo {
 
 #[cfg(feature = "testing")]
 #[async_trait]
-impl AuthCodeRepo for MockDb {
+impl AuthCodeRepo for crate::contracts::MockDb {
     async fn auth_code_create(
         &self,
         code: AuthorizationCode,
