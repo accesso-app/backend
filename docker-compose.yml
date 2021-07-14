@@ -8,74 +8,18 @@ volumes:
       device: "${PWD}/.data/postgres"
       o: bind
 
-
-networks:
-  accesso:
-    external: true
-
 services:
-  accesso-api-internal:
-    container_name: accesso-api-internal
-    hostname: accesso-api-internal
-    image: accesso-api-internal
-    depends_on:
-      - database
-    build:
-      context: .
-      dockerfile: Dockerfile
-      labels:
-        project: accesso-api-internal
-    mem_limit: 1g
-    logging:
-      driver: loki
-      options:
-        loki-url: "http://localhost:3100/loki/api/v1/push"
-    labels:
-      traefik.enable: "true"
-      traefik.http.services.accesso-api-internal.loadbalancer.server.port: "9008"
-      traefik.http.routers.accesso-api-internal.entrypoints: "http"
-      traefik.http.routers.accesso-api-internal.rule: "Host(`internal.accesso.localhost`)"
-      traefik.http.routers.accesso-api-internal.service: "accesso-api-internal"
-    networks:
-      accesso:
-    restart: "no"
-    volumes:
-      - type: bind
-        source: .env
-        target: /.env
-
-    environment:
-      ACCESSO_DATABASE__DATABASE: ${POSTGRES_DB}
-      ACCESSO_DATABASE__HOST: accesso-database
-      ACCESSO_DATABASE__PASSWORD: ${POSTGRES_PASSWORD}
-      ACCESSO_DATABASE__POOL_SIZE: 4
-      ACCESSO_DATABASE__USER: ${POSTGRES_USER}
-      ACCESSO_MODE: production
-      ACCESSO_SENDGRID__API_KEY: ${SENDGRID_API_KEY}
-      ACCESSO_SENDGRID__EMAIL_CONFIRM_TEMPLATE: d-eec45c55c0364140bf38172e021c8ea5
-      ACCESSO_SENDGRID__SENDER_EMAIL: no-reply@accesso.sova.dev
-      ACCESSO_SERVER__HOST: "0.0.0.0"
-      ACCESSO_SERVER__PORT: "9008"
-      OPENTELEMETRY_ENDPOINT_URL: "http://otel-collector:4317"
-      RUST_LOG: "debug"
-      DATABASE_URL: ${DATABASE_URL}
-
   database:
     container_name: accesso-database
-    hostname: accesso-database
     image: postgres:11.5
     restart: always
-    logging:
-      driver: loki
-      options:
-        loki-url: "http://localhost:3100/loki/api/v1/push"
-    networks:
-      accesso:
-    ports:
-    - "5432:5432"
     volumes:
       - "postgres-storage:/var/lib/postgresql/data"
     environment:
       POSTGRES_USER: accesso
       POSTGRES_PASSWORD: accesso
       POSTGRES_DB: accesso
+    expose:
+      - "5432"
+    ports:
+      - "5432:5432"

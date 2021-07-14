@@ -1,4 +1,4 @@
-FROM builder as build
+FROM docker.pkg.github.com/accesso-app/backend/builder:rust1.53.0-sqlx0.5.5 as build
 
 ENV USER="root"
 ENV SQLX_OFFLINE=true
@@ -25,7 +25,7 @@ RUN cargo build --release --package accesso-api-$API_NAME
 
 # ----------------------------------------------------------------
 
-FROM start-tools
+FROM docker.pkg.github.com/accesso-app/backend/start-tools:1.3
 
 ARG API_NAME
 
