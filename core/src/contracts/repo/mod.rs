@@ -28,6 +28,7 @@ pub struct MockDb {
     pub auth_code: MockAuthCodeRepo,
     pub client: MockClientRepo,
     pub access_token: MockAccessTokenRepo,
+    pub user_registrations: MockUserRegistrationsRepo,
 }
 
 #[cfg(feature = "testing")]
@@ -47,6 +48,7 @@ impl MockDb {
             access_token: MockAccessTokenRepo::new(),
             auth_code: MockAuthCodeRepo::new(),
             client: MockClientRepo::new(),
+            user_registrations: MockUserRegistrationsRepo::new(),
         }
     }
 }

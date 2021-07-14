@@ -4,7 +4,7 @@ use accesso_core::models;
 use accesso_core::models::{Client, User};
 
 use crate::entities::UserRegistration;
-use crate::mappers::{sqlx_error_to_unexpected, sqlx_error_to_user_registration_error};
+use crate::mappers::sqlx_error_to_user_registration_error;
 use crate::Database;
 
 #[async_trait]
@@ -24,8 +24,7 @@ impl UserRegistrationsRepo for Database {
             id
         )
         .fetch_optional(&self.pool)
-        .await
-        .map_err(sqlx_error_to_unexpected)?
+        .await?
         .map(Into::into))
     }
 
@@ -46,8 +45,7 @@ impl UserRegistrationsRepo for Database {
             user.id,
         )
         .fetch_optional(&self.pool)
-        .await
-        .map_err(sqlx_error_to_unexpected)?
+        .await?
         .map(Into::into))
     }
 

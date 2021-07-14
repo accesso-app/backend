@@ -97,8 +97,7 @@ impl UserRepo for Database {
             user_id
         )
         .fetch_optional(&self.pool)
-        .await
-        .map_err(sqlx_error_to_unexpected)?
+        .await?
         .map(Into::into))
     }
 }

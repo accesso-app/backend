@@ -3,6 +3,7 @@ use accesso_core::contracts::{SaveRegisterRequestError, UnexpectedDatabaseError}
 use accesso_core::models;
 
 use crate::entities::RegistrationRequest;
+use crate::mappers::sqlx_error_to_save_register_request_error;
 use crate::Database;
 
 #[async_trait]
@@ -28,6 +29,7 @@ impl RequestsRepo for Database {
         )
         .fetch_one(&self.pool)
         .await
+        .map_err(sqlx_error_to_save_register_request_error)
         .map(Into::into)?)
     }
 

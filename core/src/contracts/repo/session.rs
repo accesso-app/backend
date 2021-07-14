@@ -2,19 +2,24 @@ use async_trait::async_trait;
 #[cfg(feature = "testing")]
 use mockall::*;
 
-use crate::contracts::UnexpectedDatabaseError;
+use crate::contracts::{MockDb, UnexpectedDatabaseError};
 use crate::models::{SessionToken, User};
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, thiserror::Error)]
 pub enum GetUserBySessionError {
-    Unexpected,
+    #[error(transparent)]
+    Unexpected(#[from] eyre::Report),
+    #[error("Not found")]
     NotFound,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, thiserror::Error)]
 pub enum SessionCreateError {
-    Unexpected,
+    #[error(transparent)]
+    Unexpected(#[from] eyre::Report),
+    #[error("Token already exists")]
     TokenAlreadyExists,
+    #[error("User not found")]
     UserNotFound,
 }
 
@@ -40,7 +45,7 @@ pub trait SessionRepo {
 
 #[cfg(feature = "testing")]
 #[async_trait]
-impl SessionRepo for crate::contracts::MockDb {
+impl SessionRepo for MockDb {
     async fn get_user_by_session_token(
         &self,
         token: String,

@@ -50,8 +50,8 @@ pub struct AccessTokenCreated {
 
 #[derive(Debug, thiserror::Error)]
 pub enum ExchangeFailed {
-    #[error("Validation error: {0}")]
-    InvalidRequest(#[from] validator::ValidationErrors),
+    #[error("Invalid request: {0}")]
+    InvalidRequest(#[source] eyre::Report),
     #[error("Invalid client")]
     InvalidClient,
     #[error("Invalid grant")]

@@ -2,15 +2,20 @@ use async_trait::async_trait;
 #[cfg(feature = "testing")]
 use mockall::*;
 
-use crate::contracts::UnexpectedDatabaseError;
+use crate::contracts::{MockDb, UnexpectedDatabaseError};
 use crate::models::{Client, User, UserRegistration};
+use sqlx_core::types::Uuid;
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, thiserror::Error)]
 pub enum UserRegistrationCreateError {
-    Unexpected,
+    #[error(transparent)]
+    Unexpected(#[from] eyre::Report),
     // User already registered in this client
+    #[error("User already registered")]
     UserAlreadyRegistered,
+    #[error("Client does not exist")]
     ClientDoesNotExist,
+    #[error("User does not exist")]
     UserDoesNotExist,
 }
 
@@ -33,4 +38,37 @@ pub trait UserRegistrationsRepo {
         client: &Client,
         user: &User,
     ) -> Result<UserRegistration, UserRegistrationCreateError>;
+}
+
+#[cfg(feature = "testing")]
+#[async_trait]
+impl UserRegistrationsRepo for MockDb {
+    async fn user_registration_get_by_id(
+        &self,
+        id: Uuid,
+    ) -> Result<Option<UserRegistration>, UnexpectedDatabaseError> {
+        self.user_registrations
+            .user_registration_get_by_id(id)
+            .await
+    }
+
+    async fn user_registration_find_for_client(
+        &self,
+        client: &Client,
+        user: &User,
+    ) -> Result<Option<UserRegistration>, UnexpectedDatabaseError> {
+        self.user_registrations
+            .user_registration_find_for_client(client, user)
+            .await
+    }
+
+    async fn user_registration_create(
+        &self,
+        client: &Client,
+        user: &User,
+    ) -> Result<UserRegistration, UserRegistrationCreateError> {
+        self.user_registrations
+            .user_registration_create(client, user)
+            .await
+    }
 }

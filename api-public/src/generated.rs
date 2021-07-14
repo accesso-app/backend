@@ -319,7 +319,7 @@ pub mod components {
             InvalidRequest(
                 #[from]
                 #[serde(skip)]
-                validator::ValidationErrors,
+                eyre::Report,
             ),
 
             #[serde(rename = "invalid_client")]

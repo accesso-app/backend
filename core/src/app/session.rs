@@ -78,7 +78,7 @@ impl From<UnexpectedDatabaseError> for SessionCreateError {
 impl From<RepoError> for SessionCreateError {
     fn from(error: RepoError) -> Self {
         match error {
-            RepoError::Unexpected | RepoError::TokenAlreadyExists => {
+            RepoError::Unexpected(_) | RepoError::TokenAlreadyExists => {
                 Self::Unexpected(eyre::eyre!("Unexpected or token already exists"))
             }
             RepoError::UserNotFound => Self::InvalidCredentials,

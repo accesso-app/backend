@@ -52,21 +52,3 @@ impl AuthCodeRepo for Database {
         .map(Into::into))
     }
 }
-
-#[cfg(feature = "testing")]
-#[async_trait]
-impl AuthCodeRepo for accesso_core::contracts::MockDb {
-    async fn auth_code_create(
-        &self,
-        code: AuthorizationCode,
-    ) -> Result<AuthorizationCode, UnexpectedDatabaseError> {
-        self.auth_code.auth_code_create(code).await
-    }
-
-    async fn auth_code_read(
-        &self,
-        code: String,
-    ) -> Result<Option<AuthorizationCode>, UnexpectedDatabaseError> {
-        self.auth_code.auth_code_read(code).await
-    }
-}

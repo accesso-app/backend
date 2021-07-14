@@ -2,12 +2,14 @@ use async_trait::async_trait;
 #[cfg(feature = "testing")]
 use mockall::*;
 
-use crate::contracts::UnexpectedDatabaseError;
+use crate::contracts::{MockDb, UnexpectedDatabaseError};
 use crate::models::RegisterRequest;
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, thiserror::Error)]
 pub enum SaveRegisterRequestError {
-    Unexpected,
+    #[error(transparent)]
+    Unexpected(#[from] eyre::Report),
+    #[error("Code already exists")]
     CodeAlreadyExists,
 }
 
@@ -33,7 +35,7 @@ pub trait RequestsRepo {
 
 #[cfg(feature = "testing")]
 #[async_trait]
-impl RequestsRepo for crate::contracts::MockDb {
+impl RequestsRepo for MockDb {
     async fn register_request_save(
         &self,
         request: RegisterRequest,

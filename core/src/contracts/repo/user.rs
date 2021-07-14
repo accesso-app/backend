@@ -2,7 +2,7 @@ use async_trait::async_trait;
 #[cfg(feature = "testing")]
 use mockall::*;
 
-use crate::contracts::UnexpectedDatabaseError;
+use crate::contracts::{MockDb, UnexpectedDatabaseError};
 use crate::models::User;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -20,9 +20,11 @@ pub struct UserCredentials {
     pub password_hash: String,
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, thiserror::Error)]
 pub enum RegisterUserError {
-    Unexpected,
+    #[error(transparent)]
+    Unexpected(#[from] eyre::Report),
+    #[error("Email already exists")]
     EmailAlreadyExists,
 }
 
@@ -43,7 +45,7 @@ pub trait UserRepo {
 
 #[cfg(feature = "testing")]
 #[async_trait]
-impl UserRepo for crate::contracts::MockDb {
+impl UserRepo for MockDb {
     async fn user_has_with_email(&self, email: String) -> Result<bool, UnexpectedDatabaseError> {
         self.users.user_has_with_email(email).await
     }
