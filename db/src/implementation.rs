@@ -7,13 +7,12 @@ pub struct Database {
 }
 
 impl Database {
-    pub async fn new(connection_url: String, size: u32) -> Result<Self, sqlx::Error> {
+    pub fn new(connection_url: String, size: u32) -> Self {
         let pool = PgPoolOptions::new()
             .max_connections(size)
-            .connect(&connection_url)
-            .await?;
+            .connect_lazy_with(connection_url.parse().expect("Bad connection url!"));
 
-        Ok(Self { pool })
+        Self { pool }
     }
 }
 

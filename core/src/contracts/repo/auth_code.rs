@@ -18,3 +18,21 @@ pub trait AuthCodeRepo {
         code: String,
     ) -> Result<Option<AuthorizationCode>, UnexpectedDatabaseError>;
 }
+
+#[cfg(feature = "testing")]
+#[async_trait]
+impl AuthCodeRepo for crate::contracts::MockDb {
+    async fn auth_code_create(
+        &self,
+        code: AuthorizationCode,
+    ) -> Result<AuthorizationCode, UnexpectedDatabaseError> {
+        self.auth_code.auth_code_create(code).await
+    }
+
+    async fn auth_code_read(
+        &self,
+        code: String,
+    ) -> Result<Option<AuthorizationCode>, UnexpectedDatabaseError> {
+        self.auth_code.auth_code_read(code).await
+    }
+}

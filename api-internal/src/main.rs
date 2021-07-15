@@ -1,105 +1,57 @@
 #![deny(warnings)]
 #![forbid(unsafe_code)]
 
-use accesso_app::Service;
-use accesso_core::contracts::{EmailNotification, Repository, SecureGenerator};
+use accesso_app::install_logger;
 use accesso_settings::Settings;
-use actix_web::{middleware, web, HttpResponse, HttpServer};
-use handler::{not_found, AnswerFailure, FailureCode};
+use actix_web::{middleware, web, HttpServer};
+use eyre::WrapErr;
 use std::sync::Arc;
+use tracing_actix_web::TracingLogger;
 
-mod cookie;
 mod generated;
-mod handler;
-mod health;
 mod routes;
 mod session;
 
-#[actix_rt::main]
-async fn main() -> anyhow::Result<()> {
-    dotenv::dotenv().ok();
-    tracing_subscriber::fmt::init();
+pub static APP_NAME: &str = "accesso-api-internal";
 
-    let settings = Settings::new("internal").expect("failed to parse settings");
+#[actix_rt::main]
+async fn main() -> eyre::Result<()> {
+    let settings = Arc::new(Settings::new("internal").wrap_err("failed to parse settings")?);
+
+    if !settings.debug {
+    } else {
+        color_eyre::install()?;
+    }
+    dotenv::dotenv().wrap_err("Failed to initialize dotenv")?;
+
+    let _guard = install_logger(APP_NAME.into(), &settings)?;
+
     let bind_address = settings.server.bind_address();
 
     if settings.debug {
-        println!("==> api-internal runned in DEVELOPMENT MODE");
+        tracing::info!("==> api-internal running in DEVELOPMENT MODE");
     } else {
-        println!("==> PRODUCTION MODE in api-internal");
+        tracing::info!("==> PRODUCTION MODE in api-internal");
     }
 
-    let db: Arc<dyn Repository> = Arc::new(
-        accesso_db::Database::new(
-            settings.database.connection_url(),
-            settings.database.pool_size,
-        )
-        .await
-        .expect("Failed to create database"),
-    );
-
-    let generator: Arc<dyn SecureGenerator> =
-        Arc::new(accesso_core::services::generator::Generator::new());
-
-    let emailer: Arc<dyn EmailNotification> = Arc::new(accesso_core::services::email::Email {
-        api_key: settings.sendgrid.api_key,
-        sender_email: settings.sendgrid.sender_email,
-        application_host: settings.sendgrid.application_host,
-        email_confirm_url_prefix: settings.sendgrid.email_confirm_url_prefix,
-        email_confirm_template: settings.sendgrid.email_confirm_template,
-    });
-
-    let session_cookie_config = cookie::SessionCookieConfig {
-        http_only: settings.cookies.http_only,
-        secure: settings.cookies.secure,
-        path: settings.cookies.path.clone(),
-        name: settings.cookies.name.clone(),
-    };
-
-    let app = Arc::new(
-        accesso_app::App::builder()
-            .with_service(Service::from(db))
-            .with_service(Service::from(emailer))
-            .with_service(Service::from(generator))
-            .build(),
-    );
+    let settings_clone = settings.clone();
 
     let mut server = HttpServer::new(move || {
+        let settings = settings_clone.clone();
         actix_web::App::new()
-            .app_data(web::Data::from(app.clone()))
-            .app_data(web::Data::new(session_cookie_config.clone()))
-            //.wrap(middleware::Compress::default())
-            .wrap(middleware::Logger::default())
-            .app_data(web::JsonConfig::default().error_handler(|err, _| {
-                let error_message = format!("{}", err);
-                actix_web::error::InternalError::from_response(
-                    err,
-                    HttpResponse::BadRequest().json(AnswerFailure {
-                        error: FailureCode::InvalidPayload,
-                        message: Some(error_message),
-                    }),
-                )
-                .into()
-            }))
-            .app_data(web::QueryConfig::default().error_handler(|err, _| {
-                let error_message = format!("{}", err);
-                actix_web::error::InternalError::from_response(
-                    err,
-                    HttpResponse::BadRequest().json(AnswerFailure {
-                        error: FailureCode::InvalidQueryParams,
-                        message: Some(error_message),
-                    }),
-                )
-                .into()
-            }))
+            .configure(|config| {
+                let settings = settings.clone();
+                accesso_app::configure(config, settings)
+            })
+            .wrap(middleware::Compress::default())
             .wrap(
                 middleware::DefaultHeaders::new()
                     // .header("X-Frame-Options", "deny")
                     .header("X-Content-Type-Options", "nosniff")
                     .header("X-XSS-Protection", "1; mode=block"),
             )
-            .service(health::service())
-            .default_service(web::route().to(not_found))
+            .wrap(TracingLogger::default())
+            .default_service(web::route().to(accesso_app::not_found))
             .service(
                 generated::api::create()
                     .bind_oauth_authorize_request(routes::oauth::authorize::route)
@@ -125,6 +77,11 @@ async fn main() -> anyhow::Result<()> {
     }
 
     server.bind(bind_address)?.run().await?;
+
+    // This is so that when application is ran locally in debug mode it wouldn't get stuck
+    // trying to send data to telemetry collector
+    #[cfg(not(debug_assertions))]
+    opentelemetry::global::shutdown_tracer_provider();
 
     Ok(())
 }

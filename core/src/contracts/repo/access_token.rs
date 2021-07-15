@@ -13,3 +13,14 @@ pub trait AccessTokenRepo {
         token: AccessToken,
     ) -> Result<AccessToken, UnexpectedDatabaseError>;
 }
+
+#[cfg(feature = "testing")]
+#[async_trait]
+impl AccessTokenRepo for crate::contracts::MockDb {
+    async fn access_token_create(
+        &self,
+        token: AccessToken,
+    ) -> Result<AccessToken, UnexpectedDatabaseError> {
+        self.access_token.access_token_create(token).await
+    }
+}

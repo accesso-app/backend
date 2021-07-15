@@ -8,6 +8,7 @@ use accesso_core::models::AccessToken;
 
 use accesso_db::chrono;
 use async_trait::async_trait;
+use eyre::WrapErr;
 use validator::Validate;
 
 #[async_trait]
@@ -17,9 +18,10 @@ impl OAuthExchange for App {
         &self,
         form: ExchangeAccessTokenForm,
     ) -> Result<AccessTokenCreated, ExchangeFailed> {
-        let db = self.get::<Service<dyn Repository>>().unwrap();
-        let generator = self.get::<Service<dyn SecureGenerator>>().unwrap();
-        form.validate()?;
+        let db = self.get::<Service<dyn Repository>>()?;
+        let generator = self.get::<Service<dyn SecureGenerator>>()?;
+
+        form.validate().wrap_err("Could not validate")?;
 
         let ExchangeAccessTokenForm {
             grant_type,
@@ -56,7 +58,11 @@ impl OAuthExchange for App {
                 let user = db
                     .user_get_by_id(authorization_code.user_id)
                     .await?
-                    .ok_or(ExchangeFailed::InvalidRequest)?;
+                    .ok_or_else(|| {
+                        ExchangeFailed::InvalidRequest(eyre::eyre!(
+                            "Could not get user in database"
+                        ))
+                    })?;
 
                 // TODO: Check scopes
                 // if !authorization_code.is_same_valid_scopes(&scopes) {
@@ -88,7 +94,7 @@ impl OAuthExchange for App {
                 Ok(AccessTokenCreated {
                     access_token: created.token.clone(),
                     token_type: TokenType::Bearer,
-                    expires_in: created.expires_at.clone(),
+                    expires_in: created.expires_at,
                 })
             }
         }
@@ -101,7 +107,9 @@ fn user_registration_error_to_exchange_failed(
     match error {
         UserRegistrationCreateError::ClientDoesNotExist => ExchangeFailed::UnauthorizedClient,
         UserRegistrationCreateError::UserDoesNotExist
-        | UserRegistrationCreateError::UserAlreadyRegistered => ExchangeFailed::InvalidRequest,
-        UserRegistrationCreateError::Unexpected => ExchangeFailed::Unexpected,
+        | UserRegistrationCreateError::UserAlreadyRegistered => {
+            ExchangeFailed::InvalidRequest(eyre::eyre!("User does not exist or already registered"))
+        }
+        UserRegistrationCreateError::Unexpected(e) => ExchangeFailed::Unexpected(e),
     }
 }

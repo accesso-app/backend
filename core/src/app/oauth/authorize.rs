@@ -1,4 +1,3 @@
-use crate::contracts::UnexpectedDatabaseError;
 use crate::models::User;
 use async_trait::async_trait;
 
@@ -40,52 +39,48 @@ pub struct AuthCodeCreated {
     pub state: Option<String>,
 }
 
-#[derive(Debug, PartialEq, Eq, Hash)]
+#[derive(Debug, thiserror::Error)]
 pub enum RequestAuthCodeFailed {
+    #[error("Unauthenticated")]
     Unauthenticated,
 
     /// The request is missing a required parameter, includes an invalid parameter value, or is otherwise malformed.
-    InvalidRequest,
+    #[error(transparent)]
+    InvalidRequest(eyre::Report),
 
     /// If the user denies the authorization request,
     /// the server will redirect the user back to the redirect URL with error=`access_denied`
     /// in the query string, and no code will be present.
     /// It is up to the app to decide what to display to the user at this point.
+    #[error("Access denied: {redirect_uri}")]
     AccessDenied {
         redirect_uri: String,
         state: Option<String>,
     },
 
     /// The client is not authorized to request an authorization code using this method: The redirect_URI of the service either is incorrect or not provided.
+    #[error("Unauthorized client")]
     UnauthorizedClient,
 
     /// The authorization server does not support obtaining an authorization code using this method
+    #[error("Unsupported response type: {redirect_uri}")]
     UnsupportedResponseType {
         redirect_uri: String,
         state: Option<String>,
     },
 
     /// The requested scope is invalid, unknown, or malformed
+    #[error("Invalid scope: {redirect_uri}")]
     InvalidScope {
         redirect_uri: String,
         state: Option<String>,
     },
 
     /// The authorization server encountered an unexpected condition which prevented it from fulfilling the request
-    ServerError,
+    #[error(transparent)]
+    ServerError(#[from] eyre::Report),
 
     /// The authorization server is currently unable to handle the request due to a temporary overloading or maintenance of the server
+    #[error("Temporarily unavailable")]
     TemporarilyUnavailable,
-}
-
-impl From<validator::ValidationErrors> for RequestAuthCodeFailed {
-    fn from(_: validator::ValidationErrors) -> Self {
-        Self::InvalidRequest
-    }
-}
-
-impl From<UnexpectedDatabaseError> for RequestAuthCodeFailed {
-    fn from(_: UnexpectedDatabaseError) -> Self {
-        RequestAuthCodeFailed::ServerError
-    }
 }

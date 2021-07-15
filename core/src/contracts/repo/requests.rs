@@ -5,9 +5,11 @@ use mockall::*;
 use crate::contracts::UnexpectedDatabaseError;
 use crate::models::RegisterRequest;
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, thiserror::Error)]
 pub enum SaveRegisterRequestError {
-    Unexpected,
+    #[error(transparent)]
+    Unexpected(#[from] eyre::Report),
+    #[error("Code already exists")]
     CodeAlreadyExists,
 }
 

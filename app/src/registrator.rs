@@ -10,6 +10,7 @@ use accesso_core::contracts::{
 use accesso_core::models::RegisterRequest;
 use async_trait::async_trait;
 
+use eyre::WrapErr;
 use validator::Validate;
 
 const MAX_CODE_INSERT_ATTEMPTS: u8 = 10;
@@ -20,15 +21,21 @@ impl Registrator for App {
         &self,
         form: CreateRegisterRequest,
     ) -> Result<RequestCreated, RegisterRequestError> {
-        let db = self.get::<Service<dyn Repository>>().unwrap();
-        let generator = self.get::<Service<dyn SecureGenerator>>().unwrap();
-        let emailer = self.get::<Service<dyn EmailNotification>>().unwrap();
+        let db = self.get::<Service<dyn Repository>>()?;
+        let generator = self.get::<Service<dyn SecureGenerator>>()?;
+        let emailer = self.get::<Service<dyn EmailNotification>>()?;
+
         form.validate()?;
 
-        let user_exists = db.user_has_with_email(form.email.clone()).await?;
+        let user_exists = db
+            .user_has_with_email(form.email.clone())
+            .await
+            .wrap_err("User existence query failed!")?;
 
         if user_exists {
-            Err(RegisterRequestError::EmailAlreadyRegistered)
+            Err(RegisterRequestError::EmailAlreadyRegistered(
+                form.email.clone(),
+            ))
         } else {
             let mut generate_count = 0u8;
 
@@ -45,15 +52,17 @@ impl Registrator for App {
                     }
                 }
 
-                break result;
+                break result.wrap_err("Register request save failed");
             }?;
 
-            emailer.send(
-                form.email,
-                EmailMessage::RegisterConfirmation {
-                    code: request.code.clone(),
-                },
-            );
+            emailer
+                .send(
+                    form.email,
+                    EmailMessage::RegisterConfirmation {
+                        code: request.code.clone(),
+                    },
+                )
+                .await?;
 
             Ok(RequestCreated {
                 expires_at: request.expires_at,
@@ -62,15 +71,19 @@ impl Registrator for App {
     }
 
     async fn registrator_confirm(&self, form: RegisterForm) -> Result<(), RegisterConfirmError> {
-        let db = self.get::<Service<dyn Repository>>().unwrap();
-        let generator = self.get::<Service<dyn SecureGenerator>>().unwrap();
-        let emailer = self.get::<Service<dyn EmailNotification>>().unwrap();
+        let db = self.get::<Service<dyn Repository>>()?;
+        let generator = self.get::<Service<dyn SecureGenerator>>()?;
+        let emailer = self.get::<Service<dyn EmailNotification>>()?;
 
         form.validate()?;
 
         let code = form.confirmation_code.clone();
 
-        match db.register_request_get_by_code(code).await? {
+        match db
+            .register_request_get_by_code(code)
+            .await
+            .wrap_err("Could not get register request with code: {}")?
+        {
             Some(request) => {
                 let password_hash = generator.password_hash(form.password).0;
 
@@ -84,16 +97,22 @@ impl Registrator for App {
                     })
                     .await?;
 
-                emailer.send(
-                    created_user.email.clone(),
-                    EmailMessage::RegisterFinished {
-                        first_name: created_user.first_name,
-                        last_name: created_user.last_name,
-                    },
-                );
-
-                db.register_requests_delete_all_for_email(created_user.email)
+                emailer
+                    .send(
+                        created_user.email.clone(),
+                        EmailMessage::RegisterFinished {
+                            first_name: created_user.first_name,
+                            last_name: created_user.last_name,
+                        },
+                    )
                     .await?;
+
+                db.register_requests_delete_all_for_email(created_user.email.clone())
+                    .await
+                    .wrap_err(format!(
+                        "Could not delete register requests for email: {}",
+                        created_user.email
+                    ))?;
 
                 Ok(())
             }
@@ -151,12 +170,13 @@ mod tests {
 
         let result = app.registrator_create_request(form).await;
 
-        assert_eq!(result, Err(RegisterRequestError::InvalidForm));
+        assert!(matches!(result, Err(RegisterRequestError::InvalidForm(_))));
     }
 
     #[actix_rt::test]
     async fn create_request_user_exists() {
         let mut db = MockDb::new();
+        let email = "demo@domain.com";
         db.users
             .expect_user_has_with_email()
             .returning(|_| Ok(true));
@@ -166,11 +186,13 @@ mod tests {
         println!("{:?}", &app);
 
         let form = CreateRegisterRequest {
-            email: "demo@domain.com".to_owned(),
+            email: email.to_owned(),
         };
 
         let result = app.registrator_create_request(form).await;
 
-        assert_eq!(result, Err(RegisterRequestError::EmailAlreadyRegistered));
+        assert!(matches!(
+            result,
+            Err(RegisterRequestError::EmailAlreadyRegistered(e)) if e == *email));
     }
 }

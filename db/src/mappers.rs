@@ -2,14 +2,22 @@ use sqlx::postgres::PgDatabaseError;
 
 use accesso_core::contracts::{
     GetUserBySessionError, RegisterUserError, SaveRegisterRequestError, SessionCreateError,
-    UnexpectedDatabaseError, UserRegistrationCreateError,
+    UserRegistrationCreateError,
 };
 
 use crate::sql_state::SqlState;
 
-pub fn sqlx_error_to_save_register_error(error: sqlx::Error) -> SaveRegisterRequestError {
-    log::error!(target: "services/database", "UNEXPECTED {:?}", error);
-    SaveRegisterRequestError::Unexpected
+pub fn sqlx_error_to_save_register_request_error(err: sqlx::Error) -> SaveRegisterRequestError {
+    use sqlx::error::Error as SqlxError;
+
+    if let SqlxError::Database(ref e) = err {
+        let pg_err = e.downcast_ref::<PgDatabaseError>();
+        if pg_err.code() == SqlState::UNIQUE_VIOLATION.code() {
+            return SaveRegisterRequestError::CodeAlreadyExists;
+        }
+    }
+
+    SaveRegisterRequestError::Unexpected(err.into())
 }
 
 pub fn sqlx_error_to_register_user_error(err: sqlx::Error) -> RegisterUserError {
@@ -22,8 +30,7 @@ pub fn sqlx_error_to_register_user_error(err: sqlx::Error) -> RegisterUserError 
         }
     }
 
-    log::error!(target: "services/database", "UNEXPECTED {:?}", err);
-    RegisterUserError::Unexpected
+    RegisterUserError::Unexpected(err.into())
 }
 
 pub fn sqlx_error_to_session_create_error(err: sqlx::Error) -> SessionCreateError {
@@ -36,8 +43,7 @@ pub fn sqlx_error_to_session_create_error(err: sqlx::Error) -> SessionCreateErro
         }
     }
 
-    log::error!(target: "services/database", "UNEXPECTED {:?}", err);
-    SessionCreateError::Unexpected
+    SessionCreateError::Unexpected(err.into())
 }
 
 pub fn sqlx_error_to_user_registration_error(error: sqlx::Error) -> UserRegistrationCreateError {
@@ -55,8 +61,7 @@ pub fn sqlx_error_to_user_registration_error(error: sqlx::Error) -> UserRegistra
         }
     }
 
-    log::error!(target: "services/database", "UNEXPECTED {:?}", error);
-    UserRegistrationCreateError::Unexpected
+    UserRegistrationCreateError::Unexpected(error.into())
 }
 
 pub fn sqlx_error_to_get_user_by_session_error(err: sqlx::Error) -> GetUserBySessionError {
@@ -64,14 +69,6 @@ pub fn sqlx_error_to_get_user_by_session_error(err: sqlx::Error) -> GetUserBySes
 
     match err {
         Error::RowNotFound => GetUserBySessionError::NotFound,
-        error => {
-            log::error!(target: "services/database", "UNEXPECTED {:?}", error);
-            GetUserBySessionError::Unexpected
-        }
+        _ => GetUserBySessionError::Unexpected(err.into()),
     }
-}
-
-pub fn sqlx_error_to_unexpected(error: sqlx::Error) -> UnexpectedDatabaseError {
-    log::error!(target: "services/database", "UNEXPECTED {:?}", error);
-    UnexpectedDatabaseError
 }

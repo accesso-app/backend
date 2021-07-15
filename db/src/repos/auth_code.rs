@@ -3,7 +3,6 @@ use accesso_core::contracts::UnexpectedDatabaseError;
 use accesso_core::models;
 
 use crate::entities::AuthorizationCode;
-use crate::mappers::sqlx_error_to_unexpected;
 use crate::Database;
 
 #[async_trait]
@@ -14,7 +13,7 @@ impl AuthCodeRepo for Database {
     ) -> Result<models::AuthorizationCode, UnexpectedDatabaseError> {
         let code = AuthorizationCode::from(code);
 
-        sqlx::query_as!(
+        Ok(sqlx::query_as!(
             AuthorizationCode,
             // language=PostgreSQL
             r#"
@@ -31,8 +30,7 @@ impl AuthCodeRepo for Database {
         )
         .fetch_one(&self.pool)
         .await
-        .map_err(sqlx_error_to_unexpected)
-        .map(Into::into)
+        .map(Into::into)?)
     }
 
     async fn auth_code_read(
@@ -50,26 +48,7 @@ impl AuthCodeRepo for Database {
             code
         )
         .fetch_optional(&self.pool)
-        .await
-        .map_err(sqlx_error_to_unexpected)?
+        .await?
         .map(Into::into))
-    }
-}
-
-#[cfg(feature = "testing")]
-#[async_trait]
-impl AuthCodeRepo for accesso_core::contracts::MockDb {
-    async fn auth_code_create(
-        &self,
-        code: AuthorizationCode,
-    ) -> Result<AuthorizationCode, UnexpectedDatabaseError> {
-        self.auth_code.auth_code_create(code).await
-    }
-
-    async fn auth_code_read(
-        &self,
-        code: String,
-    ) -> Result<Option<AuthorizationCode>, UnexpectedDatabaseError> {
-        self.auth_code.auth_code_read(code).await
     }
 }

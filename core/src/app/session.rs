@@ -33,9 +33,10 @@ pub enum SessionDeleteStrategy {
     Single(String),
 }
 
-#[derive(Debug, PartialEq, Eq, Hash)]
+#[derive(Debug, thiserror::Error)]
 pub enum SessionResolveError {
-    Unexpected,
+    #[error(transparent)]
+    Unexpected(#[from] eyre::Report),
 }
 
 #[derive(Debug, Validate, PartialEq, Eq, Hash)]
@@ -47,33 +48,39 @@ pub struct SessionCreateForm {
     pub password: String,
 }
 
-#[derive(Debug, PartialEq, Eq, Hash)]
+#[derive(Debug, thiserror::Error)]
 pub enum SessionCreateError {
-    Unexpected,
-    InvalidForm,
+    #[error(transparent)]
+    Unexpected(#[from] eyre::Report),
+    #[error("Invalid form: {0}")]
+    InvalidForm(#[from] validator::ValidationErrors),
+    #[error("Invalid credentials")]
     InvalidCredentials,
 }
 
-#[derive(Debug, PartialEq, Eq, Hash)]
+#[derive(Debug, thiserror::Error)]
 pub enum SessionDeleteError {
-    Unexpected,
+    #[error(transparent)]
+    Unexpected(#[from] eyre::Report),
 }
 
-impl From<validator::ValidationErrors> for SessionCreateError {
-    fn from(_: validator::ValidationErrors) -> Self {
-        Self::InvalidForm
+impl From<UnexpectedDatabaseError> for SessionDeleteError {
+    fn from(e: UnexpectedDatabaseError) -> Self {
+        Self::Unexpected(e.into())
     }
 }
 
 impl From<UnexpectedDatabaseError> for SessionCreateError {
-    fn from(_: UnexpectedDatabaseError) -> Self {
-        Self::Unexpected
+    fn from(e: UnexpectedDatabaseError) -> Self {
+        Self::Unexpected(e.into())
     }
 }
 impl From<RepoError> for SessionCreateError {
     fn from(error: RepoError) -> Self {
         match error {
-            RepoError::Unexpected | RepoError::TokenAlreadyExists => Self::Unexpected,
+            RepoError::Unexpected(_) | RepoError::TokenAlreadyExists => {
+                Self::Unexpected(eyre::eyre!("Unexpected or token already exists"))
+            }
             RepoError::UserNotFound => Self::InvalidCredentials,
         }
     }

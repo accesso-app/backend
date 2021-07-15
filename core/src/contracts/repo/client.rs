@@ -11,3 +11,14 @@ use crate::models::Client;
 pub trait ClientRepo {
     async fn client_find_by_id(&self, id: Uuid) -> Result<Option<Client>, UnexpectedDatabaseError>;
 }
+
+#[cfg(feature = "testing")]
+#[async_trait]
+impl ClientRepo for crate::contracts::MockDb {
+    async fn client_find_by_id(
+        &self,
+        id: uuid::Uuid,
+    ) -> Result<Option<Client>, UnexpectedDatabaseError> {
+        self.client.client_find_by_id(id).await
+    }
+}

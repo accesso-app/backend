@@ -20,9 +20,11 @@ pub struct UserCredentials {
     pub password_hash: String,
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, thiserror::Error)]
 pub enum RegisterUserError {
-    Unexpected,
+    #[error(transparent)]
+    Unexpected(#[from] eyre::Report),
+    #[error("Email already exists")]
     EmailAlreadyExists,
 }
 

@@ -1,9 +1,16 @@
 #![deny(warnings)]
 #![forbid(unsafe_code)]
 
+mod configure;
+mod cookie;
+mod health;
 mod oauth;
 mod registrator;
 mod session;
+
+pub use configure::{configure, install_logger, not_found};
+pub use cookie::SessionCookieConfig;
+pub(crate) use health::health_service;
 
 use hashbrown::HashMap;
 use std::any::{Any, TypeId};
@@ -104,10 +111,13 @@ impl App {
         AppBuilder::new()
     }
 
-    pub fn get<T: 'static>(&self) -> Option<&T> {
-        tracing::trace!("Trying to get {}", std::any::type_name::<T>());
-        self.services
+    pub fn get<T: 'static>(&self) -> Result<&T, eyre::Report> {
+        let service_name = std::any::type_name::<T>();
+        let service = self
+            .services
             .get(&TypeId::of::<T>())
-            .and_then(|rc| (&*rc).downcast_ref())
+            .and_then(|rc| (&*rc).downcast_ref());
+
+        service.ok_or_else(|| eyre::eyre!("Could not get service with name: {}", service_name))
     }
 }

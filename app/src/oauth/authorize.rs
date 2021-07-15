@@ -7,6 +7,7 @@ use accesso_core::models::{AuthorizationCode, User};
 
 use accesso_db::chrono;
 use async_trait::async_trait;
+use eyre::WrapErr;
 use validator::Validate;
 
 #[async_trait]
@@ -16,16 +17,23 @@ impl OAuthAuthorize for App {
         actor: Option<User>,
         form: RequestAuthCode,
     ) -> Result<AuthCodeCreated, RequestAuthCodeFailed> {
-        let db = self.get::<Service<dyn Repository>>().unwrap();
-        let generator = self.get::<Service<dyn SecureGenerator>>().unwrap();
+        let db = self.get::<Service<dyn Repository>>()?;
+        let generator = self.get::<Service<dyn SecureGenerator>>()?;
         let actor = actor.ok_or(RequestAuthCodeFailed::Unauthenticated)?;
 
-        form.validate()?;
+        form.validate()
+            .map_err(|e| RequestAuthCodeFailed::InvalidRequest(e.into()))?;
 
         let client = db
             .client_find_by_id(form.client_id)
-            .await?
-            .ok_or(RequestAuthCodeFailed::InvalidRequest)?;
+            .await
+            .wrap_err("Could not find client in database")?
+            .ok_or_else(|| {
+                RequestAuthCodeFailed::InvalidRequest(eyre::eyre!(
+                    "No client with id {}",
+                    form.client_id
+                ))
+            })?;
 
         // TODO: register or login?
         // If user already registered in application, just transaprently check
@@ -35,7 +43,10 @@ impl OAuthAuthorize for App {
         // If not allowed reject authorization request
 
         if !client.is_allowed_redirect(&form.redirect_uri) {
-            return Err(RequestAuthCodeFailed::InvalidRequest);
+            return Err(RequestAuthCodeFailed::InvalidRequest(eyre::eyre!(
+                "Client id {} not allowed to redirect",
+                client.id
+            )));
         }
 
         if !client.is_allowed_response(&form.response_type) {
@@ -57,7 +68,10 @@ impl OAuthAuthorize for App {
             user_id: actor.id,
         };
 
-        let created = db.auth_code_create(code).await?;
+        let created = db
+            .auth_code_create(code)
+            .await
+            .wrap_err("Could not create auth code in database")?;
 
         Ok(AuthCodeCreated {
             code: created.code,
