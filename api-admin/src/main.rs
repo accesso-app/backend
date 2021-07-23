@@ -3,11 +3,14 @@
 
 mod routes;
 mod services;
+mod generated;
+mod session;
 
 use accesso_settings::Settings;
 
 use accesso_app::{install_logger, not_found, Service};
 use accesso_core::contracts::{EmailNotification, Repository, SecureGenerator};
+use actix_cors::Cors;
 use actix_swagger::{Answer, StatusCode};
 use actix_web::web::Data;
 use actix_web::{middleware, web, App, HttpRequest, HttpResponse, HttpServer, Responder};
@@ -47,6 +50,9 @@ async fn main() -> eyre::Result<()> {
                 let settings = settings.clone();
                 accesso_app::configure(config, settings)
             })
+            // TODO ACC-75
+            // Настроить CORS
+            .wrap(Cors::permissive())
             .wrap(middleware::Compress::default())
             .wrap(
                 middleware::DefaultHeaders::new()
@@ -55,6 +61,8 @@ async fn main() -> eyre::Result<()> {
                     .header("X-XSS-Protection", "1; mode=block"),
             )
             .wrap(TracingLogger::default())
+            .service(generated::api::create()
+                .bind_session_get(routes::session::get::route))
             .default_service(web::route().to(not_found))
     });
 

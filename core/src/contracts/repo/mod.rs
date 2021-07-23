@@ -5,6 +5,7 @@ pub use requests::*;
 pub use session::*;
 pub use user::*;
 pub use user_registration::*;
+pub use admin_session::*;
 
 mod access_token;
 mod auth_code;
@@ -13,6 +14,7 @@ mod requests;
 mod session;
 mod user;
 mod user_registration;
+mod admin_session;
 
 #[derive(Debug, thiserror::Error)]
 pub enum UnexpectedDatabaseError {

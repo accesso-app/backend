@@ -72,3 +72,12 @@ pub fn sqlx_error_to_get_user_by_session_error(err: sqlx::Error) -> GetUserBySes
         _ => GetUserBySessionError::Unexpected(err.into()),
     }
 }
+
+// pub fn sqlx_error_to_get_user_by_id_error(err: sqlx::Error) -> GetUserBySessionError {
+//     use sqlx::Error;
+//
+//     match err {
+//         Error::RowNotFound => GetUserBySessionError::NotFound,
+//         _ => GetUserBySessionError::Unexpected(err.into()),
+//     }
+// }

@@ -1,12 +1,15 @@
 use chrono::Utc;
+use serde::{Deserialize, Serialize};
 
 pub use access_token::*;
 pub use client::*;
 pub use user_registration::*;
+pub use admin_access_token::*;
 
 mod access_token;
 mod client;
 mod user_registration;
+mod admin_access_token;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct RegisterRequest {
@@ -25,7 +28,7 @@ impl RegisterRequest {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct User {
     pub id: uuid::Uuid,
     pub email: String,

@@ -7,6 +7,7 @@ mod health;
 mod oauth;
 mod registrator;
 mod session;
+mod admin_session;
 
 pub use configure::{configure, install_logger, not_found};
 pub use cookie::SessionCookieConfig;
