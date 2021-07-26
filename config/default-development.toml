@@ -11,6 +11,9 @@ password = "accesso"
 user = "accesso"
 pool_size = 2
 
+[sendgrid]
+enabled = false
+
 [server]
 host = "localhost"
-port = 9005
+port = 9010

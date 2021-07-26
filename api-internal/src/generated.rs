@@ -985,4 +985,15 @@ pub mod paths {
             }
         }
     }
+
+    pub mod client_get {
+        use super::responses;
+        use actix_swagger::ContentType;
+        use actix_web::http::StatusCode;
+        use actix_web::{HttpRequest, HttpResponse, Responder, ResponseError};
+        use serde::Serialize;
+
+        #[derive(Debug, Serialize)]
+        pub enum Response {}
+    }
 }

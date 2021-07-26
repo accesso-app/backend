@@ -6,7 +6,7 @@ info:
 externalDocs:
   url: https://accesso-app.github.io/backend/api-internal/index.html
 servers:
-  - url: http://localhost:9005/
+  - url: http://localhost:9010/
   - url: https://accesso.sova.dev/api/internal
 paths:
   "/oauth/authorize":
@@ -137,6 +137,27 @@ paths:
           description: User not authorized
         500:
           description: Something went wrong
+
+  "/client.get":
+    post:
+      operationId: clientGet
+      tags: [Client]
+      description: Get client info from id
+      requestBody:
+        content:
+          application/json:
+            schema:
+              required: [ clientId ]
+              properties:
+                clientId:
+                  type: string
+                  format: uuid
+                  description: Client id
+      responses:
+        200:
+          $ref: "#/components/responses/SessionDeleteFailure"
+        400:
+
 
 components:
   responses:
