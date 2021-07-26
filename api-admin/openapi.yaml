@@ -69,6 +69,17 @@ paths:
         500:
           description: Something went wrong
 
+  "/oauth/settings.get":
+    post:
+      operationId: oauthSettingsGet
+      tags: [OAuth]
+      description: Get settings for oauth requests
+      responses:
+        200:
+          $ref: "#/components/responses/OAuthSettingsGet"
+        500:
+          description: Something went wrong
+
   "/session/create":
     post:
       operationId: sessionCreate
@@ -239,7 +250,15 @@ components:
                   - "invalid_payload"
                   - "redirect_uri_claimed"
             
-            
+    OAuthSettingsGet:
+      description: Settings exist
+      content:
+        application/json:
+          schema:
+            properties:
+              settings:
+                $ref: "#/components/schemas/OauthSettings"
+
     SessionCreateSucceeded:
       description: Session created, token wrote to cookies
       content:
@@ -394,6 +413,18 @@ components:
                 type: boolean
 
   schemas:
+    OAuthSettings:
+      description: Settings for OAuth requests
+      type: object
+      properties:
+        required:
+          - redirectUri
+          - clientId
+        redirectUri:
+          type: string
+        clientId:
+          type: string
+
     SessionUser:
       description: Current user in a session
       type: object
