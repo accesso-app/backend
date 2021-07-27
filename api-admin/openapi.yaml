@@ -69,6 +69,21 @@ paths:
         500:
           description: Something went wrong
 
+  "/invites.generate":
+    post:
+      operationId: invitesGenerate
+      tags: [ Invites ]
+      description: Generate invites to register to application
+      requestBody:
+        $ref: "#/components/requestBodies/InvitesGenerate"
+      responses:
+        200:
+          $ref: "#/components/responses/InvitesGeneratesSuccess"
+        400:
+          $ref: "#/components/responses/InvitesGeneratesFailure"
+        500:
+          description: Something went wrong
+
   "/session/create":
     post:
       operationId: sessionCreate
@@ -299,6 +314,36 @@ components:
                   - access_denied
                   - invalid_request
 
+    InvitesGeneratesSuccess:
+      description: Invites generated successfully
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [invites]
+            properties:
+              invites:
+                type: array
+                items:
+                  type: string
+                  example: facility-repent-pastry-viper-bermuda
+
+    InvitesGeneratesFailure:
+      description: Failed to generate invites for application
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [code]
+            properties:
+              code:
+                type: string
+                enum:
+                  - application_not_found
+                  - invites_disabled_for_application
+                  - user_not_authorized
+                  - invalid_request
+
   requestBodies:
     ApplicationsCreate:
       required: true
@@ -392,6 +437,25 @@ components:
             properties:
               deleteAllSessions:
                 type: boolean
+
+    InvitesGenerate:
+      required: true
+      description: Generate invites to register in application
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [applicationId, invitesCount]
+            properties:
+              applicationId:
+                type: string
+                format: uuid
+                description: What application should be invite generated for
+              invitesCount:
+                type: number
+                example: 50
+                maximum: 1000
+                minimum: 1
 
   schemas:
     SessionUser:
