@@ -1,7 +1,7 @@
 use chrono::Utc;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct Client {
+pub struct Application {
     pub id: uuid::Uuid,
     pub redirect_uri: Vec<String>,
     pub title: String,
@@ -9,8 +9,8 @@ pub struct Client {
     pub allowed_registrations: bool,
 }
 
-impl Client {
-    /// Check is that response_type allowed for current client
+impl Application {
+    /// Check is that response_type allowed for current application
     pub fn is_allowed_response(&self, response_type: &str) -> bool {
         response_type == "code"
     }

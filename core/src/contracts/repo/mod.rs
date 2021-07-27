@@ -1,14 +1,14 @@
 pub use access_token::*;
+pub use application::*;
 pub use auth_code::*;
-pub use client::*;
 pub use requests::*;
 pub use session::*;
 pub use user::*;
 pub use user_registration::*;
 
 mod access_token;
+mod application;
 mod auth_code;
-mod client;
 mod requests;
 mod session;
 mod user;
@@ -26,7 +26,7 @@ pub struct MockDb {
     pub requests: MockRequestsRepo,
     pub session: MockSessionRepo,
     pub auth_code: MockAuthCodeRepo,
-    pub client: MockClientRepo,
+    pub application: MockApplicationRepo,
     pub access_token: MockAccessTokenRepo,
     pub user_registrations: MockUserRegistrationsRepo,
 }
@@ -47,7 +47,7 @@ impl MockDb {
             session: MockSessionRepo::new(),
             access_token: MockAccessTokenRepo::new(),
             auth_code: MockAuthCodeRepo::new(),
-            client: MockClientRepo::new(),
+            application: MockApplicationRepo::new(),
             user_registrations: MockUserRegistrationsRepo::new(),
         }
     }

@@ -138,31 +138,31 @@ paths:
         500:
           description: Something went wrong
 
-  "/client.get":
+  "/application.get":
     post:
-      operationId: clientGet
-      tags: [Client]
-      description: Get client info from id
+      operationId: applicationGet
+      tags: [Application]
+      description: Get application info from id
       requestBody:
         content:
           application/json:
             schema:
-              required: [ clientId ]
+              required: [ applicationId ]
               properties:
-                clientId:
+                applicationId:
                   type: string
                   format: uuid
-                  description: Client id
+                  description: Application id
       responses:
         200:
-          description: Found client by id
+          description: Found application by id
           content:
             application/json:
               schema:
-                required: [client]
+                required: [application]
                 properties:
-                  client:
-                    $ref: "#/components/schemas/Client"
+                  application:
+                    $ref: "#/components/schemas/Application"
         400:
           description: CLIENT_ERROR
           content:
@@ -520,7 +520,7 @@ components:
         lastName:
           type: string
 
-    Client:
+    Application:
       description: Application which has accesso registration possibilities
       type: object
       required:

@@ -135,20 +135,20 @@ pub mod api {
             self
         }
 
-        pub fn bind_client_get<F, T, R>(mut self, handler: F) -> Self
+        pub fn bind_application_get<F, T, R>(mut self, handler: F) -> Self
         where
             F: Handler<T, R>,
             T: FromRequest + 'static,
             R: Future<
                     Output = Result<
-                        super::paths::client_get::Response,
-                        super::paths::client_get::Error,
+                        super::paths::application_get::Response,
+                        super::paths::application_get::Error,
                     >,
                 > + 'static,
         {
             self.api = self
                 .api
-                .bind("/client.get".to_owned(), Method::POST, handler);
+                .bind("/application.get".to_owned(), Method::POST, handler);
             self
         }
     }
@@ -458,23 +458,23 @@ pub mod components {
         }
 
         #[derive(Debug, Serialize)]
-        /// Found client by id
-        pub struct ClientGetSuccess {
-            pub client: super::schemas::Client,
+        /// Found application by id
+        pub struct ApplicationGetSuccess {
+            pub client: super::schemas::Application,
         }
 
         #[derive(Debug, Serialize, thiserror::Error)]
         #[serde(rename_all = "snake_case")]
-        pub enum ClientGetError {
+        pub enum ApplicationGetError {
             #[error("Not found")]
             NotFound,
         }
 
         #[derive(Debug, Serialize, thiserror::Error)]
         #[error(transparent)]
-        pub struct ClientGetFailure {
+        pub struct ApplicationGetFailure {
             #[from]
-            pub error: ClientGetError,
+            pub error: ApplicationGetError,
         }
     }
 
@@ -567,8 +567,8 @@ pub mod components {
 
         #[derive(Debug, Deserialize)]
         #[serde(rename_all = "camelCase")]
-        pub struct ClientGetRequestBody {
-            pub client_id: uuid::Uuid,
+        pub struct ApplicationGetRequestBody {
+            pub application_id: uuid::Uuid,
         }
     }
 
@@ -587,7 +587,7 @@ pub mod components {
 
         #[derive(Debug, Serialize, Deserialize)]
         #[serde(rename_all = "camelCase")]
-        pub struct Client {
+        pub struct Application {
             pub id: uuid::Uuid,
             pub title: String,
             pub allowed_registrations: bool,
@@ -1039,7 +1039,7 @@ pub mod paths {
         }
     }
 
-    pub mod client_get {
+    pub mod application_get {
         use super::responses;
         use actix_swagger::ContentType;
         use actix_web::http::StatusCode;
@@ -1049,14 +1049,14 @@ pub mod paths {
         #[derive(Debug, Serialize)]
         #[serde(untagged)]
         pub enum Response {
-            Ok(responses::ClientGetSuccess),
+            Ok(responses::ApplicationGetSuccess),
         }
 
         #[derive(Debug, Serialize, thiserror::Error)]
         #[serde(untagged)]
         pub enum Error {
             #[error(transparent)]
-            BadRequest(#[from] responses::ClientGetFailure),
+            BadRequest(#[from] responses::ApplicationGetFailure),
             #[error(transparent)]
             InternalServerError(
                 #[from]

@@ -1,28 +1,29 @@
 use crate::generated::{
     components::{
-        request_bodies::ClientGetRequestBody,
+        request_bodies::ApplicationGetRequestBody,
         responses::{
-            ClientGetError as FailureVariant, ClientGetFailure as Failure, ClientGetSuccess,
+            ApplicationGetError as FailureVariant, ApplicationGetFailure as Failure,
+            ApplicationGetSuccess,
         },
-        schemas::Client,
+        schemas::Application,
     },
-    paths::client_get::{Error, Response},
+    paths::application_get::{Error, Response},
 };
-use accesso_core::app::client::{Client as _, ClientGetError};
+use accesso_core::app::application::{Application as _, ApplicationGetError};
 use actix_web::web::{Data, Json};
 
 pub async fn route(
     app: Data<accesso_app::App>,
-    body: Json<ClientGetRequestBody>,
+    body: Json<ApplicationGetRequestBody>,
 ) -> Result<Response, Error> {
     let body = body.into_inner();
     let client = app
-        .client_get(body.client_id)
+        .application_get(body.application_id)
         .await
         .map_err(map_client_get_error)?;
 
-    Ok(Response::Ok(ClientGetSuccess {
-        client: Client {
+    Ok(Response::Ok(ApplicationGetSuccess {
+        client: Application {
             id: client.id,
             title: client.title,
             allowed_registrations: client.allowed_registrations,
@@ -32,11 +33,11 @@ pub async fn route(
     }))
 }
 
-fn map_client_get_error(error: ClientGetError) -> Error {
-    use ClientGetError::*;
+fn map_client_get_error(error: ApplicationGetError) -> Error {
+    use ApplicationGetError::*;
     match error {
         Unexpected(e) => Error::InternalServerError(e),
-        ClientNotFound => Error::BadRequest(Failure {
+        ApplicationNotFound => Error::BadRequest(Failure {
             error: FailureVariant::NotFound,
         }),
     }

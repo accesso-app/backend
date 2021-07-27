@@ -52,14 +52,14 @@ pub struct AccessTokenCreated {
 pub enum ExchangeFailed {
     #[error("Invalid request: {0}")]
     InvalidRequest(#[source] eyre::Report),
-    #[error("Invalid client")]
+    #[error("Invalid application")]
     InvalidClient,
     #[error("Invalid grant")]
     InvalidGrant,
     // UnsupportedGrantType
     #[error("Invalid scope")]
     InvalidScope,
-    #[error("Unauthorized client")]
+    #[error("Unauthorized application")]
     UnauthorizedClient,
     #[error(transparent)]
     Unexpected(#[from] eyre::Report),

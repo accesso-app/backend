@@ -1,7 +1,7 @@
 #![deny(warnings)]
 #![forbid(unsafe_code)]
 
-mod client;
+mod application;
 mod configure;
 mod cookie;
 mod health;

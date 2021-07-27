@@ -25,12 +25,12 @@ impl OAuthAuthorize for App {
             .map_err(|e| RequestAuthCodeFailed::InvalidRequest(e.into()))?;
 
         let client = db
-            .client_find_by_id(form.client_id)
+            .application_find_by_id(form.client_id)
             .await
-            .wrap_err("Could not find client in database")?
+            .wrap_err("Could not find application in database")?
             .ok_or_else(|| {
                 RequestAuthCodeFailed::InvalidRequest(eyre::eyre!(
-                    "No client with id {}",
+                    "No application with id {}",
                     form.client_id
                 ))
             })?;
@@ -39,7 +39,7 @@ impl OAuthAuthorize for App {
         // If user already registered in application, just transaprently check
         // If user not registered, show confirmation dialog
 
-        // TODO: check `client.allowed_registrations` when user registers
+        // TODO: check `application.allowed_registrations` when user registers
         // If not allowed reject authorization request
 
         if !client.is_allowed_redirect(&form.redirect_uri) {
@@ -56,7 +56,7 @@ impl OAuthAuthorize for App {
             });
         }
 
-        // Check if actor already authorized with client
+        // Check if actor already authorized with application
         // TODO: think about authorize confirmation
 
         let code = AuthorizationCode {

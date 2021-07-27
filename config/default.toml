@@ -31,7 +31,7 @@ port = 9005
 # workers = 8
 
 # This refers to the number of clients that can be waiting to be served.
-# Exceeding this number results in the client getting an error when
+# Exceeding this number results in the application getting an error when
 # attempting to connect. It should only affect servers under significant
 # load. Generally set in the 64-2048 range.
 # backlog = 2048
