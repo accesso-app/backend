@@ -78,9 +78,24 @@ paths:
         $ref: "#/components/requestBodies/InvitesGenerate"
       responses:
         200:
-          $ref: "#/components/responses/InvitesGeneratesSuccess"
+          $ref: "#/components/responses/InvitesGenerateSuccess"
         400:
-          $ref: "#/components/responses/InvitesGeneratesFailure"
+          $ref: "#/components/responses/InvitesGenerateFailure"
+        500:
+          description: Something went wrong
+
+  "/invites.list":
+    post:
+      operationId: invitesList
+      tags: [ Invites ]
+      description: Get invites for an application
+      requestBody:
+        $ref: "#/components/requestBodies/InvitesList"
+      responses:
+        200:
+          $ref: "#/components/responses/InvitesListSuccess"
+        400:
+          $ref: "#/components/responses/InvitesListFailure"
         500:
           description: Something went wrong
 
@@ -253,8 +268,7 @@ components:
                 enum:
                   - "invalid_payload"
                   - "redirect_uri_claimed"
-            
-            
+
     SessionCreateSucceeded:
       description: Session created, token wrote to cookies
       content:
@@ -314,7 +328,7 @@ components:
                   - access_denied
                   - invalid_request
 
-    InvitesGeneratesSuccess:
+    InvitesGenerateSuccess:
       description: Invites generated successfully
       content:
         application/json:
@@ -328,7 +342,7 @@ components:
                   type: string
                   example: facility-repent-pastry-viper-bermuda
 
-    InvitesGeneratesFailure:
+    InvitesGenerateFailure:
       description: Failed to generate invites for application
       content:
         application/json:
@@ -341,6 +355,52 @@ components:
                 enum:
                   - application_not_found
                   - invites_disabled_for_application
+                  - user_not_authorized
+                  - invalid_request
+
+    InvitesListSuccess:
+      description: Invites listed successfully for the application
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [invites]
+            properties:
+              invites:
+                type: array
+                items:
+                  type: object
+                  required: [invite, createdAt]
+                  properties:
+                    invite:
+                      type: string
+                      example: facility-repent-pastry-viper-bermuda
+                    createdAt:
+                      type: string
+                      format: date-time
+                    registered:
+                      type: object
+                      required: [user, registeredAt]
+                      properties:
+                        user:
+                          $ref: "#/components/schemas/ApplicationUser"
+                        registeredAt:
+                          type: string
+                          format: date-time
+                          description: When an invite was used for registration in the application
+
+    InvitesListFailure:
+      description: Failed to list invites for application
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [ code ]
+            properties:
+              code:
+                type: string
+                enum:
+                  - application_not_found
                   - user_not_authorized
                   - invalid_request
 
@@ -457,6 +517,35 @@ components:
                 maximum: 1000
                 minimum: 1
 
+    InvitesList:
+      required: true
+      description: Get invites for an application
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [applicationId]
+            properties:
+              applicationId:
+                type: string
+                format: uuid
+                description: What application should invites listed for?
+              filter:
+                type: string
+                enum:
+                  - only_used
+                  - only_unused
+                  - all
+                default: all
+              sort:
+                type: string
+                enum:
+                  - registration_asc
+                  - registration_desc
+                  - generation_asc
+                  - generation_desc
+                default: generation_desc
+
   schemas:
     SessionUser:
       description: Current user in a session
@@ -469,3 +558,20 @@ components:
           type: string
         lastName:
           type: string
+
+    ApplicationUser:
+      description: Fields used to describe user of an application
+      type: object
+      required: [ id, firstName, lastName, registeredAt ]
+      properties:
+        id:
+          type: string
+          format: uuid
+        firstName:
+          type: string
+        lastName:
+          type: string
+        registeredAt:
+          type: string
+          format: date-time
+          description: When the user was registered in Accesso
