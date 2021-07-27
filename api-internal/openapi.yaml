@@ -6,7 +6,7 @@ info:
 externalDocs:
   url: https://accesso-app.github.io/backend/api-internal/index.html
 servers:
-  - url: http://localhost:9005/
+  - url: http://localhost:9010/
   - url: https://accesso.sova.dev/api/internal
 paths:
   "/oauth/authorize":
@@ -138,6 +138,45 @@ paths:
         500:
           description: Something went wrong
 
+  "/application.get":
+    post:
+      operationId: applicationGet
+      tags: [Application]
+      description: Get application info from id
+      requestBody:
+        content:
+          application/json:
+            schema:
+              required: [ applicationId ]
+              properties:
+                applicationId:
+                  type: string
+                  format: uuid
+                  description: Application id
+      responses:
+        200:
+          description: Found application by id
+          content:
+            application/json:
+              schema:
+                required: [application]
+                properties:
+                  application:
+                    $ref: "#/components/schemas/Application"
+        400:
+          description: CLIENT_ERROR
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [error]
+                properties:
+                  error:
+                    type: string
+                    enum:
+                      - not_found
+        500:
+          description: Something went wrong
 components:
   responses:
     OAuthAuthorizeDone:
@@ -481,3 +520,20 @@ components:
         lastName:
           type: string
 
+    Application:
+      description: Application which has accesso registration possibilities
+      type: object
+      required:
+        - id
+        - title
+        - allowedRegistrations
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        allowedRegistrations:
+          type: boolean
+        avatar:
+          type: string
