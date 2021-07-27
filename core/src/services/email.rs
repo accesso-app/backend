@@ -39,6 +39,7 @@ impl EmailNotification for Email {
     async fn send(&self, email: String, message: EmailMessage) -> Result<(), SendEmailError> {
         if !self.enabled {
             tracing::warn!("Email service is disabled!");
+            tracing::debug!(?message);
             return Ok(());
         }
 

@@ -59,7 +59,8 @@ async fn main() -> eyre::Result<()> {
                     .bind_register_request(routes::register::request::route)
                     .bind_session_create(routes::session::create::route)
                     .bind_session_delete(routes::session::delete::route)
-                    .bind_session_get(routes::session::get::route),
+                    .bind_session_get(routes::session::get::route)
+                    .bind_client_get(routes::client::get::route),
             )
     });
 

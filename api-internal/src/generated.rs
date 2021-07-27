@@ -134,6 +134,23 @@ pub mod api {
                 .bind("/session/get".to_owned(), Method::POST, handler);
             self
         }
+
+        pub fn bind_client_get<F, T, R>(mut self, handler: F) -> Self
+        where
+            F: Handler<T, R>,
+            T: FromRequest + 'static,
+            R: Future<
+                    Output = Result<
+                        super::paths::client_get::Response,
+                        super::paths::client_get::Error,
+                    >,
+                > + 'static,
+        {
+            self.api = self
+                .api
+                .bind("/client.get".to_owned(), Method::POST, handler);
+            self
+        }
     }
 }
 
@@ -302,6 +319,7 @@ pub mod components {
         }
 
         #[derive(Debug, Serialize)]
+        #[serde(rename_all = "camelCase")]
         pub struct SessionGetSuccess {
             pub user: super::schemas::SessionUser,
         }
@@ -438,6 +456,26 @@ pub mod components {
             #[error("Unsupported grant type")]
             UnsupportedGrantType,
         }
+
+        #[derive(Debug, Serialize)]
+        /// Found client by id
+        pub struct ClientGetSuccess {
+            pub client: super::schemas::Client,
+        }
+
+        #[derive(Debug, Serialize, thiserror::Error)]
+        #[serde(rename_all = "snake_case")]
+        pub enum ClientGetError {
+            #[error("Not found")]
+            NotFound,
+        }
+
+        #[derive(Debug, Serialize, thiserror::Error)]
+        #[error(transparent)]
+        pub struct ClientGetFailure {
+            #[from]
+            pub error: ClientGetError,
+        }
     }
 
     pub mod request_bodies {
@@ -526,6 +564,12 @@ pub mod components {
             pub client_id: uuid::Uuid,
             pub client_secret: String,
         }
+
+        #[derive(Debug, Deserialize)]
+        #[serde(rename_all = "camelCase")]
+        pub struct ClientGetRequestBody {
+            pub client_id: uuid::Uuid,
+        }
     }
 
     pub mod schemas {
@@ -539,6 +583,15 @@ pub mod components {
 
             #[serde(rename = "lastName")]
             pub last_name: String,
+        }
+
+        #[derive(Debug, Serialize, Deserialize)]
+        #[serde(rename_all = "camelCase")]
+        pub struct Client {
+            pub id: uuid::Uuid,
+            pub title: String,
+            pub allowed_registrations: bool,
+            pub avatar: Option<String>,
         }
     }
 }
@@ -994,6 +1047,58 @@ pub mod paths {
         use serde::Serialize;
 
         #[derive(Debug, Serialize)]
-        pub enum Response {}
+        #[serde(untagged)]
+        pub enum Response {
+            Ok(responses::ClientGetSuccess),
+        }
+
+        #[derive(Debug, Serialize, thiserror::Error)]
+        #[serde(untagged)]
+        pub enum Error {
+            #[error(transparent)]
+            BadRequest(#[from] responses::ClientGetFailure),
+            #[error(transparent)]
+            InternalServerError(
+                #[from]
+                #[serde(skip)]
+                eyre::Report,
+            ),
+        }
+
+        impl Responder for Response {
+            fn respond_to(self, _: &HttpRequest) -> HttpResponse {
+                match self {
+                    Response::Ok(r) => HttpResponse::build(StatusCode::OK).json(r),
+                }
+            }
+        }
+
+        impl ResponseError for Error {
+            fn status_code(&self) -> StatusCode {
+                match self {
+                    Error::BadRequest(_) => StatusCode::BAD_REQUEST,
+                    Error::InternalServerError(_) => StatusCode::INTERNAL_SERVER_ERROR,
+                }
+            }
+
+            fn error_response(&self) -> HttpResponse {
+                let content_type = match self {
+                    Self::BadRequest(_) => Some(ContentType::Json),
+                    _ => None,
+                };
+
+                let mut res = &mut HttpResponse::build(self.status_code());
+                if let Some(content_type) = content_type {
+                    res = res.content_type(content_type.to_string());
+
+                    match content_type {
+                        ContentType::Json => res.body(serde_json::to_string(self).unwrap()),
+                        ContentType::FormData => res.body(serde_plain::to_string(self).unwrap()),
+                    }
+                } else {
+                    HttpResponse::build(self.status_code()).finish()
+                }
+            }
+        }
     }
 }
