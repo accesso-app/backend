@@ -99,6 +99,21 @@ paths:
         500:
           description: Something went wrong
 
+  "/invites.delete":
+    post:
+      operationId: invitesDelete
+      tags: [ Invites ]
+      description: Delete invites from an application
+      requestBody:
+        $ref: "#/components/requestBodies/InvitesDelete"
+      responses:
+        200:
+          $ref: "#/components/responses/InvitesDeleteSuccess"
+        400:
+          $ref: "#/components/responses/InvitesDeleteFailure"
+        500:
+          description: Something went wrong
+
   "/session/create":
     post:
       operationId: sessionCreate
@@ -274,15 +289,7 @@ components:
       content:
         application/json:
           schema:
-            # TODO: Use SessionUser here
-            required:
-              - firstName
-              - lastName
-            properties:
-              firstName:
-                type: string
-              lastName:
-                type: string
+            $ref: "#/components/schemas/SessionUser"
 
     SessionCreateFailed:
       description: Login failed
@@ -343,7 +350,7 @@ components:
                   example: facility-repent-pastry-viper-bermuda
 
     InvitesGenerateFailure:
-      description: Failed to generate invites for application
+      description: Failed to generate invites for the application
       content:
         application/json:
           schema:
@@ -390,7 +397,25 @@ components:
                           description: When an invite was used for registration in the application
 
     InvitesListFailure:
-      description: Failed to list invites for application
+      description: Failed to list invites for the application
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [ code ]
+            properties:
+              code:
+                type: string
+                enum:
+                  - application_not_found
+                  - user_not_authorized
+                  - invalid_request
+
+    InvitesDeleteSuccess:
+      description: Invites deleted successfully from the application
+
+    InvitesDeleteFailure:
+      description: Failed to delete invites from the application
       content:
         application/json:
           schema:
@@ -545,6 +570,27 @@ components:
                   - generation_asc
                   - generation_desc
                 default: generation_desc
+
+    InvitesDelete:
+      required: true
+      description: Delete invites from an application
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [ applicationId, invites ]
+            properties:
+              applicationId:
+                type: string
+                format: uuid
+                description: What application should invites deleted from?
+              invites:
+                type: array
+                description: What invites should be deleted
+                minLength: 1
+                items:
+                  type: string
+                  example: facility-repent-pastry-viper-bermuda
 
   schemas:
     SessionUser:
