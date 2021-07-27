@@ -3,13 +3,13 @@ use async_trait::async_trait;
 use mockall::*;
 
 use crate::contracts::UnexpectedDatabaseError;
-use crate::models::{Client, User, UserRegistration};
+use crate::models::{Application, User, UserRegistration};
 
 #[derive(Debug, thiserror::Error)]
 pub enum UserRegistrationCreateError {
     #[error(transparent)]
     Unexpected(#[from] eyre::Report),
-    // User already registered in this client
+    // User already registered in this application
     #[error("User already registered")]
     UserAlreadyRegistered,
     #[error("Client does not exist")]
@@ -28,13 +28,13 @@ pub trait UserRegistrationsRepo {
 
     async fn user_registration_find_for_client(
         &self,
-        client: &Client,
+        client: &Application,
         user: &User,
     ) -> Result<Option<UserRegistration>, UnexpectedDatabaseError>;
 
     async fn user_registration_create(
         &self,
-        client: &Client,
+        client: &Application,
         user: &User,
     ) -> Result<UserRegistration, UserRegistrationCreateError>;
 }
@@ -53,7 +53,7 @@ impl UserRegistrationsRepo for crate::contracts::MockDb {
 
     async fn user_registration_find_for_client(
         &self,
-        client: &Client,
+        client: &Application,
         user: &User,
     ) -> Result<Option<UserRegistration>, UnexpectedDatabaseError> {
         self.user_registrations
@@ -63,7 +63,7 @@ impl UserRegistrationsRepo for crate::contracts::MockDb {
 
     async fn user_registration_create(
         &self,
-        client: &Client,
+        client: &Application,
         user: &User,
     ) -> Result<UserRegistration, UserRegistrationCreateError> {
         self.user_registrations

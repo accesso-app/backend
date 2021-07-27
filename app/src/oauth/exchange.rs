@@ -47,7 +47,7 @@ impl OAuthExchange for App {
                     return Err(ExchangeFailed::InvalidGrant);
                 }
                 let client = db
-                    .client_find_by_id(authorization_code.client_id)
+                    .application_find_by_id(authorization_code.client_id)
                     .await?
                     .ok_or(ExchangeFailed::InvalidClient)?;
 

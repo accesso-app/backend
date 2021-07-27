@@ -10,9 +10,9 @@ pub(crate) struct Client {
     pub(crate) allowed_registrations: bool,
 }
 
-impl Into<models::Client> for Client {
-    fn into(self) -> models::Client {
-        models::Client {
+impl Into<models::Application> for Client {
+    fn into(self) -> models::Application {
+        models::Application {
             id: self.id,
             redirect_uri: self.redirect_uri,
             secret_key: self.secret_key,

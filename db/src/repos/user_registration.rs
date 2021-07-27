@@ -1,7 +1,7 @@
 use accesso_core::contracts::repo::UserRegistrationsRepo;
 use accesso_core::contracts::{UnexpectedDatabaseError, UserRegistrationCreateError};
 use accesso_core::models;
-use accesso_core::models::{Client, User};
+use accesso_core::models::{Application, User};
 
 use crate::entities::UserRegistration;
 use crate::mappers::sqlx_error_to_user_registration_error;
@@ -30,7 +30,7 @@ impl UserRegistrationsRepo for Database {
 
     async fn user_registration_find_for_client(
         &self,
-        client: &Client,
+        client: &Application,
         user: &User,
     ) -> Result<Option<models::UserRegistration>, UnexpectedDatabaseError> {
         Ok(sqlx::query_as!(
@@ -51,7 +51,7 @@ impl UserRegistrationsRepo for Database {
 
     async fn user_registration_create(
         &self,
-        client: &Client,
+        client: &Application,
         user: &User,
     ) -> Result<models::UserRegistration, UserRegistrationCreateError> {
         Ok(sqlx::query_as!(

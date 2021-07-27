@@ -12,9 +12,9 @@ pub struct Session {
 }
 
 impl actix_web::FromRequest for Session {
+    type Config = ();
     type Error = actix_web::Error;
     type Future = Pin<Box<dyn Future<Output = Result<Self, Self::Error>>>>;
-    type Config = ();
 
     fn from_request(
         req: &actix_web::HttpRequest,

@@ -58,8 +58,8 @@ pub enum RequestAuthCodeFailed {
         state: Option<String>,
     },
 
-    /// The client is not authorized to request an authorization code using this method: The redirect_URI of the service either is incorrect or not provided.
-    #[error("Unauthorized client")]
+    /// The application is not authorized to request an authorization code using this method: The redirect_URI of the service either is incorrect or not provided.
+    #[error("Unauthorized application")]
     UnauthorizedClient,
 
     /// The authorization server does not support obtaining an authorization code using this method

@@ -33,6 +33,10 @@ pub struct Database {
     pub pool_size: u32,
 }
 
+fn default_sendgrid_enabled() -> bool {
+    true
+}
+
 #[derive(Debug, Deserialize, Clone)]
 pub struct SendGrid {
     pub api_key: String,
@@ -44,6 +48,8 @@ pub struct SendGrid {
     pub email_confirm_template: String,
     /// `no-reply@accesso.sova.dev`
     pub sender_email: String,
+    #[serde(default = "default_sendgrid_enabled")]
+    pub enabled: bool,
 }
 
 #[derive(Debug, Deserialize, Clone)]

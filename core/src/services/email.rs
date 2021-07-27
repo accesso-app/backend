@@ -17,6 +17,7 @@ pub struct Email {
     /// Confirmation url prefix. Should be concatenated with https:// and application_host
     pub email_confirm_url_prefix: String,
     pub email_confirm_template: String,
+    pub enabled: bool,
 }
 
 impl From<SendGrid> for Email {
@@ -27,6 +28,7 @@ impl From<SendGrid> for Email {
             application_host: s.application_host,
             email_confirm_template: s.email_confirm_template,
             email_confirm_url_prefix: s.email_confirm_url_prefix,
+            enabled: s.enabled,
         }
     }
 }
@@ -35,6 +37,12 @@ impl From<SendGrid> for Email {
 impl EmailNotification for Email {
     #[tracing::instrument]
     async fn send(&self, email: String, message: EmailMessage) -> Result<(), SendEmailError> {
+        if !self.enabled {
+            tracing::warn!("Email service is disabled!");
+            tracing::debug!(?message);
+            return Ok(());
+        }
+
         if let EmailMessage::RegisterConfirmation { code } = message {
             let client = isahc::HttpClient::new()?;
 

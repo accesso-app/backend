@@ -1,10 +1,10 @@
 -- Add up migration script here
 CREATE TABLE "access_tokens"
 (
-    "client_id"  uuid      NOT NULL REFERENCES clients (id),
+    "client_id"  uuid      NOT NULL REFERENCES clients (id) ON DELETE CASCADE,
     "created_at" timestamp NOT NULL DEFAULT now(),
     "token"      varchar   NOT NULL,
-    "user_id"    uuid      NOT NULL REFERENCES users (id),
+    "user_id"    uuid      NOT NULL REFERENCES users (id) ON DELETE CASCADE,
     PRIMARY KEY ("token")
 );
 
