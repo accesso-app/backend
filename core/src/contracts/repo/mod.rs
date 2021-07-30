@@ -5,8 +5,10 @@ pub use requests::*;
 pub use session::*;
 pub use user::*;
 pub use user_registration::*;
+pub use admin_user::*;
 
 mod access_token;
+mod admin_user;
 mod auth_code;
 mod client;
 mod requests;
@@ -52,3 +54,5 @@ impl MockDb {
         }
     }
 }
+
+pub type RepoResult<T> = Result<T, UnexpectedDatabaseError>;

@@ -4,6 +4,9 @@
 #[macro_use]
 extern crate validator_derive;
 
+#[macro_use]
+extern crate async_trait;
+
 pub mod app;
 pub mod contracts;
 pub mod models;

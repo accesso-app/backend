@@ -1,4 +1,5 @@
 use crate::contracts::UnexpectedDatabaseError;
+use serde::Serialize;
 use async_trait::async_trait;
 
 #[async_trait]
@@ -10,7 +11,7 @@ pub trait OAuthExchange {
     ) -> Result<AccessTokenCreated, ExchangeFailed>;
 }
 
-#[derive(Debug, PartialEq, Eq, Hash)]
+#[derive(Serialize, Debug, PartialEq, Eq, Hash)]
 pub enum GrantType {
     AuthorizationCode,
 }

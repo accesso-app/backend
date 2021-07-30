@@ -3,6 +3,8 @@
 
 mod routes;
 mod services;
+mod accesso;
+mod generated;
 
 use accesso_settings::Settings;
 
@@ -16,11 +18,21 @@ use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tracing_actix_web::TracingLogger;
 
+use shrinkwraprs::Shrinkwrap;
+use url::Url;
+
+#[derive(Debug, Shrinkwrap, Clone)]
+#[shrinkwrap(mutable)]
+pub struct AccessoUrl(pub Url);
+
 pub static APP_NAME: &str = "accesso-api-admin";
 
 #[actix_rt::main]
 async fn main() -> eyre::Result<()> {
     let settings = Arc::new(Settings::new("admin").wrap_err("failed to parse settings")?);
+
+    let client = create_request_client(&settings)?;
+
 
     if !settings.debug {
     } else {
@@ -55,6 +67,7 @@ async fn main() -> eyre::Result<()> {
                     .header("X-XSS-Protection", "1; mode=block"),
             )
             .wrap(TracingLogger::default())
+            .app_data(web::Data::new(client))
             .default_service(web::route().to(not_found))
     });
 

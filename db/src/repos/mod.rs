@@ -5,3 +5,4 @@ mod requests;
 mod session;
 mod user;
 mod user_registration;
+mod admin_user;

@@ -1,12 +1,16 @@
 #![deny(warnings)]
 #![forbid(unsafe_code)]
 
+#[macro_use]
+extern crate async_trait;
+
 mod configure;
 mod cookie;
 mod health;
 mod oauth;
 mod registrator;
 mod session;
+mod accesso_authorize;
 
 pub use configure::{configure, install_logger, not_found};
 pub use cookie::SessionCookieConfig;
