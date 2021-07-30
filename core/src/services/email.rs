@@ -1,7 +1,7 @@
 use crate::contracts::{EmailMessage, EmailNotification, SendEmailError};
 use accesso_settings::SendGrid;
 use async_trait::async_trait;
-use isahc::http::StatusCode;
+use reqwest::{Client, StatusCode};
 
 #[derive(Clone, Debug)]
 pub struct Email {
@@ -18,6 +18,7 @@ pub struct Email {
     pub email_confirm_url_prefix: String,
     pub email_confirm_template: String,
     pub enabled: bool,
+    client: Client,
 }
 
 impl From<SendGrid> for Email {
@@ -29,6 +30,7 @@ impl From<SendGrid> for Email {
             email_confirm_template: s.email_confirm_template,
             email_confirm_url_prefix: s.email_confirm_url_prefix,
             enabled: s.enabled,
+            client: Client::new(),
         }
     }
 }
@@ -44,9 +46,9 @@ impl EmailNotification for Email {
         }
 
         if let EmailMessage::RegisterConfirmation { code } = message {
-            let client = isahc::HttpClient::new()?;
-
-            let request = isahc::Request::post("https://api.sendgrid.com/v3/mail/send")
+            let request = self
+                .client
+                .post("https://api.sendgrid.com/v3/mail/send")
                 .header("Authorization", format!("Bearer {}", self.api_key.clone()))
                 .body(serde_json::to_vec(&sg::MailSend {
                     subject: "Confirm registration at Accesso".to_owned(),
@@ -67,9 +69,9 @@ impl EmailNotification for Email {
                         },
                         to: vec![sg::Target { email }],
                     }],
-                })?)?;
+                })?);
 
-            let resp = client.send_async(request).await?;
+            let resp = request.send().await?;
 
             tracing::info!("resp: {:?}", resp);
 

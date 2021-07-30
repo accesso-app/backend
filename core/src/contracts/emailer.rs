@@ -5,10 +5,8 @@ use serde::Serialize;
 
 #[derive(Debug, thiserror::Error)]
 pub enum SendEmailError {
-    #[error("Isahc error: {0}")]
-    IsahcError(#[from] isahc::Error),
-    #[error("Http error: {0}")]
-    HttpError(#[from] isahc::http::Error),
+    #[error("Reqwest error: {0}")]
+    ReqwestError(#[from] reqwest::Error),
     #[error("Serialize json error: {0}")]
     SerdeJsonError(#[from] serde_json::Error),
     #[error(transparent)]

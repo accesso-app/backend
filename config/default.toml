@@ -18,10 +18,9 @@ port = 5432
 [sendgrid]
 application_host = "locahost:3000"
 email_confirm_url_prefix = "/register/confirm-"
-
-# api_key = ""
-# email_confirm_template = ""
-# sender_email = ""
+api_key = ""
+email_confirm_template = ""
+sender_email = ""
 
 [server]
 host = "localhost"
