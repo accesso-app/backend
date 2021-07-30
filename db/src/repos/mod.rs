@@ -6,3 +6,4 @@ mod session;
 mod user;
 mod user_registration;
 mod admin_user;
+mod admin_session_token;

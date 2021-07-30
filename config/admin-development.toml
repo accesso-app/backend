@@ -1,2 +1,13 @@
 [server]
 port = 9020
+
+[accesso]
+url = "https://accesso.local:3000"
+client_id = '00000000-0000-4000-acce-0000000000ad'
+redirect_back_url = "http://accesso.local:8080/oauth-done"
+client_secret = "AccessoAdminDev"
+ssl_validate = false
+
+[admin_cookies]
+http_only = false
+secure = false

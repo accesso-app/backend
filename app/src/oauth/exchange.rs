@@ -41,7 +41,7 @@ impl OAuthExchange for App {
                     .ok_or(ExchangeFailed::InvalidClient)?;
 
                 if !authorization_code.is_code_correct(&code)
-                    || !authorization_code.is_expired()
+                    // || !authorization_code.is_expired()
                     || !authorization_code.is_redirect_same(&redirect_uri)
                 {
                     return Err(ExchangeFailed::InvalidGrant);

@@ -1,14 +1,14 @@
 use accesso_core::app::accesso_authorize::{AccessoAuthorize, UpdateAdminUserFailure};
 use accesso_core::contracts::{SecureGenerator, Repository, AdminUserCreateError};
-use accesso_core::models::{SessionToken, AdminUser};
+use accesso_core::models::{AdminUser, AdminSessionToken};
 use crate::{App, Service};
 use accesso_core::app::AdminUserInfo;
 
-const ACCESS_TOKEN_LENGTH: u8 = 60;
+// const ACCESS_TOKEN_LENGTH: u8 = 60;
 
 #[async_trait]
 impl AccessoAuthorize for App {
-    async fn authorize(&self, info: AdminUserInfo) -> Result<(AdminUser, SessionToken), UpdateAdminUserFailure> {
+    async fn authorize(&self, info: AdminUserInfo) -> Result<(AdminUser, AdminSessionToken), UpdateAdminUserFailure> {
         let db = self.get::<Service<dyn Repository>>()?;
         let generator = self.get::<Service<dyn SecureGenerator>>()?;
 
@@ -31,9 +31,9 @@ impl AccessoAuthorize for App {
             }
         }?;
 
-        let token = generator.secure_token(ACCESS_TOKEN_LENGTH);
-        let access_token = SessionToken::new(actual_user.id, token);
-        let token = db.token_create(access_token).await?;
+        let token = generator.generate_token();
+        let session_token = AdminSessionToken::new(actual_user.id, token);
+        let token = db.admin_token_create(session_token).await?;
 
         Ok((actual_user, token))
     }

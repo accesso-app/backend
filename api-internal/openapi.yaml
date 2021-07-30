@@ -6,7 +6,7 @@ info:
 externalDocs:
   url: https://accesso-app.github.io/backend/api-internal/index.html
 servers:
-  - url: http://localhost:9005/
+  - url: http://accesso.local:9005/
   - url: https://accesso.sova.dev/api/internal
 paths:
   "/oauth/authorize":

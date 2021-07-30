@@ -17,12 +17,14 @@ use eyre::WrapErr;
 use reqwest::Client;
 use tracing::Span;
 use accesso_settings::Settings;
-use accesso_app::SessionCookieConfig;
+use accesso_app::{SessionCookieConfig, AdminSessionCookieConfig};
+use accesso_core::app::UpdateAdminUserFailure;
+use accesso_core::models::{SessionToken, AdminSessionToken};
 
 pub async fn route(
     body: Json<AuthDoneRequestBody>,
     config: Data<Settings>,
-    config_session: Data<SessionCookieConfig>,
+    admin_config_session: Data<AdminSessionCookieConfig>,
     client: Data<Client>,
     app: Data<accesso_app::App>,
     accesso_url: Data<AccessoUrl>,
@@ -42,16 +44,19 @@ pub async fn route(
         let mut uri = AccessoUrl::clone(&accesso_url);
         let clone = uri.clone();
         let host = clone.host_str();
+
         uri.set_host(host.map(|host| format!("api.{}", host)).as_deref())
             .wrap_err("Could not set host")?;
-        uri.set_path("/v0/oauth/token");
+        uri.set_port(Some(9010));
+        uri.set_path("/oauth/token");
         uri.to_string()
     };
 
     tracing::debug!(%exchange_token_url, ?payload, "Sending request");
 
+    // TODO Set exchange_token_url
     let response = client
-        .post(exchange_token_url)
+        .post("http://accesso.local:9010/oauth/token")
         .json(&payload)
         .send()
         .await
@@ -96,8 +101,9 @@ pub async fn route(
                         uri.to_string()
                     };
 
-                    let result = client
-                        .post(viewer_get_url)
+                    // TODO Set viewer_get_url
+                    let result = client.clone()
+                        .post("http://accesso.local:9010/viewer.get")
                         .header(header::AUTHORIZATION, access_token)
                         .send()
                         .await
@@ -115,7 +121,7 @@ pub async fn route(
                             use accesso_core::app::AccessoAuthorize;
 
                             let (user, session_token) = app
-                                .authorize(accesso_core::app::UserInfo {
+                                .authorize(accesso_core::app::AdminUserInfo {
                                     accesso_id: id,
                                     first_name,
                                     last_name,
@@ -132,7 +138,11 @@ pub async fn route(
                             .respond_to(&req);
 
                             response
-                                .add_cookie(&config_session.to_cookie(session_token))
+                                .add_cookie(&admin_config_session.to_cookie(AdminSessionToken {
+                                    expires_at: session_token.expires_at,
+                                    token: session_token.token,
+                                    user_id: session_token.user_id
+                                }))
                                 .wrap_err("Could not add cookie")?;
 
                             Ok(response)
@@ -208,8 +218,8 @@ fn map_exchange_token_error(
     }
 }
 
-fn map_authorize_error(err: UpdateUserFailure) -> AuthDoneFailure {
+fn map_authorize_error(err: UpdateAdminUserFailure) -> AuthDoneFailure {
     match err {
-        UpdateUserFailure::Unexpected(e) => AuthDoneFailure::Unexpected(e),
+        UpdateAdminUserFailure::Unexpected(e) => AuthDoneFailure::Unexpected(e),
     }
 }

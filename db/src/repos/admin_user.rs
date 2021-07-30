@@ -29,8 +29,8 @@ impl AdminUserRepo for Database {
             // language=PostgreSQL
             r#"
             SELECT id, accesso_id, first_name, last_name
-            FROM users
-            WHERE users.accesso_id = $1
+            FROM admin_users
+            WHERE admin_users.accesso_id = $1
             "#,
             accesso_id
         )
@@ -44,7 +44,7 @@ impl AdminUserRepo for Database {
             AdminUser,
             // language=PostgreSQL
             r#"
-            UPDATE users
+            UPDATE admin_users
             SET (accesso_id, first_name, last_name) = ($1, $2, $3)
             WHERE id = $4
             RETURNING id, accesso_id, first_name, last_name
@@ -65,7 +65,7 @@ impl AdminUserRepo for Database {
             AdminUser,
             // language=PostgreSQL
             r#"
-            INSERT INTO users (accesso_id, first_name, last_name)
+            INSERT INTO admin_users (accesso_id, first_name, last_name)
             VALUES ($1, $2, $3)
             RETURNING id, accesso_id, first_name, last_name
             "#,

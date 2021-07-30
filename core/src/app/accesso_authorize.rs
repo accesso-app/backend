@@ -6,7 +6,7 @@ pub trait AccessoAuthorize {
     async fn authorize(
         &self,
         user: AdminUserInfo,
-    ) -> Result<(models::AdminUser, models::SessionToken), UpdateAdminUserFailure>;
+    ) -> Result<(models::AdminUser, models::AdminSessionToken), UpdateAdminUserFailure>;
 }
 
 #[derive(Debug, Clone)]

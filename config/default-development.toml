@@ -4,13 +4,24 @@ debug = true
 http_only = false
 secure = false
 
+[admin_cookies]
+http_only = false
+secure = false
+
 [database]
 database = "accesso"
-host = "localhost"
+host = "accesso.local"
 password = "accesso"
 user = "accesso"
 pool_size = 2
 
 [server]
-host = "localhost"
+host = "accesso.local"
 port = 9005
+
+[accesso]
+url = "https://accesso.local:9115"
+client_id = '00000000-0000-4000-acce-0000000000ad'
+redirect_back_url = "http://accesso.local:8080/oauth-done"
+client_secret = "AccessoAdmin[Dev]"
+ssl_validate = false

@@ -8,15 +8,34 @@ use std::env;
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct Settings {
+    pub accesso: Accesso,
     pub debug: bool,
     pub database: Database,
     pub cookies: Cookies,
+    pub admin_cookies: AdminCookies,
     pub server: Server,
     pub sendgrid: SendGrid,
 }
 
 #[derive(Debug, Deserialize, Clone)]
+pub struct Accesso {
+    pub client_id: String,
+    pub client_secret: String,
+    pub redirect_back_url: String,
+    pub url: String,
+    pub ssl_validate: bool,
+}
+
+#[derive(Debug, Deserialize, Clone)]
 pub struct Cookies {
+    pub http_only: bool,
+    pub secure: bool,
+    pub path: String,
+    pub name: String,
+}
+
+#[derive(Debug, Deserialize, Clone)]
+pub struct AdminCookies {
     pub http_only: bool,
     pub secure: bool,
     pub path: String,

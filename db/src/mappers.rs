@@ -1,9 +1,6 @@
 use sqlx::postgres::PgDatabaseError;
 
-use accesso_core::contracts::{
-    GetUserBySessionError, RegisterUserError, SaveRegisterRequestError, SessionCreateError,
-    UserRegistrationCreateError,
-};
+use accesso_core::contracts::{GetUserBySessionError, RegisterUserError, SaveRegisterRequestError, SessionCreateError, UserRegistrationCreateError, AdminUserCreateError};
 
 use crate::sql_state::SqlState;
 
@@ -71,4 +68,17 @@ pub fn sqlx_error_to_get_user_by_session_error(err: sqlx::Error) -> GetUserBySes
         Error::RowNotFound => GetUserBySessionError::NotFound,
         _ => GetUserBySessionError::Unexpected(err.into()),
     }
+}
+
+pub fn sqlx_error_to_user_create_error(error: sqlx::Error) -> AdminUserCreateError {
+    use sqlx::Error as SqlxError;
+
+    if let SqlxError::Database(ref e) = error {
+        let pg_err = e.downcast_ref::<PgDatabaseError>();
+        if pg_err.code() == SqlState::UNIQUE_VIOLATION.code() {
+            return AdminUserCreateError::AdminUserAlreadyExists;
+        }
+    }
+
+    AdminUserCreateError::UnexpectedFailure(error.into())
 }

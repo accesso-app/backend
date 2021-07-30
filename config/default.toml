@@ -1,6 +1,12 @@
 # Enable logging
 debug = false
 
+[admin_cookies]
+http_only = true
+name = "admin-session-token"
+path = "/"
+secure = true
+
 [cookies]
 http_only = true
 name = "session-token"
@@ -9,7 +15,7 @@ secure = true
 
 [database]
 # database = "accesso"
-# host = "localhost"
+# host = "accesso.local"
 # password = "accesso"
 # pool_size = 8
 port = 5432
