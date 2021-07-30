@@ -35,6 +35,20 @@ impl SessionRepo for Database {
         &self,
         token: String,
     ) -> Result<models::User, GetUserBySessionError> {
+
+        // let account = sqlx::query!(r#"
+        //     SELECT users.*
+        //         FROM users
+        //                  INNER JOIN user_registrations ON users.id = user_registrations.user_id
+        //                  INNER JOIN access_tokens ON user_registrations.id = access_tokens.registration_id
+        //         WHERE access_tokens.token = 'jEGvogXrnbUxtXQmtfPZcZoE32DGG5CcmTZnOhEV05kFNLKdMnEV'
+        //           AND access_tokens.expires_at > '2021-07-30 20:29:11.537166445';
+        //     "#)
+        //     .fetch_one(&self.pool)
+        //     .await?;
+        //
+        // println!("{:?}", account);
+
         sqlx::query_as!(
             User,
             // language=PostgreSQL

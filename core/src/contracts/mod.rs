@@ -8,6 +8,8 @@ pub mod secure;
 
 pub trait Repository:
     AccessTokenRepo
+    + AdminUserRepo
+    + AdminSessionTokenRepo
     + AuthCodeRepo
     + ApplicationRepo
     + RequestsRepo
@@ -21,6 +23,8 @@ pub trait Repository:
 
 impl<T> Repository for T where
     T: AccessTokenRepo
+        + AdminUserRepo
+        + AdminSessionTokenRepo
         + AuthCodeRepo
         + ApplicationRepo
         + RequestsRepo

@@ -8,9 +8,13 @@ mod health;
 mod oauth;
 mod registrator;
 mod session;
+mod accesso_authorize;
+mod admin_session;
+mod admin_cookie;
 
 pub use configure::{configure, install_logger, not_found};
 pub use cookie::SessionCookieConfig;
+pub use admin_cookie::AdminSessionCookieConfig;
 pub(crate) use health::health_service;
 
 use hashbrown::HashMap;

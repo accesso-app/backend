@@ -3,10 +3,14 @@ use chrono::Utc;
 pub use access_token::*;
 pub use client::*;
 pub use user_registration::*;
+pub use admin_user::*;
+pub use admin_session_token::*;
 
 mod access_token;
 mod client;
 mod user_registration;
+mod admin_user;
+mod admin_session_token;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct RegisterRequest {

@@ -99,9 +99,18 @@ pub fn configure(config: &mut ServiceConfig, settings: Arc<Settings>) {
         name: settings.cookies.name.clone(),
     };
 
+    let admin_session_cookie_config = crate::AdminSessionCookieConfig {
+        http_only: settings.admin_cookies.http_only,
+        secure: settings.admin_cookies.secure,
+        path: settings.admin_cookies.path.clone(),
+        name: settings.admin_cookies.name.clone(),
+    };
+
     config
         .app_data(Data::new(app))
         .app_data(Data::new(session_cookie_config))
+        .app_data(Data::new(admin_session_cookie_config))
+        .app_data(Data::from(settings))
         .app_data(web::JsonConfig::default().error_handler(|err, _| {
             let error_message = format!("{}", err);
             actix_web::error::InternalError::from_response(

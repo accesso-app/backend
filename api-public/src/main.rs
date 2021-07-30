@@ -7,6 +7,7 @@ use actix_web::{middleware, web, HttpServer};
 use eyre::WrapErr;
 use std::sync::Arc;
 use tracing_actix_web::TracingLogger;
+use actix_cors::Cors;
 
 mod generated;
 mod health;
@@ -44,6 +45,7 @@ async fn main() -> eyre::Result<()> {
                 let settings = settings.clone();
                 accesso_app::configure(config, settings)
             })
+            .wrap(Cors::permissive())
             .wrap(middleware::Compress::default())
             .wrap(
                 middleware::DefaultHeaders::new()

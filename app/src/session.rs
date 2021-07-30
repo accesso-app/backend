@@ -35,8 +35,9 @@ impl Session for App {
         access_token: String,
     ) -> Result<Option<User>, SessionResolveError> {
         let db = self.get::<Service<dyn Repository>>()?;
+        let res = db.get_user_by_access_token(access_token).await;
 
-        match db.get_user_by_access_token(access_token).await {
+        match res  {
             Err(GetUserBySessionError::Unexpected(e)) => Err(SessionResolveError::Unexpected(e)),
             Err(GetUserBySessionError::NotFound) => Ok(None),
             Ok(user) => Ok(Some(user)),
