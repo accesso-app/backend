@@ -6,7 +6,7 @@ ARG rustc_mode=release
 ARG rustc_opts=--release
 ARG API_NAME
 
-RUN apt update && apt install ca-certificates libsodium-dev pkg-config -y && update-ca-certificates && apt clean
+RUN apt update && apt upgrade -y && apt install ca-certificates libsodium-dev pkg-config -y && update-ca-certificates && apt clean
 
 RUN rustup component add rustfmt
 
@@ -67,6 +67,8 @@ FROM debian:buster-slim AS runtime
 ARG API_NAME
 
 COPY --from=build /out/ /
+
+RUN apt update && apt upgrade -y && apt install ca-certificates libsodium23 -y && update-ca-certificates && apt clean
 
 USER nobody:nobody
 
