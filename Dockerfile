@@ -72,4 +72,6 @@ RUN apt update && apt upgrade -y && apt install ca-certificates libsodium23 -y &
 
 USER nobody:nobody
 
-ENTRYPOINT ["/accesso-api-internal"]
+ENV API_NAME=${API_NAME}
+
+ENTRYPOINT ["sh", "-c", "/accesso-api-${API_NAME}"]
