@@ -1,4 +1,5 @@
-FROM rust:latest
+ARG rust_ver=1.54
+FROM rust:${rust_ver}-slim
 
 COPY migrations /app/migrations
 COPY ./docker-entrypoint.sh /app/entrypoint.sh
