@@ -75,7 +75,7 @@ impl EmailNotification for Email {
 
             tracing::info!("resp: {:?}", resp);
 
-            if resp.status() != StatusCode::OK {
+            if resp.status() != StatusCode::ACCEPTED {
                 return Err(SendEmailError::Unexpected(eyre::eyre!(
                     "Could not send email!, status: {}",
                     resp.status()
