@@ -50,7 +50,7 @@ impl EmailNotification for Email {
                 .client
                 .post("https://api.sendgrid.com/v3/mail/send")
                 .header("Authorization", format!("Bearer {}", self.api_key.clone()))
-                .body(serde_json::to_vec(&sg::MailSend {
+                .json(&sg::MailSend {
                     subject: "Confirm registration at Accesso".to_owned(),
                     template_id: self.email_confirm_template.clone(),
                     from: sg::Sender {
@@ -69,7 +69,7 @@ impl EmailNotification for Email {
                         },
                         to: vec![sg::Target { email }],
                     }],
-                })?);
+                });
 
             let resp = request.send().await?;
 
