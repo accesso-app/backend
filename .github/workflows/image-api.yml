@@ -139,6 +139,7 @@ jobs:
           file: migrations.Dockerfile
 
       - name: Move cache
+        if: steps.changes.outputs.tools == 'true'
         run: |
           rm -rf /tmp/.buildx-cache-migrations
           mv /tmp/.buildx-cache-new-migrations /tmp/.buildx-cache-migrations
@@ -217,6 +218,7 @@ jobs:
           build-args: API_NAME=${{ matrix.api }}
 
       - name: Move cache
+        if: steps.changes.outputs.source == 'true'
         run: |
           rm -rf /tmp/.buildx-cache-${{ matrix.api }}
           mv /tmp/.buildx-cache-new-${{ matrix.api }} /tmp/.buildx-cache-${{ matrix.api }}
