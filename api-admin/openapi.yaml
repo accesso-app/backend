@@ -69,6 +69,51 @@ paths:
         500:
           description: Something went wrong
 
+  "/invites.generate":
+    post:
+      operationId: invitesGenerate
+      tags: [ Invites ]
+      description: Generate invites to register to application
+      requestBody:
+        $ref: "#/components/requestBodies/InvitesGenerate"
+      responses:
+        200:
+          $ref: "#/components/responses/InvitesGenerateSuccess"
+        400:
+          $ref: "#/components/responses/InvitesGenerateFailure"
+        500:
+          description: Something went wrong
+
+  "/invites.list":
+    post:
+      operationId: invitesList
+      tags: [ Invites ]
+      description: Get invites for an application
+      requestBody:
+        $ref: "#/components/requestBodies/InvitesList"
+      responses:
+        200:
+          $ref: "#/components/responses/InvitesListSuccess"
+        400:
+          $ref: "#/components/responses/InvitesListFailure"
+        500:
+          description: Something went wrong
+
+  "/invites.delete":
+    post:
+      operationId: invitesDelete
+      tags: [ Invites ]
+      description: Delete invites from an application
+      requestBody:
+        $ref: "#/components/requestBodies/InvitesDelete"
+      responses:
+        200:
+          $ref: "#/components/responses/InvitesDeleteSuccess"
+        400:
+          $ref: "#/components/responses/InvitesDeleteFailure"
+        500:
+          description: Something went wrong
+
   "/session/create":
     post:
       operationId: sessionCreate
@@ -238,22 +283,13 @@ components:
                 enum:
                   - "invalid_payload"
                   - "redirect_uri_claimed"
-            
-            
+
     SessionCreateSucceeded:
       description: Session created, token wrote to cookies
       content:
         application/json:
           schema:
-            # TODO: Use SessionUser here
-            required:
-              - firstName
-              - lastName
-            properties:
-              firstName:
-                type: string
-              lastName:
-                type: string
+            $ref: "#/components/schemas/SessionUser"
 
     SessionCreateFailed:
       description: Login failed
@@ -297,6 +333,100 @@ components:
                 type: string
                 enum:
                   - access_denied
+                  - invalid_request
+
+    InvitesGenerateSuccess:
+      description: Invites generated successfully
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [invites]
+            properties:
+              invites:
+                type: array
+                items:
+                  type: string
+                  example: facility-repent-pastry-viper-bermuda
+
+    InvitesGenerateFailure:
+      description: Failed to generate invites for the application
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [code]
+            properties:
+              code:
+                type: string
+                enum:
+                  - application_not_found
+                  - invites_disabled_for_application
+                  - user_not_authorized
+                  - invalid_request
+
+    InvitesListSuccess:
+      description: Invites listed successfully for the application
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [invites]
+            properties:
+              invites:
+                type: array
+                items:
+                  type: object
+                  required: [invite, createdAt]
+                  properties:
+                    invite:
+                      type: string
+                      example: facility-repent-pastry-viper-bermuda
+                    createdAt:
+                      type: string
+                      format: date-time
+                    registered:
+                      type: object
+                      required: [user, registeredAt]
+                      properties:
+                        user:
+                          $ref: "#/components/schemas/ApplicationUser"
+                        registeredAt:
+                          type: string
+                          format: date-time
+                          description: When an invite was used for registration in the application
+
+    InvitesListFailure:
+      description: Failed to list invites for the application
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [ code ]
+            properties:
+              code:
+                type: string
+                enum:
+                  - application_not_found
+                  - user_not_authorized
+                  - invalid_request
+
+    InvitesDeleteSuccess:
+      description: Invites deleted successfully from the application
+
+    InvitesDeleteFailure:
+      description: Failed to delete invites from the application
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [ code ]
+            properties:
+              code:
+                type: string
+                enum:
+                  - application_not_found
+                  - user_not_authorized
                   - invalid_request
 
   requestBodies:
@@ -393,6 +523,75 @@ components:
               deleteAllSessions:
                 type: boolean
 
+    InvitesGenerate:
+      required: true
+      description: Generate invites to register in application
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [applicationId, invitesCount]
+            properties:
+              applicationId:
+                type: string
+                format: uuid
+                description: What application should be invite generated for
+              invitesCount:
+                type: number
+                example: 50
+                maximum: 1000
+                minimum: 1
+
+    InvitesList:
+      required: true
+      description: Get invites for an application
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [applicationId]
+            properties:
+              applicationId:
+                type: string
+                format: uuid
+                description: What application should invites listed for?
+              filter:
+                type: string
+                enum:
+                  - only_used
+                  - only_unused
+                  - all
+                default: all
+              sort:
+                type: string
+                enum:
+                  - registration_asc
+                  - registration_desc
+                  - generation_asc
+                  - generation_desc
+                default: generation_desc
+
+    InvitesDelete:
+      required: true
+      description: Delete invites from an application
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [ applicationId, invites ]
+            properties:
+              applicationId:
+                type: string
+                format: uuid
+                description: What application should invites deleted from?
+              invites:
+                type: array
+                description: What invites should be deleted
+                minLength: 1
+                items:
+                  type: string
+                  example: facility-repent-pastry-viper-bermuda
+
   schemas:
     SessionUser:
       description: Current user in a session
@@ -405,3 +604,20 @@ components:
           type: string
         lastName:
           type: string
+
+    ApplicationUser:
+      description: Fields used to describe user of an application
+      type: object
+      required: [ id, firstName, lastName, registeredAt ]
+      properties:
+        id:
+          type: string
+          format: uuid
+        firstName:
+          type: string
+        lastName:
+          type: string
+        registeredAt:
+          type: string
+          format: date-time
+          description: When the user was registered in Accesso
