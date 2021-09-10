@@ -7,6 +7,7 @@ pub async fn route(session: Session) -> Result<Response, Error> {
         user: schemas::SessionUser {
             first_name: session.user.first_name,
             last_name: session.user.last_name,
+            email: session.user.email,
         },
     }))
 }
