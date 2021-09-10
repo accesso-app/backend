@@ -21,6 +21,7 @@ pub async fn route(
     }))
 }
 
+#[allow(dead_code)]
 fn map_register_request_error(error: RegisterRequestError) -> register_request::Error {
     use RegisterRequestError::{EmailAlreadyRegistered, EmailSenderError, InvalidForm, Unexpected};
 
