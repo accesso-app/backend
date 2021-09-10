@@ -1,7 +1,7 @@
 openapi: 3.0.1
 info:
   title: Accesso App Internal API.
-  version: 0.4.0
+  version: 0.6.0
   description: Internal API for frontend
 externalDocs:
   url: https://accesso-app.github.io/backend/api-internal/index.html
@@ -514,10 +514,13 @@ components:
       required:
         - firstName
         - lastName
+        - email
       properties:
         firstName:
           type: string
         lastName:
+          type: string
+        email:
           type: string
 
     Application:
