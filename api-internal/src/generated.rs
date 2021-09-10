@@ -583,6 +583,9 @@ pub mod components {
 
             #[serde(rename = "lastName")]
             pub last_name: String,
+
+            #[serde(rename = "email")]
+            pub email: String,
         }
 
         #[derive(Debug, Serialize, Deserialize)]
