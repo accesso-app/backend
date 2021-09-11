@@ -138,6 +138,23 @@ paths:
         500:
           description: Something went wrong
 
+  "/account.edit":
+    post:
+      operationId: accountEdit
+      tags: [Account]
+      description: Edit description details of the account
+      requestBody:
+        $ref: "#/components/requestBodies/AccountEdit"
+      responses:
+        200:
+          $ref: "#/components/responses/AccountEditSuccess"
+        400:
+          $ref: "#/components/responses/AccountEditFailure"
+        401:
+          description: User not authorized
+        500:
+          description: Something went wrong
+
   "/application.get":
     post:
       operationId: applicationGet
@@ -377,6 +394,31 @@ components:
                 enum:
                   - "invalid_payload"
 
+    AccountEditSuccess:
+      description: account edit successfully
+      content:
+        application/json:
+          schema:
+            required:
+              - user
+            properties:
+              user:
+                $ref: "#/components/schemas/SessionUser"
+
+    AccountEditFailure:
+      description: failed to edit account
+      content:
+        application/json:
+          schema:
+            required:
+              - error
+            properties:
+              error:
+                type: string
+                enum:
+                  - "invalid_payload"
+                  - "invalid_form"
+
   requestBodies:
     OAuthAuthorize:
       required: true
@@ -506,6 +548,20 @@ components:
             properties:
               deleteAllSessions:
                 type: boolean
+
+    AccountEdit:
+      required: true
+      content:
+        application/json:
+          schema:
+            required:
+              - firstName
+              - lastName
+            properties:
+              firstName:
+                type: string
+              lastName:
+                type: string
 
   schemas:
     SessionUser:
