@@ -1,6 +1,7 @@
 #![deny(warnings)]
 #![forbid(unsafe_code)]
 
+mod account;
 mod application;
 mod configure;
 mod cookie;

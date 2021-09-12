@@ -1,11 +1,12 @@
 use accesso_core::contracts::repo::UserRepo;
 use accesso_core::contracts::{
-    RegisterUserError, UnexpectedDatabaseError, UserCredentials, UserRegisterForm,
+    RegisterUserError, UnexpectedDatabaseError, UserCredentials, UserEditError, UserEditForm,
+    UserRegisterForm,
 };
 use accesso_core::models;
 
 use crate::entities::User;
-use crate::mappers::sqlx_error_to_register_user_error;
+use crate::mappers::{sqlx_error_to_account_edit_error, sqlx_error_to_register_user_error};
 use crate::Database;
 use sqlx::types::Uuid;
 
@@ -99,5 +100,30 @@ impl UserRepo for Database {
         .fetch_optional(&self.pool)
         .await?
         .map(Into::into))
+    }
+
+    async fn user_edit_by_id(
+        &self,
+        user_id: Uuid,
+        form: UserEditForm,
+    ) -> Result<models::User, UserEditError> {
+        Ok(sqlx::query_as!(
+            User,
+            // language=PostgreSQL
+            r#"
+            UPDATE users
+            SET first_name = $1, last_name = $2
+            WHERE id = $3
+            RETURNING users.*
+            "#,
+            form.first_name,
+            form.last_name,
+            user_id
+        )
+        .fetch_optional(&self.pool)
+        .await
+        .map_err(sqlx_error_to_account_edit_error)
+        .and_then(|option| option.ok_or(UserEditError::UserNotFound))
+        .map(Into::into)?)
     }
 }

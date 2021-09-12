@@ -2,7 +2,7 @@ use sqlx::postgres::PgDatabaseError;
 
 use accesso_core::contracts::{
     GetUserBySessionError, RegisterUserError, SaveRegisterRequestError, SessionCreateError,
-    UserRegistrationCreateError,
+    UserEditError, UserRegistrationCreateError,
 };
 
 use crate::sql_state::SqlState;
@@ -31,6 +31,10 @@ pub fn sqlx_error_to_register_user_error(err: sqlx::Error) -> RegisterUserError 
     }
 
     RegisterUserError::Unexpected(err.into())
+}
+
+pub fn sqlx_error_to_account_edit_error(err: sqlx::Error) -> UserEditError {
+    UserEditError::Unexpected(err.into())
 }
 
 pub fn sqlx_error_to_session_create_error(err: sqlx::Error) -> SessionCreateError {
