@@ -371,6 +371,58 @@
       ]
     }
   },
+  "597f9aa6f92ed1ee2334b904d804c943199bc08745749c72598c784b28c51700": {
+    "query": "\n            UPDATE users\n            SET first_name = $1, last_name = $2\n            WHERE id = $3\n            RETURNING users.*\n            ",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 1,
+          "name": "email",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 2,
+          "name": "password_hash",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 3,
+          "name": "first_name",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 4,
+          "name": "last_name",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 5,
+          "name": "canonical_email",
+          "type_info": "Varchar"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Varchar",
+          "Varchar",
+          "Uuid"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    }
+  },
   "86fa894031607e0b2e0a4ebdac4c9b668fca7e1a266b6afdd5face270041f672": {
     "query": "\n            DELETE\n            FROM registration_requests\n            WHERE email = $1\n            ",
     "describe": {
