@@ -32,7 +32,7 @@ pub async fn route(
     let mut response = Response::Created(responses::SessionCreateSucceeded {
         first_name: user.first_name,
         last_name: user.last_name,
-        email: user.email
+        email: user.email,
     })
     .respond_to(&req);
 
