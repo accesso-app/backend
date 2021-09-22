@@ -1,2 +1,2 @@
 ALTER TABLE clients
-    DROP COLUMN is_dev
+    DROP COLUMN is_dev;
