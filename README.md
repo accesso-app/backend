@@ -84,7 +84,8 @@ Finally, [install just and run](#development).
 - `just` — to build and start `api-internal` crate (aliased to `just internal`)
 - `just public` — to build and run `api-public`
 
-After changing any sql query you need to run in root:
+You shouldn't run migrations at CI, but you have to prepare sqlx-data file for deploy - after changing any sql query you
+need to run in root:
 
 ```sh
 cargo sqlx prepare --merged

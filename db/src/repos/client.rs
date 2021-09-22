@@ -16,6 +16,7 @@ impl ApplicationRepo for Database {
             // language=PostgreSQL
             r#"
             SELECT id,
+                   is_dev,
                    redirect_uri,
                    secret_key,
                    title,

@@ -3,6 +3,7 @@ use chrono::Utc;
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Application {
     pub id: uuid::Uuid,
+    pub is_dev: bool,
     pub redirect_uri: Vec<String>,
     pub title: String,
     pub secret_key: String,

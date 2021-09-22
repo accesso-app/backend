@@ -415,6 +415,56 @@
       "nullable": []
     }
   },
+  "8cf63a7ac20825eb1201ee9f67a00d1feddf84cdcb17a9f35fbbb4ac1160c7c0": {
+    "query": "\n            SELECT id,\n                   is_dev,\n                   redirect_uri,\n                   secret_key,\n                   title,\n                   allowed_registrations\n            FROM clients\n            WHERE id = $1\n            ",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 1,
+          "name": "is_dev",
+          "type_info": "Bool"
+        },
+        {
+          "ordinal": 2,
+          "name": "redirect_uri",
+          "type_info": "TextArray"
+        },
+        {
+          "ordinal": 3,
+          "name": "secret_key",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 4,
+          "name": "title",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 5,
+          "name": "allowed_registrations",
+          "type_info": "Bool"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    }
+  },
   "ae3a688b60703a83a710f3396865d7e7ce07317f2fe9b5c0ad3affc1fddf3af5": {
     "query": "\n            SELECT id,\n                   email,\n                   password_hash,\n                   first_name,\n                   last_name,\n                   canonical_email\n            FROM users\n            WHERE canonical_email = $1\n            ",
     "describe": {
@@ -634,50 +684,6 @@
         false,
         false,
         true,
-        false
-      ]
-    }
-  },
-  "fe1e350516766bf8397050dab593cafbe4a0ced8a07cf57ecf320dc9a879da3d": {
-    "query": "\n            SELECT id,\n                   redirect_uri,\n                   secret_key,\n                   title,\n                   allowed_registrations\n            FROM clients\n            WHERE id = $1\n            ",
-    "describe": {
-      "columns": [
-        {
-          "ordinal": 0,
-          "name": "id",
-          "type_info": "Uuid"
-        },
-        {
-          "ordinal": 1,
-          "name": "redirect_uri",
-          "type_info": "TextArray"
-        },
-        {
-          "ordinal": 2,
-          "name": "secret_key",
-          "type_info": "Varchar"
-        },
-        {
-          "ordinal": 3,
-          "name": "title",
-          "type_info": "Varchar"
-        },
-        {
-          "ordinal": 4,
-          "name": "allowed_registrations",
-          "type_info": "Bool"
-        }
-      ],
-      "parameters": {
-        "Left": [
-          "Uuid"
-        ]
-      },
-      "nullable": [
-        false,
-        false,
-        false,
-        false,
         false
       ]
     }
