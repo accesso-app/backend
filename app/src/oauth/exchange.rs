@@ -40,16 +40,17 @@ impl OAuthExchange for App {
                     .await?
                     .ok_or(ExchangeFailed::InvalidClient)?;
 
-                if !authorization_code.is_code_correct(&code)
-                    || !authorization_code.is_expired()
-                    || !authorization_code.is_redirect_same(&redirect_uri)
-                {
+                if !authorization_code.is_code_correct(&code) || !authorization_code.is_expired() {
                     return Err(ExchangeFailed::InvalidGrant);
                 }
                 let client = db
                     .application_find_by_id(authorization_code.client_id)
                     .await?
                     .ok_or(ExchangeFailed::InvalidClient)?;
+
+                if !client.is_dev && !authorization_code.is_redirect_same(&redirect_uri) {
+                    return Err(ExchangeFailed::InvalidGrant);
+                }
 
                 if !client.is_enabled() || !client.is_allowed_secret(&client_id, &client_secret) {
                     return Err(ExchangeFailed::InvalidClient);
