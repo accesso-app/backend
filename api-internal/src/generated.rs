@@ -2,12 +2,13 @@
 #![allow(clippy::from_over_into)]
 
 pub mod api {
+    use std::future::Future;
+
     use actix_swagger::{Api, Method};
     use actix_web::{
         dev::{AppService, Handler, HttpServiceFactory},
         FromRequest, Responder,
     };
-    use std::future::Future;
 
     pub struct AccessoInternalApi {
         api: Api,
@@ -132,6 +133,23 @@ pub mod api {
             self.api = self
                 .api
                 .bind("/session/get".to_owned(), Method::POST, handler);
+            self
+        }
+
+        pub fn bind_account_edit<F, T, R>(mut self, handler: F) -> Self
+        where
+            F: Handler<T, R>,
+            T: FromRequest + 'static,
+            R: Future<
+                    Output = Result<
+                        super::paths::account_edit::Response,
+                        super::paths::account_edit::Error,
+                    >,
+                > + 'static,
+        {
+            self.api = self
+                .api
+                .bind("/account.edit".to_owned(), Method::POST, handler);
             self
         }
 
@@ -319,6 +337,34 @@ pub mod components {
             #[serde(rename = "invalid_payload")]
             #[error(transparent)]
             InvalidPayload(#[serde(skip)] eyre::Report),
+        }
+
+        #[derive(Debug, Serialize)]
+        pub struct AccountEditSuccess {
+            pub user: super::schemas::SessionUser,
+        }
+
+        #[derive(Debug, Serialize, thiserror::Error)]
+        pub enum AccountEditFailureError {
+            #[serde(rename = "invalid_payload")]
+            #[error("Invalid payload")]
+            InvalidPayload,
+
+            #[serde(rename = "invalid_form")]
+            #[error(transparent)]
+            InvalidForm(
+                #[from]
+                #[serde(skip)]
+                validator::ValidationErrors,
+            ),
+        }
+
+        #[doc = "failed to edit account"]
+        #[derive(Debug, Serialize, thiserror::Error)]
+        #[error(transparent)]
+        pub struct AccountEditFailure {
+            #[from]
+            pub error: AccountEditFailureError,
         }
 
         #[derive(Debug, Serialize)]
@@ -515,6 +561,15 @@ pub mod components {
             pub delete_all_sessions: bool,
         }
 
+        #[derive(Debug, Deserialize)]
+        pub struct AccountEdit {
+            #[serde(rename = "firstName")]
+            pub first_name: String,
+
+            #[serde(rename = "lastName")]
+            pub last_name: String,
+        }
+
         /// responseType is set to code indicating that you want an authorization code as the response.
         #[derive(Debug, Serialize, Deserialize)]
         pub enum OAuthAuthorizeResponseType {
@@ -604,12 +659,14 @@ pub mod components {
 
 pub mod paths {
     use super::components::responses;
+
     pub mod register_request {
-        use super::responses;
         use actix_swagger::ContentType;
         use actix_web::http::StatusCode;
         use actix_web::{HttpRequest, HttpResponse, Responder, ResponseError};
         use serde::Serialize;
+
+        use super::responses;
 
         #[derive(Debug, Serialize)]
         #[serde(untagged)]
@@ -668,11 +725,12 @@ pub mod paths {
     }
 
     pub mod session_create {
-        use super::responses;
         use actix_swagger::ContentType;
         use actix_web::http::StatusCode;
         use actix_web::{HttpRequest, HttpResponse, Responder, ResponseError};
         use serde::Serialize;
+
+        use super::responses;
 
         #[derive(Debug, Serialize)]
         #[serde(untagged)]
@@ -731,11 +789,12 @@ pub mod paths {
     }
 
     pub mod session_delete {
-        use super::responses;
         use actix_swagger::ContentType;
         use actix_web::http::StatusCode;
         use actix_web::{HttpRequest, HttpResponse, Responder, ResponseError};
         use serde::Serialize;
+
+        use super::responses;
 
         #[derive(Debug, Serialize)]
         #[serde(untagged)]
@@ -796,12 +855,80 @@ pub mod paths {
         }
     }
 
-    pub mod session_get {
-        use super::responses;
+    pub mod account_edit {
         use actix_swagger::ContentType;
         use actix_web::http::StatusCode;
         use actix_web::{HttpRequest, HttpResponse, Responder, ResponseError};
         use serde::Serialize;
+
+        use super::responses;
+
+        #[derive(Debug, Serialize)]
+        #[serde(untagged)]
+        pub enum Response {
+            Ok(responses::AccountEditSuccess),
+        }
+
+        #[derive(Debug, Serialize, thiserror::Error)]
+        pub enum Error {
+            #[error(transparent)]
+            BadRequest(#[from] responses::AccountEditFailure),
+
+            #[error(transparent)]
+            Unauthorized(#[serde(skip)] eyre::Report),
+
+            #[error(transparent)]
+            Unexpected(
+                #[from]
+                #[serde(skip)]
+                eyre::Report,
+            ),
+        }
+
+        impl Responder for Response {
+            fn respond_to(self, _: &HttpRequest) -> HttpResponse {
+                match self {
+                    Response::Ok(r) => HttpResponse::build(StatusCode::OK).json(r),
+                }
+            }
+        }
+
+        impl ResponseError for Error {
+            fn status_code(&self) -> StatusCode {
+                match self {
+                    Error::BadRequest(_) => StatusCode::BAD_REQUEST,
+                    Error::Unexpected(_) => StatusCode::INTERNAL_SERVER_ERROR,
+                    Error::Unauthorized(_) => StatusCode::UNAUTHORIZED,
+                }
+            }
+
+            fn error_response(&self) -> HttpResponse {
+                let content_type: Option<ContentType> = match self {
+                    _ => None,
+                };
+
+                let mut res = &mut HttpResponse::build(self.status_code());
+                if let Some(content_type) = content_type {
+                    res = res.content_type(content_type.to_string());
+
+                    match content_type {
+                        ContentType::Json => res.body(serde_json::to_string(self).unwrap()),
+                        ContentType::FormData => res.body(serde_plain::to_string(self).unwrap()),
+                    }
+                } else {
+                    HttpResponse::build(self.status_code()).finish()
+                }
+            }
+        }
+    }
+
+    pub mod session_get {
+        use actix_swagger::ContentType;
+        use actix_web::http::StatusCode;
+        use actix_web::{HttpRequest, HttpResponse, Responder, ResponseError};
+        use serde::Serialize;
+
+        use super::responses;
 
         #[derive(Debug, Serialize)]
         #[serde(untagged)]
@@ -858,11 +985,12 @@ pub mod paths {
     }
 
     pub mod register_confirmation {
-        use super::responses;
         use actix_swagger::ContentType;
         use actix_web::http::StatusCode;
         use actix_web::{HttpRequest, HttpResponse, Responder, ResponseError};
         use serde::Serialize;
+
+        use super::responses;
 
         #[derive(Debug, Serialize)]
         #[serde(untagged)]
@@ -921,11 +1049,12 @@ pub mod paths {
     }
 
     pub mod oauth_authorize_request {
-        use super::responses;
         use actix_swagger::ContentType;
         use actix_web::http::StatusCode;
         use actix_web::{HttpRequest, HttpResponse, Responder, ResponseError};
         use serde::Serialize;
+
+        use super::responses;
 
         #[derive(Debug, Serialize)]
         #[serde(untagged)]
@@ -983,11 +1112,12 @@ pub mod paths {
     }
 
     pub mod oauth_token {
-        use super::responses;
         use actix_swagger::ContentType;
         use actix_web::http::StatusCode;
         use actix_web::{HttpRequest, HttpResponse, Responder, ResponseError};
         use serde::Serialize;
+
+        use super::responses;
 
         #[derive(Debug, Serialize)]
         #[serde(untagged)]
@@ -1046,11 +1176,12 @@ pub mod paths {
     }
 
     pub mod application_get {
-        use super::responses;
         use actix_swagger::ContentType;
         use actix_web::http::StatusCode;
         use actix_web::{HttpRequest, HttpResponse, Responder, ResponseError};
         use serde::Serialize;
+
+        use super::responses;
 
         #[derive(Debug, Serialize)]
         #[serde(untagged)]

@@ -1,12 +1,15 @@
 #![deny(warnings)]
 #![forbid(unsafe_code)]
 
-use accesso_app::install_logger;
-use accesso_settings::Settings;
+use std::sync::Arc;
+
 use actix_web::{middleware, web, HttpServer};
 use eyre::WrapErr;
-use std::sync::Arc;
 use tracing_actix_web::TracingLogger;
+
+use accesso_app::install_logger;
+use accesso_settings::Settings;
+use routes::account;
 
 mod generated;
 mod routes;
@@ -60,6 +63,7 @@ async fn main() -> eyre::Result<()> {
                     .bind_session_create(routes::session::create::route)
                     .bind_session_delete(routes::session::delete::route)
                     .bind_session_get(routes::session::get::route)
+                    .bind_account_edit(account::edit::route)
                     .bind_application_get(routes::application::get::route),
             )
     });

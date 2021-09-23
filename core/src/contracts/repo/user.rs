@@ -28,6 +28,21 @@ pub enum RegisterUserError {
     EmailAlreadyExists,
 }
 
+#[derive(Debug, Clone)]
+pub struct UserEditForm {
+    pub first_name: String,
+    pub last_name: String,
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum UserEditError {
+    #[error("User not found")]
+    UserNotFound,
+
+    #[error(transparent)]
+    Unexpected(#[from] eyre::Report),
+}
+
 #[cfg_attr(feature = "testing", automock)]
 #[async_trait]
 pub trait UserRepo {
@@ -41,6 +56,11 @@ pub trait UserRepo {
         &self,
         user_id: uuid::Uuid,
     ) -> Result<Option<User>, UnexpectedDatabaseError>;
+    async fn user_edit_by_id(
+        &self,
+        user_id: uuid::Uuid,
+        form: UserEditForm,
+    ) -> Result<User, UserEditError>;
 }
 
 #[cfg(feature = "testing")]
@@ -64,5 +84,13 @@ impl UserRepo for crate::contracts::MockDb {
         user_id: uuid::Uuid,
     ) -> Result<Option<User>, UnexpectedDatabaseError> {
         self.users.user_get_by_id(user_id).await
+    }
+
+    async fn user_edit_by_id(
+        &self,
+        user_id: uuid::Uuid,
+        form: UserEditForm,
+    ) -> Result<User, UserEditError> {
+        self.users.user_edit_by_id(user_id, form).await
     }
 }
