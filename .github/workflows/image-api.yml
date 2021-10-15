@@ -91,6 +91,8 @@ jobs:
           filters: |
             tools:
               - 'migrations.Dockerfile'
+              - 'migrations/**'
+              - '.github/workflows/image-api.yml'
 
       - name: Docker meta
         id: meta
@@ -170,6 +172,7 @@ jobs:
               - 'Cargo.toml'
               - 'Dockerfile'
               - 'migrations/**'
+              - '.github/workflows/image-api.yml'
 
       - name: Docker meta
         id: meta
