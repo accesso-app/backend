@@ -4,17 +4,14 @@
 mod routes;
 mod services;
 
-use accesso_settings::Settings;
-
-use accesso_app::{install_logger, not_found, Service};
-use accesso_core::contracts::{EmailNotification, Repository, SecureGenerator};
-use actix_swagger::{Answer, StatusCode};
-use actix_web::web::Data;
-use actix_web::{middleware, web, App, HttpRequest, HttpResponse, HttpServer, Responder};
-use eyre::WrapErr;
-use serde::{Deserialize, Serialize};
 use std::sync::Arc;
+
+use actix_web::{middleware, web, HttpServer};
+use eyre::WrapErr;
 use tracing_actix_web::TracingLogger;
+
+use accesso_app::install_logger;
+use accesso_settings::Settings;
 
 pub static APP_NAME: &str = "accesso-api-admin";
 
@@ -42,7 +39,7 @@ async fn main() -> eyre::Result<()> {
 
     let mut server = HttpServer::new(move || {
         let settings = settings_clone.clone();
-        App::new()
+        actix_web::App::new()
             .configure(|config| {
                 let settings = settings.clone();
                 accesso_app::configure(config, settings)
@@ -51,11 +48,11 @@ async fn main() -> eyre::Result<()> {
             .wrap(
                 middleware::DefaultHeaders::new()
                     .header("X-Frame-Options", "deny")
-                    .header("X-Content-Type-Options", "nosniff")
+                    // .header("X-Content-Type-Options", "nosniff")
                     .header("X-XSS-Protection", "1; mode=block"),
             )
             .wrap(TracingLogger::default())
-            .default_service(web::route().to(not_found))
+            .default_service(web::route().to(accesso_app::not_found))
     });
 
     if let Some(workers) = settings.server.workers {
@@ -72,6 +69,11 @@ async fn main() -> eyre::Result<()> {
     }
 
     server.bind(&bind_address)?.run().await?;
+
+    // This is so that when application is ran locally in debug mode it wouldn't get stuck
+    // trying to send data to telemetry collector
+    #[cfg(not(debug_assertions))]
+    opentelemetry::global::shutdown_tracer_provider();
 
     Ok(())
 }

@@ -1,7 +1,7 @@
 use accesso_core::contracts::{ApplicationRepo, UnexpectedDatabaseError};
 use accesso_core::models;
 
-use crate::entities::Client;
+use crate::entities;
 use crate::Database;
 
 #[async_trait]
@@ -11,7 +11,7 @@ impl ApplicationRepo for Database {
         id: uuid::Uuid,
     ) -> Result<Option<models::Application>, UnexpectedDatabaseError> {
         Ok(sqlx::query_as!(
-            Client,
+            entities::Client,
             // TODO: rename table to `applications`
             // language=PostgreSQL
             r#"
