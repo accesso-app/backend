@@ -1,7 +1,8 @@
-use juniper::{
-    graphql_object, EmptyMutation, EmptySubscription, FieldResult, GraphQLEnum, GraphQLInputObject,
-    GraphQLObject, ScalarValue,
-};
+use accesso_app::Service;
+use accesso_core::contracts::{Repository, SecureGenerator};
+use actix_web::web::Data;
+use juniper::{graphql_object, EmptySubscription, FieldResult, GraphQLInputObject, GraphQLObject};
+use std::sync::Arc;
 
 #[derive(GraphQLObject, Default, Clone)]
 #[graphql(description = "The application user want to register")]
@@ -25,8 +26,38 @@ impl From<accesso_core::models::Application> for Application {
     }
 }
 
-use accesso_core::contracts::{Repository, SecureGenerator};
-use std::sync::Arc;
+#[derive(GraphQLObject, Default, Clone)]
+#[graphql(description = "The application user want to register")]
+pub struct ApplicationSecret {
+    id: uuid::Uuid,
+    is_dev: bool,
+    redirect_uri: Vec<String>,
+    title: String,
+    allowed_registrations: bool,
+    /// Allowed to read only after application is created
+    secret_key: String,
+}
+
+impl From<accesso_core::models::Application> for ApplicationSecret {
+    fn from(app: accesso_core::models::Application) -> Self {
+        ApplicationSecret {
+            id: app.id,
+            is_dev: app.is_dev,
+            redirect_uri: app.redirect_uri,
+            title: app.title,
+            allowed_registrations: app.allowed_registrations,
+            secret_key: app.secret_key,
+        }
+    }
+}
+
+#[derive(GraphQLInputObject)]
+struct ApplicationCreate {
+    title: String,
+    redirect_uri: Vec<String>,
+    is_dev: Option<bool>,
+    allowed_registrations: Option<bool>,
+}
 
 pub struct Context {
     app: Arc<accesso_app::App>,
@@ -36,24 +67,20 @@ impl juniper::Context for Context {}
 
 pub struct Query;
 
-use accesso_app::Service;
-
 #[graphql_object(context = Context)]
 impl Query {
     fn apiVersion() -> &'static str {
         "0.1"
     }
 
-    async fn application(context: &Context, id: uuid::Uuid) -> FieldResult<Application> {
-        use accesso_core::app::application::Application;
-        let found = context.app.application_get(id).await?;
+    async fn application(context: &Context, id: uuid::Uuid) -> FieldResult<Option<Application>> {
         let db = context.app.get::<Service<dyn Repository>>()?;
+        let found = db.application_find_by_id(id).await?;
 
-        Ok(found.into())
+        Ok(found.map(|app| app.into()))
     }
 
     async fn applications(context: &Context) -> FieldResult<Vec<Application>> {
-        use accesso_core::app::application::Application;
         let db = context.app.get::<Service<dyn Repository>>()?;
         let list = db.application_list().await?;
         Ok(list.into_iter().map(|client| client.into()).collect())
@@ -62,12 +89,48 @@ impl Query {
 
 pub struct Mutation;
 
-use std::fmt::Display;
-
 #[graphql_object(context = Context)]
 impl Mutation {
-    async fn createApplication(context: &Context) -> FieldResult<Application> {
-        Ok(Default::default())
+    async fn applicationCreate(
+        context: &Context,
+        form: ApplicationCreate,
+    ) -> FieldResult<ApplicationSecret> {
+        let db = context.app.get::<Service<dyn Repository>>()?;
+        let generator = context.app.get::<Service<dyn SecureGenerator>>()?;
+        let app = db
+            .application_create(accesso_core::contracts::ApplicationForm {
+                title: form.title,
+                redirect_uri: form.redirect_uri,
+                is_dev: form.is_dev.unwrap_or_default(),
+                allowed_registrations: form.allowed_registrations.unwrap_or_default(),
+                secret_key: generator.generate_token_long(),
+            })
+            .await?;
+
+        Ok(app.into())
+    }
+
+    async fn applicationRegenerateSecret(
+        context: &Context,
+        application_id: uuid::Uuid,
+    ) -> FieldResult<Option<ApplicationSecret>> {
+        let db = context.app.get::<Service<dyn Repository>>()?;
+        let generator = context.app.get::<Service<dyn SecureGenerator>>()?;
+        let app = db.application_find_by_id(application_id).await?;
+        if let Some(app) = app {
+            let updated = db
+                .application_edit(
+                    application_id,
+                    accesso_core::contracts::ApplicationForm {
+                        secret_key: generator.generate_token_long(),
+                        ..app.into()
+                    },
+                )
+                .await?;
+            Ok(updated.map(|app| app.into()))
+        } else {
+            Ok(None)
+        }
     }
 }
 
@@ -77,11 +140,10 @@ pub fn schema() -> Schema {
     Schema::new(Query, Mutation, EmptySubscription::<Context>::new())
 }
 
-use actix_web::web::Data;
-
 pub async fn graphiql_route() -> Result<actix_web::HttpResponse, actix_web::Error> {
     juniper_actix::graphiql_handler("/graphql", None).await
 }
+
 pub async fn playground_route() -> Result<actix_web::HttpResponse, actix_web::Error> {
     juniper_actix::playground_handler("/graphql", None).await
 }

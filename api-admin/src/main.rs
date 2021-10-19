@@ -7,7 +7,7 @@ mod services;
 
 use std::sync::Arc;
 
-use actix_web::{http::header, middleware, web, HttpServer};
+use actix_web::{middleware, web, HttpServer};
 use eyre::WrapErr;
 use tracing_actix_web::TracingLogger;
 
