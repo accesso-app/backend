@@ -9,7 +9,6 @@ pub struct Application {
     id: uuid::Uuid,
     is_dev: bool,
     redirect_uri: Vec<String>,
-    secret_key: String,
     title: String,
     allowed_registrations: bool,
 }
@@ -20,7 +19,6 @@ impl From<accesso_core::models::Application> for Application {
             id: app.id,
             is_dev: app.is_dev,
             redirect_uri: app.redirect_uri,
-            secret_key: app.secret_key,
             title: app.title,
             allowed_registrations: app.allowed_registrations,
         }
@@ -38,6 +36,8 @@ impl juniper::Context for Context {}
 
 pub struct Query;
 
+use accesso_app::Service;
+
 #[graphql_object(context = Context)]
 impl Query {
     fn apiVersion() -> &'static str {
@@ -47,8 +47,16 @@ impl Query {
     async fn application(context: &Context, id: uuid::Uuid) -> FieldResult<Application> {
         use accesso_core::app::application::Application;
         let found = context.app.application_get(id).await?;
+        let db = context.app.get::<Service<dyn Repository>>()?;
 
         Ok(found.into())
+    }
+
+    async fn applications(context: &Context) -> FieldResult<Vec<Application>> {
+        use accesso_core::app::application::Application;
+        let db = context.app.get::<Service<dyn Repository>>()?;
+        let list = db.application_list().await?;
+        Ok(list.into_iter().map(|client| client.into()).collect())
     }
 }
 
@@ -63,15 +71,10 @@ impl Mutation {
     }
 }
 
-pub type Schema =
-    juniper::RootNode<'static, Query, EmptyMutation<Context>, EmptySubscription<Context>>;
+pub type Schema = juniper::RootNode<'static, Query, Mutation, EmptySubscription<Context>>;
 
 pub fn schema() -> Schema {
-    Schema::new(
-        Query,
-        EmptyMutation::<Context>::new(),
-        EmptySubscription::<Context>::new(),
-    )
+    Schema::new(Query, Mutation, EmptySubscription::<Context>::new())
 }
 
 use actix_web::web::Data;

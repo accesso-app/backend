@@ -30,4 +30,20 @@ impl ApplicationRepo for Database {
         .await?
         .map(Into::into))
     }
+
+    async fn application_list(&self) -> Result<Vec<models::Application>, UnexpectedDatabaseError> {
+        Ok(sqlx::query_as!(
+            entities::Client,
+            // language=PostgreSQL
+            r#"
+            SELECT id, is_dev, redirect_uri, secret_key, title, allowed_registrations
+            FROM clients
+            "#,
+        )
+        .fetch_all(&self.pool)
+        .await?
+        .into_iter()
+        .map(|client| client.into())
+        .collect())
+    }
 }

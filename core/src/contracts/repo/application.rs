@@ -13,6 +13,8 @@ pub trait ApplicationRepo {
         &self,
         id: Uuid,
     ) -> Result<Option<Application>, UnexpectedDatabaseError>;
+
+    async fn application_list(&self) -> Result<Vec<Application>, UnexpectedDatabaseError>;
 }
 
 #[cfg(feature = "testing")]
@@ -23,5 +25,9 @@ impl ApplicationRepo for crate::contracts::MockDb {
         id: uuid::Uuid,
     ) -> Result<Option<Application>, UnexpectedDatabaseError> {
         self.application.application_find_by_id(id).await
+    }
+
+    async fn application_list(&self) -> Result<Vec<Application>, UnexpectedDatabaseError> {
+        self.application.application_list().await
     }
 }
