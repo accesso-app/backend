@@ -1,7 +1,10 @@
 use accesso_app::Service;
 use accesso_core::contracts::{Repository, SecureGenerator};
 use actix_web::web::Data;
-use juniper::{graphql_object, EmptySubscription, FieldResult, GraphQLInputObject, GraphQLObject};
+use actix_web::HttpResponse;
+use async_graphql::http::{playground_source, GraphQLPlaygroundConfig};
+use async_graphql::{EmptyMutation, EmptySubscription, Schema as GraphQlSchema};
+use async_graphql_actix_web::{Request, Response};
 use std::sync::Arc;
 
 #[derive(GraphQLObject, Default, Clone)]
@@ -140,12 +143,10 @@ pub fn schema() -> Schema {
     Schema::new(Query, Mutation, EmptySubscription::<Context>::new())
 }
 
-pub async fn graphiql_route() -> Result<actix_web::HttpResponse, actix_web::Error> {
-    juniper_actix::graphiql_handler("/graphql", None).await
-}
-
-pub async fn playground_route() -> Result<actix_web::HttpResponse, actix_web::Error> {
-    juniper_actix::playground_handler("/graphql", None).await
+pub async fn playground_route() -> actix_web::Result<HttpResponse> {
+    Ok(HttpResponse::Ok()
+        .content_type("text/html; charset=utf-8")
+        .body(playground_source(GraphQLPlaygroundConfig::new("/graphql"))))
 }
 
 pub async fn graphql_route(

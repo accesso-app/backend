@@ -1,12 +1,14 @@
 // temporary #![deny(warnings)]
 #![forbid(unsafe_code)]
 
-mod api;
+// mod api;
 mod routes;
+mod schema;
 mod services;
 
 use std::sync::Arc;
 
+use actix_web::web::Data;
 use actix_web::{middleware, web, HttpServer};
 use eyre::WrapErr;
 use tracing_actix_web::TracingLogger;
@@ -38,29 +40,32 @@ async fn main() -> eyre::Result<()> {
 
     let settings_clone = settings.clone();
 
+    let schema = schema::schema().finish();
+
     let mut server = HttpServer::new(move || {
         let settings = settings_clone.clone();
         actix_web::App::new()
-            .app_data(web::Data::new(api::schema()))
+            .app_data(Data::new(schema.clone()))
             .configure(|config| {
                 let settings = settings.clone();
                 accesso_app::configure(config, settings)
             })
             .wrap(middleware::Compress::default())
-            // .wrap(
-            //     middleware::DefaultHeaders::new()
-            //         .header("X-Frame-Options", "deny")
-            //         .header("X-XSS-Protection", "1; mode=block"),
-            // )
             .wrap(TracingLogger::default())
             .default_service(web::route().to(accesso_app::not_found))
             .service(
                 web::resource("/graphql")
-                    .route(web::post().to(api::graphql_route))
-                    .route(web::get().to(api::graphql_route)),
+                    .route(web::post().to(schema::graphql))
+                    .route(web::get().to(schema::graphql)),
             )
-            .service(web::resource("/playground").route(web::get().to(api::playground_route)))
-            .service(web::resource("/graphiql").route(web::get().to(api::graphiql_route)))
+            .service(web::resource("/playground").route(web::get().to(schema::graphql_playground)))
+            .service(web::resource("/graphiql").route(web::get().to(schema::graphiql)))
+            .service(
+                web::resource("/")
+                    .guard(actix_web::guard::Get())
+                    .guard(actix_web::guard::Header("upgrade", "websocket"))
+                    .to(schema::index_ws),
+            )
     });
 
     if let Some(workers) = settings.server.workers {
