@@ -1,7 +1,7 @@
 // temporary #![deny(warnings)]
 #![forbid(unsafe_code)]
 
-// mod api;
+mod graphql;
 mod routes;
 mod schema;
 mod services;
@@ -55,16 +55,16 @@ async fn main() -> eyre::Result<()> {
             .default_service(web::route().to(accesso_app::not_found))
             .service(
                 web::resource("/graphql")
-                    .route(web::post().to(schema::graphql))
-                    .route(web::get().to(schema::graphql)),
+                    .route(web::post().to(graphql::main))
+                    .route(web::get().to(graphql::main)),
             )
-            .service(web::resource("/playground").route(web::get().to(schema::graphql_playground)))
-            .service(web::resource("/graphiql").route(web::get().to(schema::graphiql)))
+            .service(web::resource("/playground").route(web::get().to(graphql::playground)))
+            .service(web::resource("/graphiql").route(web::get().to(graphql::graphiql)))
             .service(
                 web::resource("/")
                     .guard(actix_web::guard::Get())
                     .guard(actix_web::guard::Header("upgrade", "websocket"))
-                    .to(schema::index_ws),
+                    .to(graphql::subscriptions),
             )
     });
 
