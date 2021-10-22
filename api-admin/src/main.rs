@@ -50,6 +50,13 @@ async fn main() -> eyre::Result<()> {
                 let settings = settings.clone();
                 accesso_app::configure(config, settings)
             })
+            .wrap(
+                actix_cors::Cors::default()
+                    .allow_any_origin()
+                    .allow_any_header()
+                    .allow_any_method()
+                    .max_age(3600),
+            )
             .wrap(middleware::Compress::default())
             .wrap(TracingLogger::default())
             .default_service(web::route().to(accesso_app::not_found))

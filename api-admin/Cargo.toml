@@ -10,7 +10,7 @@ accesso-app = { "path" = "../app" }
 accesso-core = { "path" = "../core" }
 accesso-db = { "path" = "../db" }
 accesso-settings = { "path" = "../settings" }
-actix-cors = "0.5.4"
+actix-cors = "0.6.0-beta.3"
 actix-http = "3.0.0-beta.11"
 actix-router = "0.4.0"
 actix-rt = "2.2.0"
