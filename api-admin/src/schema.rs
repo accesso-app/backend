@@ -3,7 +3,7 @@ use async_graphql::{
 };
 
 use accesso_app::Service;
-use accesso_core::contracts::Repository;
+use accesso_core::contracts::{Repository, SecureGenerator};
 
 #[derive(SimpleObject, Default)]
 pub struct Application {
@@ -88,8 +88,48 @@ pub struct Mutation;
 
 #[Object]
 impl Mutation {
-    async fn demo(&self) -> &'static str {
-        "hello"
+    async fn application_create(
+        &self,
+        context: &Context<'_>,
+        form: ApplicationCreate,
+    ) -> async_graphql::Result<ApplicationSecret> {
+        let db = context.data::<Service<dyn Repository>>()?;
+        let generator = context.data::<Service<dyn SecureGenerator>>()?;
+        let app = db
+            .application_create(accesso_core::contracts::ApplicationForm {
+                title: form.title,
+                redirect_uri: form.redirect_uri,
+                is_dev: form.is_dev.unwrap_or_default(),
+                allowed_registrations: form.allowed_registrations.unwrap_or_default(),
+                secret_key: generator.generate_token_long(),
+            })
+            .await?;
+
+        Ok(app.into())
+    }
+
+    async fn application_regenerate_secret(
+        &self,
+        context: &Context<'_>,
+        application_id: uuid::Uuid,
+    ) -> async_graphql::Result<Option<ApplicationSecret>> {
+        let db = context.data::<Service<dyn Repository>>()?;
+        let generator = context.data::<Service<dyn SecureGenerator>>()?;
+        let app = db.application_find_by_id(application_id).await?;
+        if let Some(app) = app {
+            let updated = db
+                .application_edit(
+                    application_id,
+                    accesso_core::contracts::ApplicationForm {
+                        secret_key: generator.generate_token_long(),
+                        ..app.into()
+                    },
+                )
+                .await?;
+            Ok(updated.map(|app| app.into()))
+        } else {
+            Ok(None)
+        }
     }
 }
 
