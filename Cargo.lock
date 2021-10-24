@@ -45,6 +45,7 @@ dependencies = [
  "tracing",
  "tracing-actix-web",
  "tracing-opentelemetry",
+ "url",
  "uuid",
  "validator",
 ]
@@ -588,6 +589,7 @@ dependencies = [
  "static_assertions",
  "tempfile",
  "thiserror",
+ "url",
  "uuid",
 ]
 

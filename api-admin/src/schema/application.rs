@@ -63,6 +63,7 @@ impl Application {
 pub struct ApplicationSecret {
     id: uuid::Uuid,
     is_dev: bool,
+    // TODO: use `url::Url` here
     redirect_uri: Vec<String>,
     title: String,
     allowed_registrations: bool,

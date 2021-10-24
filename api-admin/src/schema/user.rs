@@ -1,4 +1,5 @@
-use async_graphql::{ComplexObject, Context, Object, SimpleObject};
+use async_graphql::validators::Email;
+use async_graphql::*;
 
 use super::user_registration::UserRegistration;
 use accesso_app::Service;
@@ -47,5 +48,23 @@ impl QueryUser {
         let db = context.data::<Service<dyn Repository>>()?;
         let list = db.user_list().await?;
         Ok(list.into_iter().map(Into::into).collect())
+    }
+
+    async fn user_by_email(
+        &self,
+        context: &Context<'_>,
+        #[graphql(validator(Email))] email: String,
+    ) -> async_graphql::Result<Option<User>> {
+        let db = context.data::<Service<dyn Repository>>()?;
+        Ok(db.user_get_by_email(email).await?.map(Into::into))
+    }
+
+    async fn user_by_id(
+        &self,
+        context: &Context<'_>,
+        user_id: uuid::Uuid,
+    ) -> async_graphql::Result<Option<User>> {
+        let db = context.data::<Service<dyn Repository>>()?;
+        Ok(db.user_get_by_id(user_id).await?.map(Into::into))
     }
 }

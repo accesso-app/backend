@@ -102,6 +102,25 @@ impl UserRepo for Database {
         .map(Into::into))
     }
 
+    async fn user_get_by_email(
+        &self,
+        email: String,
+    ) -> Result<Option<models::User>, UnexpectedDatabaseError> {
+        Ok(sqlx::query_as!(
+            User,
+            // language=PostgreSQL
+            r#"
+            SELECT users.*
+            FROM users
+            WHERE users.email = $1
+            "#,
+            email
+        )
+        .fetch_optional(&self.pool)
+        .await?
+        .map(Into::into))
+    }
+
     async fn user_edit_by_id(
         &self,
         user_id: Uuid,
