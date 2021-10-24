@@ -12,6 +12,13 @@ pub trait AccessTokenRepo {
         &self,
         token: AccessToken,
     ) -> Result<AccessToken, UnexpectedDatabaseError>;
+
+    async fn access_tokens_list(&self) -> Result<Vec<AccessToken>, UnexpectedDatabaseError>;
+
+    async fn access_tokens_list_for_registration(
+        &self,
+        registration_id: uuid::Uuid,
+    ) -> Result<Vec<AccessToken>, UnexpectedDatabaseError>;
 }
 
 #[cfg(feature = "testing")]
@@ -22,5 +29,18 @@ impl AccessTokenRepo for crate::contracts::MockDb {
         token: AccessToken,
     ) -> Result<AccessToken, UnexpectedDatabaseError> {
         self.access_token.access_token_create(token).await
+    }
+
+    async fn access_tokens_list(&self) -> Result<Vec<AccessToken>, UnexpectedDatabaseError> {
+        self.access_token.access_token_list().await
+    }
+
+    async fn access_tokens_list_for_registration(
+        &self,
+        registration_id: uuid::Uuid,
+    ) -> Result<Vec<AccessToken>, UnexpectedDatabaseError> {
+        self.access_token
+            .access_tokens_list_for_registration(registration_id)
+            .await
     }
 }
