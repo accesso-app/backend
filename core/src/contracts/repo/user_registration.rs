@@ -37,6 +37,16 @@ pub trait UserRegistrationsRepo {
         client: &Application,
         user: &User,
     ) -> Result<UserRegistration, UserRegistrationCreateError>;
+
+    async fn user_registration_list_for_client(
+        &self,
+        application_id: uuid::Uuid,
+    ) -> Result<Vec<UserRegistration>, UnexpectedDatabaseError>;
+
+    async fn user_registration_list_for_user(
+        &self,
+        user_id: uuid::Uuid,
+    ) -> Result<Vec<UserRegistration>, UnexpectedDatabaseError>;
 }
 
 #[cfg(feature = "testing")]
@@ -68,6 +78,24 @@ impl UserRegistrationsRepo for crate::contracts::MockDb {
     ) -> Result<UserRegistration, UserRegistrationCreateError> {
         self.user_registrations
             .user_registration_create(client, user)
+            .await
+    }
+
+    async fn user_registration_list_for_client(
+        &self,
+        application_id: uuid::Uuid,
+    ) -> Result<Vec<UserRegistration>, UnexpectedDatabaseError> {
+        self.user_registrations
+            .user_registration_list_for_client(application_id)
+            .await
+    }
+
+    async fn user_registration_list_for_user(
+        &self,
+        user_id: uuid::Uuid,
+    ) -> Result<Vec<UserRegistration>, UnexpectedDatabaseError> {
+        self.user_registrations
+            .user_registration_list_for_user(user_id)
             .await
     }
 }

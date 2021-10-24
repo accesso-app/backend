@@ -61,6 +61,7 @@ pub trait UserRepo {
         user_id: uuid::Uuid,
         form: UserEditForm,
     ) -> Result<User, UserEditError>;
+    async fn user_list(&self) -> Result<Vec<User>, UnexpectedDatabaseError>;
 }
 
 #[cfg(feature = "testing")]
@@ -92,5 +93,9 @@ impl UserRepo for crate::contracts::MockDb {
         form: UserEditForm,
     ) -> Result<User, UserEditError> {
         self.users.user_edit_by_id(user_id, form).await
+    }
+
+    async fn user_list(&self) -> Result<Vec<User>, UnexpectedDatabaseError> {
+        self.users.user_list().await
     }
 }

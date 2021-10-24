@@ -1,17 +1,21 @@
 use async_graphql::{
-    Context, EmptySubscription, InputObject, Object, Schema, SchemaBuilder, SimpleObject,
+    ComplexObject, Context, EmptySubscription, InputObject, Object, Schema, SchemaBuilder,
+    SimpleObject,
 };
 
 use accesso_app::Service;
 use accesso_core::contracts::{Repository, SecureGenerator};
 
-#[derive(SimpleObject, Default)]
+#[derive(SimpleObject)]
+#[graphql(complex)]
 pub struct Application {
     id: uuid::Uuid,
     is_dev: bool,
     redirect_uri: Vec<String>,
     title: String,
     allowed_registrations: bool,
+    #[graphql(skip)]
+    secret_key: String,
 }
 
 impl From<accesso_core::models::Application> for Application {
@@ -22,7 +26,77 @@ impl From<accesso_core::models::Application> for Application {
             redirect_uri: app.redirect_uri,
             title: app.title,
             allowed_registrations: app.allowed_registrations,
+            secret_key: app.secret_key,
         }
+    }
+}
+
+impl Into<accesso_core::models::Application> for Application {
+    fn into(self) -> accesso_core::models::Application {
+        accesso_core::models::Application {
+            id: self.id,
+            is_dev: self.is_dev,
+            redirect_uri: self.redirect_uri,
+            title: self.title,
+            secret_key: self.secret_key,
+            allowed_registrations: self.allowed_registrations,
+        }
+    }
+}
+
+#[derive(SimpleObject)]
+#[graphql(complex)]
+pub struct UserRegistration {
+    pub id: uuid::Uuid,
+    /// Field renamed from `client_id`
+    pub application_id: uuid::Uuid,
+    // User registration does not expires!
+    pub created_at: chrono::DateTime<chrono::Utc>,
+    pub user_id: uuid::Uuid,
+}
+
+impl From<accesso_core::models::UserRegistration> for UserRegistration {
+    fn from(ur: accesso_core::models::UserRegistration) -> Self {
+        Self {
+            id: ur.id,
+            application_id: ur.client_id,
+            created_at: ur.created_at,
+            user_id: ur.user_id,
+        }
+    }
+}
+
+#[ComplexObject]
+impl UserRegistration {
+    async fn user(&self, context: &Context<'_>) -> async_graphql::Result<Option<User>> {
+        let db = context.data::<Service<dyn Repository>>()?;
+        let user = db.user_get_by_id(self.user_id).await?;
+        Ok(user.map(Into::into))
+    }
+
+    async fn application(
+        &self,
+        context: &Context<'_>,
+    ) -> async_graphql::Result<Option<Application>> {
+        let db = context.data::<Service<dyn Repository>>()?;
+        let application = db.application_find_by_id(self.application_id).await?;
+        Ok(application.map(Into::into))
+    }
+}
+
+#[ComplexObject]
+impl Application {
+    async fn registrations(
+        &self,
+        context: &Context<'_>,
+    ) -> async_graphql::Result<Vec<UserRegistration>> {
+        let db = context.data::<Service<dyn Repository>>()?;
+        Ok(db
+            .user_registration_list_for_client(self.id)
+            .await?
+            .into_iter()
+            .map(Into::into)
+            .collect())
     }
 }
 
@@ -58,6 +132,40 @@ struct ApplicationCreate {
     allowed_registrations: Option<bool>,
 }
 
+#[derive(SimpleObject, Clone)]
+#[graphql(complex)]
+pub struct User {
+    id: uuid::Uuid,
+    email: String,
+    canonical_email: String,
+    first_name: String,
+    last_name: String,
+}
+
+impl From<accesso_core::models::User> for User {
+    fn from(user: accesso_core::models::User) -> Self {
+        Self {
+            id: user.id,
+            email: user.email,
+            canonical_email: user.canonical_email,
+            first_name: user.first_name,
+            last_name: user.last_name,
+        }
+    }
+}
+
+#[ComplexObject]
+impl User {
+    async fn registrations(
+        &self,
+        context: &Context<'_>,
+    ) -> async_graphql::Result<Vec<UserRegistration>> {
+        let db = context.data::<Service<dyn Repository>>()?;
+        let apps = db.user_registration_list_for_user(self.id).await?;
+        Ok(apps.into_iter().map(Into::into).collect())
+    }
+}
+
 pub struct Query;
 
 #[Object]
@@ -80,6 +188,12 @@ impl Query {
     async fn applications(&self, context: &Context<'_>) -> async_graphql::Result<Vec<Application>> {
         let db = context.data::<Service<dyn Repository>>()?;
         let list = db.application_list().await?;
+        Ok(list.into_iter().map(|client| client.into()).collect())
+    }
+
+    async fn users(&self, context: &Context<'_>) -> async_graphql::Result<Vec<User>> {
+        let db = context.data::<Service<dyn Repository>>()?;
+        let list = db.user_list().await?;
         Ok(list.into_iter().map(|client| client.into()).collect())
     }
 }
@@ -136,5 +250,5 @@ impl Mutation {
 pub type AdminSchema = Schema<Query, Mutation, EmptySubscription>;
 
 pub fn schema() -> SchemaBuilder<Query, Mutation, EmptySubscription> {
-    Schema::build(Query, Mutation, EmptySubscription)
+    Schema::build(Query, Mutation, EmptySubscription).limit_depth(8)
 }

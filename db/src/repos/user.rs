@@ -126,4 +126,24 @@ impl UserRepo for Database {
         .and_then(|option| option.ok_or(UserEditError::UserNotFound))
         .map(Into::into)?)
     }
+
+    async fn user_list(&self) -> Result<Vec<models::User>, UnexpectedDatabaseError> {
+        Ok(sqlx::query_as!(
+            User,
+            // language=PostgreSQL
+            r#"
+                SELECT id,
+                   email,
+                   password_hash,
+                   first_name,
+                   last_name,
+                   canonical_email
+                FROM users 
+                "#,
+        )
+        .fetch_all(&self.pool)
+        .await
+        .map_err(|e| UnexpectedDatabaseError::SqlxError(e))
+        .map(|list| list.into_iter().map(Into::into).collect())?)
+    }
 }

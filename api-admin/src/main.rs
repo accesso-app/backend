@@ -2,9 +2,7 @@
 #![forbid(unsafe_code)]
 
 mod graphql;
-mod routes;
 mod schema;
-mod services;
 
 use std::sync::Arc;
 
