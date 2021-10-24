@@ -31,6 +31,8 @@ pub trait RequestsRepo {
         &self,
         email: String,
     ) -> Result<u64, UnexpectedDatabaseError>;
+
+    async fn register_request_list(&self) -> Result<Vec<RegisterRequest>, UnexpectedDatabaseError>;
 }
 
 #[cfg(feature = "testing")]
@@ -58,5 +60,9 @@ impl RequestsRepo for crate::contracts::MockDb {
         self.requests
             .register_requests_delete_all_for_email(email)
             .await
+    }
+
+    async fn register_request_list(&self) -> Result<RegisterRequest, UnexpectedDatabaseError> {
+        self.requests.register_request_list().await
     }
 }

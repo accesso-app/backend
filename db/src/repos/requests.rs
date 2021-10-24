@@ -71,4 +71,22 @@ impl RequestsRepo for Database {
         .await?
         .rows_affected())
     }
+
+    async fn register_request_list(
+        &self,
+    ) -> Result<Vec<models::RegisterRequest>, UnexpectedDatabaseError> {
+        Ok(sqlx::query_as!(
+            RegistrationRequest,
+            // language=PostgreSQL
+            r#"
+                SELECT registration_requests.*
+                FROM registration_requests
+                "#
+        )
+        .fetch_all(&self.pool)
+        .await?
+        .into_iter()
+        .map(Into::into)
+        .collect())
+    }
 }

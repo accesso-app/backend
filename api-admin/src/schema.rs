@@ -166,6 +166,23 @@ impl User {
     }
 }
 
+#[derive(SimpleObject)]
+pub struct RegisterRequest {
+    email: String,
+    code: String,
+    expires_at: chrono::DateTime<chrono::Utc>,
+}
+
+impl From<accesso_core::models::RegisterRequest> for RegisterRequest {
+    fn from(register_request: accesso_core::models::RegisterRequest) -> Self {
+        Self {
+            email: register_request.email,
+            code: register_request.code,
+            expires_at: register_request.expires_at,
+        }
+    }
+}
+
 pub struct Query;
 
 #[Object]
@@ -188,13 +205,22 @@ impl Query {
     async fn applications(&self, context: &Context<'_>) -> async_graphql::Result<Vec<Application>> {
         let db = context.data::<Service<dyn Repository>>()?;
         let list = db.application_list().await?;
-        Ok(list.into_iter().map(|client| client.into()).collect())
+        Ok(list.into_iter().map(Into::into).collect())
     }
 
     async fn users(&self, context: &Context<'_>) -> async_graphql::Result<Vec<User>> {
         let db = context.data::<Service<dyn Repository>>()?;
         let list = db.user_list().await?;
-        Ok(list.into_iter().map(|client| client.into()).collect())
+        Ok(list.into_iter().map(Into::into).collect())
+    }
+
+    async fn register_requests(
+        &self,
+        context: &Context<'_>,
+    ) -> async_graphql::Result<Vec<RegisterRequest>> {
+        let db = context.data::<Service<dyn Repository>>()?;
+        let list = db.register_request_list().await?;
+        Ok(list.into_iter().map(Into::into).collect())
     }
 }
 
@@ -244,6 +270,28 @@ impl Mutation {
         } else {
             Ok(None)
         }
+    }
+
+    async fn register_request_create(
+        &self,
+        context: &Context<'_>,
+        email: String,
+    ) -> async_graphql::Result<RegisterRequest> {
+        let db = context.data::<Service<dyn Repository>>()?;
+        let generator = context.data::<Service<dyn SecureGenerator>>()?;
+        let code = generator.confirmation_code();
+        let request = accesso_core::models::RegisterRequest::new(email, code);
+        let result = db.register_request_save(request).await?;
+        Ok(result.into())
+    }
+
+    async fn register_request_delete_all_for_email(
+        &self,
+        context: &Context<'_>,
+        email: String,
+    ) -> async_graphql::Result<u64> {
+        let db = context.data::<Service<dyn Repository>>()?;
+        Ok(db.register_requests_delete_all_for_email(email).await?)
     }
 }
 
