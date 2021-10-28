@@ -9,7 +9,9 @@ env:
   #!/usr/bin/env node
   console.log(process.env)
 
-admin: (run "admin")
+admin:
+    cargo run --package accesso-api-admin | pino-pretty -t -f
+
 public: (run "public")
 internal: (run "internal")
 

@@ -33,6 +33,36 @@ impl QueryRequesterRequest {
         let list = db.register_request_list().await?;
         Ok(list.into_iter().map(Into::into).collect())
     }
+
+    pub async fn register_requests_by_email(
+        &self,
+        context: &Context<'_>,
+        #[graphql(validator(Email))] email: String,
+        #[graphql(default = 100)] count: u16,
+    ) -> async_graphql::Result<Vec<RegisterRequest>> {
+        let db = context.data::<Service<dyn Repository>>()?;
+        Ok(db
+            .register_requests_get_by_email(email, count)
+            .await?
+            .into_iter()
+            .map(Into::into)
+            .collect())
+    }
+
+    pub async fn register_requests_search(
+        &self,
+        context: &Context<'_>,
+        query: String,
+        #[graphql(default = 100)] count: u16,
+    ) -> async_graphql::Result<Vec<RegisterRequest>> {
+        let db = context.data::<Service<dyn Repository>>()?;
+        Ok(db
+            .register_requests_search(query, count)
+            .await?
+            .into_iter()
+            .map(Into::into)
+            .collect())
+    }
 }
 
 #[derive(Default)]
@@ -60,5 +90,17 @@ impl MutationRegisterRequest {
     ) -> async_graphql::Result<u64> {
         let db = context.data::<Service<dyn Repository>>()?;
         Ok(db.register_requests_delete_all_for_email(email).await?)
+    }
+
+    pub async fn register_request_delete(
+        &self,
+        context: &Context<'_>,
+        code: String,
+    ) -> async_graphql::Result<Option<RegisterRequest>> {
+        let db = context.data::<Service<dyn Repository>>()?;
+        Ok(db
+            .register_request_delete_by_code(code)
+            .await?
+            .map(Into::into))
     }
 }

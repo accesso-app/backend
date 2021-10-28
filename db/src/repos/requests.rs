@@ -1,6 +1,7 @@
 use accesso_core::contracts::repo::RequestsRepo;
 use accesso_core::contracts::{SaveRegisterRequestError, UnexpectedDatabaseError};
 use accesso_core::models;
+use accesso_core::models::RegisterRequest;
 
 use crate::entities::RegistrationRequest;
 use crate::mappers::sqlx_error_to_save_register_request_error;
@@ -54,6 +55,30 @@ impl RequestsRepo for Database {
         .map(Into::into))
     }
 
+    async fn register_requests_get_by_email(
+        &self,
+        email: String,
+        count: u16,
+    ) -> Result<Vec<RegisterRequest>, UnexpectedDatabaseError> {
+        Ok(sqlx::query_as!(
+            RegistrationRequest,
+            // language=PostgreSQL
+            r#"
+            SELECT confirmation_code, email, expires_at
+            FROM registration_requests
+            WHERE email = $1
+            LIMIT $2
+            "#,
+            email,
+            count as i16
+        )
+        .fetch_all(&self.pool)
+        .await?
+        .into_iter()
+        .map(Into::into)
+        .collect())
+    }
+
     async fn register_requests_delete_all_for_email(
         &self,
         email: String,
@@ -88,5 +113,50 @@ impl RequestsRepo for Database {
         .into_iter()
         .map(Into::into)
         .collect())
+    }
+
+    async fn register_requests_search(
+        &self,
+        query: String,
+        count: u16,
+    ) -> Result<Vec<RegisterRequest>, UnexpectedDatabaseError> {
+        Ok(sqlx::query_as!(
+            RegistrationRequest,
+            // language=PostgreSQL
+            r#"
+            SELECT registration_requests.*
+            FROM registration_requests
+            WHERE registration_requests.email ILIKE $1
+                OR registration_requests.confirmation_code ILIKE $1
+            LIMIT $2
+            "#,
+            format!("%{}%", query),
+            count as i16,
+        )
+        .fetch_all(&self.pool)
+        .await?
+        .into_iter()
+        .map(Into::into)
+        .collect())
+    }
+
+    async fn register_request_delete_by_code(
+        &self,
+        code: String,
+    ) -> Result<Option<RegisterRequest>, UnexpectedDatabaseError> {
+        Ok(sqlx::query_as!(
+            RegistrationRequest,
+            // language=PostgreSQL
+            r#"
+            DELETE
+            FROM registration_requests
+            WHERE confirmation_code = $1
+            RETURNING registration_requests.*
+            "#,
+            code
+        )
+        .fetch_optional(&self.pool)
+        .await?
+        .map(Into::into))
     }
 }
