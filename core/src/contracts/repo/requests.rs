@@ -76,7 +76,7 @@ impl RequestsRepo for crate::contracts::MockDb {
         count: u16,
     ) -> Result<Vec<RegisterRequest>, UnexpectedDatabaseError> {
         self.requests
-            .register_request_get_by_email(email, count)
+            .register_requests_get_by_email(email, count)
             .await
     }
 
@@ -89,7 +89,7 @@ impl RequestsRepo for crate::contracts::MockDb {
             .await
     }
 
-    async fn register_request_list(&self) -> Result<RegisterRequest, UnexpectedDatabaseError> {
+    async fn register_request_list(&self) -> Result<Vec<RegisterRequest>, UnexpectedDatabaseError> {
         self.requests.register_request_list().await
     }
 
@@ -105,6 +105,6 @@ impl RequestsRepo for crate::contracts::MockDb {
         &self,
         code: String,
     ) -> Result<Option<RegisterRequest>, UnexpectedDatabaseError> {
-        self.requests.register_requests_search(code).await
+        self.requests.register_request_delete_by_code(code).await
     }
 }

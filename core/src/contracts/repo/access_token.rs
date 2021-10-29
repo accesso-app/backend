@@ -32,7 +32,7 @@ impl AccessTokenRepo for crate::contracts::MockDb {
     }
 
     async fn access_tokens_list(&self) -> Result<Vec<AccessToken>, UnexpectedDatabaseError> {
-        self.access_token.access_token_list().await
+        self.access_token.access_tokens_list().await
     }
 
     async fn access_tokens_list_for_registration(
