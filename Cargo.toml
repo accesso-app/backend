@@ -9,3 +9,7 @@ members = [
     "settings",
     "tests"
 ]
+
+[patch.crates-io]
+async-graphql-actix-web = { git = 'https://github.com/sergeysova/async-graphql', branch = 'upgrade-actix-web' }
+async-graphql = { git = 'https://github.com/sergeysova/async-graphql', branch = 'upgrade-actix-web' }

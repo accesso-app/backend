@@ -56,11 +56,16 @@ pub trait UserRepo {
         &self,
         user_id: uuid::Uuid,
     ) -> Result<Option<User>, UnexpectedDatabaseError>;
+    async fn user_get_by_email(
+        &self,
+        email: String,
+    ) -> Result<Option<User>, UnexpectedDatabaseError>;
     async fn user_edit_by_id(
         &self,
         user_id: uuid::Uuid,
         form: UserEditForm,
     ) -> Result<User, UserEditError>;
+    async fn user_list(&self) -> Result<Vec<User>, UnexpectedDatabaseError>;
 }
 
 #[cfg(feature = "testing")]
@@ -86,11 +91,22 @@ impl UserRepo for crate::contracts::MockDb {
         self.users.user_get_by_id(user_id).await
     }
 
+    async fn user_get_by_email(
+        &self,
+        email: String,
+    ) -> Result<Option<User>, UnexpectedDatabaseError> {
+        self.users.user_get_by_email(email).await
+    }
+
     async fn user_edit_by_id(
         &self,
         user_id: uuid::Uuid,
         form: UserEditForm,
     ) -> Result<User, UserEditError> {
         self.users.user_edit_by_id(user_id, form).await
+    }
+
+    async fn user_list(&self) -> Result<Vec<User>, UnexpectedDatabaseError> {
+        self.users.user_list().await
     }
 }

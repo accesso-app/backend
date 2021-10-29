@@ -1,8 +1,10 @@
+set dotenv-load := true
+
 export RUST_BACKTRACE := "1"
 
 # Build and run crate api-&
 run API='internal':
-  cargo run --package accesso-api-{{API}}
+  cargo run --package accesso-api-{{API}} | pino-pretty -t -f
 
 # Show env variables
 env:
@@ -15,3 +17,6 @@ internal: (run "internal")
 
 integration:
     cargo test --package tests
+
+prepare:
+    cargo sqlx prepare --merged

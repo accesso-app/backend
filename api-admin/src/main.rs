@@ -1,11 +1,12 @@
 // temporary #![deny(warnings)]
 #![forbid(unsafe_code)]
 
-mod routes;
-mod services;
+mod graphql;
+mod schema;
 
 use std::sync::Arc;
 
+use actix_web::web::Data;
 use actix_web::{middleware, web, HttpServer};
 use eyre::WrapErr;
 use tracing_actix_web::TracingLogger;
@@ -37,22 +38,39 @@ async fn main() -> eyre::Result<()> {
 
     let settings_clone = settings.clone();
 
+    let schema = schema::schema().finish();
+
     let mut server = HttpServer::new(move || {
         let settings = settings_clone.clone();
         actix_web::App::new()
+            .app_data(Data::new(schema.clone()))
             .configure(|config| {
                 let settings = settings.clone();
                 accesso_app::configure(config, settings)
             })
-            .wrap(middleware::Compress::default())
             .wrap(
-                middleware::DefaultHeaders::new()
-                    .header("X-Frame-Options", "deny")
-                    // .header("X-Content-Type-Options", "nosniff")
-                    .header("X-XSS-Protection", "1; mode=block"),
+                actix_cors::Cors::default()
+                    .allow_any_origin()
+                    .allow_any_header()
+                    .allow_any_method()
+                    .max_age(3600),
             )
+            .wrap(middleware::Compress::default())
             .wrap(TracingLogger::default())
             .default_service(web::route().to(accesso_app::not_found))
+            .service(
+                web::resource("/graphql")
+                    .route(web::post().to(graphql::main))
+                    .route(web::get().to(graphql::main)),
+            )
+            .service(web::resource("/playground").route(web::get().to(graphql::playground)))
+            .service(web::resource("/graphiql").route(web::get().to(graphql::graphiql)))
+            .service(
+                web::resource("/")
+                    .guard(actix_web::guard::Get())
+                    .guard(actix_web::guard::Header("upgrade", "websocket"))
+                    .to(graphql::subscriptions),
+            )
     });
 
     if let Some(workers) = settings.server.workers {

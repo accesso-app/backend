@@ -87,7 +87,6 @@ pub mod components {
         pub struct AccessToken(pub String);
 
         impl FromRequest for AccessToken {
-            type Config = ();
             type Error = actix_web::Error;
             type Future = futures::future::Ready<Result<Self, Self::Error>>;
 

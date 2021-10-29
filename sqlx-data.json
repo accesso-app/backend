@@ -321,6 +321,60 @@
       "nullable": []
     }
   },
+  "4135999130506c1a84d7e54b97c200d7c18256129a9c1cf885a59877c0af41a3": {
+    "query": "\n            INSERT INTO clients (is_dev, redirect_uri, title, secret_key, allowed_registrations)\n            VALUES ($1, $2, $3, $4, $5)\n            RETURNING id, is_dev, redirect_uri, title, secret_key, allowed_registrations\n            ",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 1,
+          "name": "is_dev",
+          "type_info": "Bool"
+        },
+        {
+          "ordinal": 2,
+          "name": "redirect_uri",
+          "type_info": "TextArray"
+        },
+        {
+          "ordinal": 3,
+          "name": "title",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 4,
+          "name": "secret_key",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 5,
+          "name": "allowed_registrations",
+          "type_info": "Bool"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Bool",
+          "TextArray",
+          "Varchar",
+          "Varchar",
+          "Bool"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    }
+  },
   "4cde755d037b0b47cfdcba87519619752629a589f2b1173e9f1b0c85319c6bc0": {
     "query": "\n            SELECT users.*\n            FROM users\n            WHERE users.id = $1\n            ",
     "describe": {
@@ -365,6 +419,36 @@
         false,
         false,
         false,
+        false,
+        false,
+        false
+      ]
+    }
+  },
+  "5102353fb527f87e6c84caf4e2c46d1c0c1dc928f75f54f13a97c05f30aa66fe": {
+    "query": "\n                SELECT registration_requests.*\n                FROM registration_requests\n                ",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "confirmation_code",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 1,
+          "name": "email",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 2,
+          "name": "expires_at",
+          "type_info": "Timestamptz"
+        }
+      ],
+      "parameters": {
+        "Left": []
+      },
+      "nullable": [
         false,
         false,
         false
@@ -423,6 +507,142 @@
       ]
     }
   },
+  "6184b65928a41cfd81fd023711927e3f0e8e69edc51eaa37711a512e0c133826": {
+    "query": "\n            SELECT users.*\n            FROM users\n            WHERE users.email = $1\n            ",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 1,
+          "name": "email",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 2,
+          "name": "password_hash",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 3,
+          "name": "first_name",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 4,
+          "name": "last_name",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 5,
+          "name": "canonical_email",
+          "type_info": "Varchar"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    }
+  },
+  "7a1e9e6767e38eba56e440ddb8698a902c6e4d2ddfd4c487ba0f766122722192": {
+    "query": "\n                SELECT id,\n                   email,\n                   password_hash,\n                   first_name,\n                   last_name,\n                   canonical_email\n                FROM users \n                ",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 1,
+          "name": "email",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 2,
+          "name": "password_hash",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 3,
+          "name": "first_name",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 4,
+          "name": "last_name",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 5,
+          "name": "canonical_email",
+          "type_info": "Varchar"
+        }
+      ],
+      "parameters": {
+        "Left": []
+      },
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    }
+  },
+  "858206b0621a4f9c5577557df249efec9de88055adaf19593978234062c8489e": {
+    "query": "\n            SELECT regs.*\n            FROM user_registrations regs\n            WHERE regs.client_id = $1\n            ",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 1,
+          "name": "client_id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 2,
+          "name": "created_at",
+          "type_info": "Timestamptz"
+        },
+        {
+          "ordinal": 3,
+          "name": "user_id",
+          "type_info": "Uuid"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false,
+        false
+      ]
+    }
+  },
   "86fa894031607e0b2e0a4ebdac4c9b668fca7e1a266b6afdd5face270041f672": {
     "query": "\n            DELETE\n            FROM registration_requests\n            WHERE email = $1\n            ",
     "describe": {
@@ -433,6 +653,75 @@
         ]
       },
       "nullable": []
+    }
+  },
+  "8a4b3bbb4499d59ebf1f049c5a38c4fa69a08ccd2880e6093e2f23d40e8e1d74": {
+    "query": "\n            SELECT token, scopes, expires_at, registration_id\n            FROM access_tokens\n            ",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "token",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 1,
+          "name": "scopes",
+          "type_info": "TextArray"
+        },
+        {
+          "ordinal": 2,
+          "name": "expires_at",
+          "type_info": "Timestamptz"
+        },
+        {
+          "ordinal": 3,
+          "name": "registration_id",
+          "type_info": "Uuid"
+        }
+      ],
+      "parameters": {
+        "Left": []
+      },
+      "nullable": [
+        false,
+        false,
+        false,
+        false
+      ]
+    }
+  },
+  "8b9a29c9eae2e0a84b4f177ab94ee130016e832b04ebdcc23540689d3b3d8863": {
+    "query": "\n            SELECT registration_requests.*\n            FROM registration_requests\n            WHERE registration_requests.email ILIKE $1\n                OR registration_requests.confirmation_code ILIKE $1\n            LIMIT $2\n            ",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "confirmation_code",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 1,
+          "name": "email",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 2,
+          "name": "expires_at",
+          "type_info": "Timestamptz"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Int8"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false
+      ]
     }
   },
   "8c589785d5e08300ec7eb125e4ea8ef6ff32be304a5f12233167f1e0bbc9f6b1": {
@@ -517,6 +806,92 @@
       ]
     }
   },
+  "93eb65652b731fb2f24aecdff109e33b78a1bbeaef5efc9158e458262a22327f": {
+    "query": "\n            SELECT id, is_dev, redirect_uri, secret_key, title, allowed_registrations\n            FROM clients\n            ",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 1,
+          "name": "is_dev",
+          "type_info": "Bool"
+        },
+        {
+          "ordinal": 2,
+          "name": "redirect_uri",
+          "type_info": "TextArray"
+        },
+        {
+          "ordinal": 3,
+          "name": "secret_key",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 4,
+          "name": "title",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 5,
+          "name": "allowed_registrations",
+          "type_info": "Bool"
+        }
+      ],
+      "parameters": {
+        "Left": []
+      },
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    }
+  },
+  "9d725657dc88b9a5933e848f0d301532a1671fff54ca50309c1e3718e8b78d7a": {
+    "query": "\n            SELECT user_registrations.*\n            FROM user_registrations\n            WHERE user_registrations.user_id = $1\n            ",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 1,
+          "name": "client_id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 2,
+          "name": "created_at",
+          "type_info": "Timestamptz"
+        },
+        {
+          "ordinal": 3,
+          "name": "user_id",
+          "type_info": "Uuid"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false,
+        false
+      ]
+    }
+  },
   "ae3a688b60703a83a710f3396865d7e7ce07317f2fe9b5c0ad3affc1fddf3af5": {
     "query": "\n            SELECT id,\n                   email,\n                   password_hash,\n                   first_name,\n                   last_name,\n                   canonical_email\n            FROM users\n            WHERE canonical_email = $1\n            ",
     "describe": {
@@ -567,6 +942,44 @@
       ]
     }
   },
+  "b476940cf325ca5181bf12fe8dacf77b013c8e7270db36e6e0eed634234700cb": {
+    "query": "\n            SELECT token, scopes, expires_at, registration_id\n            FROM access_tokens\n            WHERE registration_id = $1\n            ",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "token",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 1,
+          "name": "scopes",
+          "type_info": "TextArray"
+        },
+        {
+          "ordinal": 2,
+          "name": "expires_at",
+          "type_info": "Timestamptz"
+        },
+        {
+          "ordinal": 3,
+          "name": "registration_id",
+          "type_info": "Uuid"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false,
+        false
+      ]
+    }
+  },
   "b78b35db7090c2c7243c0900bfaf8f500b003da4955f6b2544a9274c7596a50a": {
     "query": "\n            SELECT confirmation_code, email, expires_at\n            FROM registration_requests\n            WHERE confirmation_code = $1\n              AND expires_at > $2\n            ",
     "describe": {
@@ -591,6 +1004,71 @@
         "Left": [
           "Text",
           "Timestamptz"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false
+      ]
+    }
+  },
+  "b80dbec4c48b9726cbcbff621a9e97261ac402a23a5940b74345b00509045a3b": {
+    "query": "\n            DELETE\n            FROM registration_requests\n            WHERE confirmation_code = $1\n            RETURNING registration_requests.*\n            ",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "confirmation_code",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 1,
+          "name": "email",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 2,
+          "name": "expires_at",
+          "type_info": "Timestamptz"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false
+      ]
+    }
+  },
+  "caea0cb5c78efd0b48e055ca8059be24b482a53b42ea2b43e845f2bb935d1e3d": {
+    "query": "\n            SELECT confirmation_code, email, expires_at\n            FROM registration_requests\n            WHERE email = $1\n            LIMIT $2\n            ",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "confirmation_code",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 1,
+          "name": "email",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 2,
+          "name": "expires_at",
+          "type_info": "Timestamptz"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Int8"
         ]
       },
       "nullable": [
@@ -736,6 +1214,61 @@
         false,
         false,
         true,
+        false
+      ]
+    }
+  },
+  "fd15cccd048973e281e768b469c858e2ed41a8323218c8df9e42f9d8a8ea72b3": {
+    "query": "\n            UPDATE clients SET (is_dev, redirect_uri, title, secret_key, allowed_registrations)\n            = ($1, $2, $3, $4, $5)\n            WHERE id = $6\n            RETURNING id, is_dev, redirect_uri, title, secret_key, allowed_registrations\n            ",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 1,
+          "name": "is_dev",
+          "type_info": "Bool"
+        },
+        {
+          "ordinal": 2,
+          "name": "redirect_uri",
+          "type_info": "TextArray"
+        },
+        {
+          "ordinal": 3,
+          "name": "title",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 4,
+          "name": "secret_key",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 5,
+          "name": "allowed_registrations",
+          "type_info": "Bool"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Bool",
+          "TextArray",
+          "Varchar",
+          "Varchar",
+          "Bool",
+          "Uuid"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
         false
       ]
     }

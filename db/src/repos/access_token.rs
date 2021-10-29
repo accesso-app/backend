@@ -1,6 +1,7 @@
 use accesso_core::contracts::repo::AccessTokenRepo;
 use accesso_core::contracts::UnexpectedDatabaseError;
 use accesso_core::models;
+use sqlx::types::Uuid;
 
 use crate::entities::AccessToken;
 use crate::Database;
@@ -29,5 +30,44 @@ impl AccessTokenRepo for Database {
         .fetch_one(&self.pool)
         .await?
         .into())
+    }
+
+    async fn access_tokens_list(
+        &self,
+    ) -> Result<Vec<models::AccessToken>, UnexpectedDatabaseError> {
+        Ok(sqlx::query_as!(
+            AccessToken,
+            // language=PostgreSQL
+            r#"
+            SELECT token, scopes, expires_at, registration_id
+            FROM access_tokens
+            "#
+        )
+        .fetch_all(&self.pool)
+        .await?
+        .into_iter()
+        .map(Into::into)
+        .collect())
+    }
+
+    async fn access_tokens_list_for_registration(
+        &self,
+        registration_id: Uuid,
+    ) -> Result<Vec<models::AccessToken>, UnexpectedDatabaseError> {
+        Ok(sqlx::query_as!(
+            AccessToken,
+            // language=PostgreSQL
+            r#"
+            SELECT token, scopes, expires_at, registration_id
+            FROM access_tokens
+            WHERE registration_id = $1
+            "#,
+            registration_id,
+        )
+        .fetch_all(&self.pool)
+        .await?
+        .into_iter()
+        .map(Into::into)
+        .collect())
     }
 }
