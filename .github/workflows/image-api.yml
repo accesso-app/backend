@@ -15,6 +15,13 @@ on:
       - "api-internal@*"
       - "api-public@*"
 
+  workflow_dispatch:
+    inputs:
+      force_rebuild:
+        description: 'Set "yes" to force rebuild images'
+        required: true
+        default: 'no'
+
 jobs:
   style:
     runs-on: ubuntu-latest
@@ -221,7 +228,7 @@ jobs:
           build-args: API_NAME=${{ matrix.api }}
 
       - name: Move cache
-        if: steps.changes.outputs.source == 'true'
+        if: steps.changes.outputs.source == 'true' || github.event.inputs.force_rebuild == 'yes'
         run: |
           rm -rf /tmp/.buildx-cache-${{ matrix.api }}
           mv /tmp/.buildx-cache-new-${{ matrix.api }} /tmp/.buildx-cache-${{ matrix.api }}
