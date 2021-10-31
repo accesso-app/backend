@@ -76,5 +76,10 @@ async fn main() -> eyre::Result<()> {
 
     server.bind(bind_address)?.run().await?;
 
+    #[cfg(not(debug_assertions))]
+    if settings.use_opentelemetry {
+        opentelemetry::global::shutdown_tracer_provider();
+    }
+
     Ok(())
 }

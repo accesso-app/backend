@@ -13,6 +13,7 @@ pub struct Settings {
     pub cookies: Cookies,
     pub server: Server,
     pub sendgrid: SendGrid,
+    pub use_opentelemetry: bool,
 }
 
 #[derive(Debug, Deserialize, Clone)]

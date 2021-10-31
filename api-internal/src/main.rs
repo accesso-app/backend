@@ -86,7 +86,9 @@ async fn main() -> eyre::Result<()> {
     // This is so that when application is ran locally in debug mode it wouldn't get stuck
     // trying to send data to telemetry collector
     #[cfg(not(debug_assertions))]
-    opentelemetry::global::shutdown_tracer_provider();
+    if settings.use_opentelemetry {
+        opentelemetry::global::shutdown_tracer_provider();
+    }
 
     Ok(())
 }

@@ -1,5 +1,6 @@
 # Enable logging
 debug = false
+use_opentelemetry = false
 
 [cookies]
 http_only = true
