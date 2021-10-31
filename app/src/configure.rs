@@ -12,6 +12,7 @@ use crate::health_service;
 use actix_web::{http::StatusCode, web, HttpRequest, Responder};
 use opentelemetry::sdk::Resource;
 use opentelemetry::KeyValue;
+use opentelemetry_otlp::WithExportConfig;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -48,12 +49,16 @@ pub fn install_logger(app_name: String, _settings: &Settings) -> Result<WorkerGu
     let bunyan_layer = BunyanFormattingLayer::new(app_name.clone(), move || writer.clone());
 
     let tracer = opentelemetry_otlp::new_pipeline()
-        .with_endpoint(std::env::var("OPENTELEMETRY_ENDPOINT_URL")?)
+        .tracing()
+        .with_exporter(
+            opentelemetry_otlp::new_exporter()
+                .tonic()
+                .with_endpoint(std::env::var("OPENTELEMETRY_ENDPOINT_URL")?),
+        )
         .with_trace_config(
             trace::config()
                 .with_resource(Resource::new(vec![KeyValue::new("service.name", app_name)])),
         )
-        .with_tonic()
         .install_batch(opentelemetry::runtime::Tokio)?;
 
     let telemetry = tracing_opentelemetry::layer().with_tracer(tracer);

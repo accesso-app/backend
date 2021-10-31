@@ -10,8 +10,8 @@ mod oauth;
 mod registrator;
 mod session;
 
+pub use crate::cookie::{AddCookieExt, SessionCookieConfig};
 pub use configure::{configure, install_logger, not_found};
-pub use cookie::SessionCookieConfig;
 pub(crate) use health::health_service;
 
 use hashbrown::HashMap;

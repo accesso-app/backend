@@ -6,7 +6,8 @@ use crate::session::Session;
 use accesso_core::app::session::SessionDeleteError;
 use actix_web::http::header::SET_COOKIE;
 use actix_web::http::HeaderValue;
-use actix_web::{cookie::CookieBuilder, web, Responder};
+use actix_web::{web, Responder};
+use cookie::CookieBuilder;
 use eyre::WrapErr;
 
 pub async fn route(

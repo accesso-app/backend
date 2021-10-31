@@ -1,6 +1,6 @@
 [package]
 authors = ["Sergey Sova <mail@sergeysova.com>", "Kirill Mironov <vetrokm@gmail.com>"]
-edition = "2018"
+edition = "2021"
 name = "accesso-db"
 version = "0.2.0"
 
@@ -8,9 +8,9 @@ version = "0.2.0"
 [dependencies]
 accesso-core = { path = "../core" }
 chrono = { version = "0.4.19", default-features = false, features = ["serde", "std", "clock"] }
-tracing = "0.1.26"
-serde = "1.0.104"
-serde_json = "1.0.44"
+tracing = "0.1.29"
+serde = "1.0.130"
+serde_json = "1.0.68"
 uuid = { version = "0.8.2", features = ["v4"] }
-async-trait = "0.1.50"
-sqlx = { version = "0.5.5", default-features = false, features = ["uuid", "postgres", "chrono", "macros", "runtime-actix-rustls", "offline"]}
+async-trait = "0.1.51"
+sqlx = { version = "0.5.9", default-features = false, features = ["uuid", "postgres", "chrono", "macros", "runtime-actix-rustls", "offline"] }

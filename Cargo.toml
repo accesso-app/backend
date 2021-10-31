@@ -10,6 +10,8 @@ members = [
     "tests"
 ]
 
+resolver = "2"
+
 [patch.crates-io]
 async-graphql-actix-web = { git = 'https://github.com/sergeysova/async-graphql', branch = 'upgrade-actix-web' }
 async-graphql = { git = 'https://github.com/sergeysova/async-graphql', branch = 'upgrade-actix-web' }

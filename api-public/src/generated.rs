@@ -1,7 +1,8 @@
 #![allow(dead_code)]
 
 pub mod api {
-    use actix_swagger::{Api, Method};
+    use actix_http::Method;
+    use actix_swagger::Api;
     use actix_web::{
         dev::{AppService, Handler, HttpServiceFactory},
         FromRequest,
@@ -34,9 +35,7 @@ pub mod api {
                     >,
                 > + 'static,
         {
-            self.api = self
-                .api
-                .bind("/oauth/token".to_owned(), Method::POST, handler);
+            self.api = self.api.bind("/oauth/token", Method::POST, handler);
             self
         }
 
@@ -51,9 +50,7 @@ pub mod api {
                     >,
                 > + 'static,
         {
-            self.api = self
-                .api
-                .bind("/viewer.get".to_owned(), Method::POST, handler);
+            self.api = self.api.bind("/viewer.get", Method::POST, handler);
             self
         }
     }

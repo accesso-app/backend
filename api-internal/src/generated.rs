@@ -4,7 +4,8 @@
 pub mod api {
     use std::future::Future;
 
-    use actix_swagger::{Api, Method};
+    use actix_http::Method;
+    use actix_swagger::Api;
     use actix_web::{
         dev::{AppService, Handler, HttpServiceFactory},
         FromRequest, Responder,
@@ -36,9 +37,7 @@ pub mod api {
                     >,
                 > + 'static,
         {
-            self.api = self
-                .api
-                .bind("/oauth/authorize".to_owned(), Method::POST, handler);
+            self.api = self.api.bind("/oauth/authorize", Method::POST, handler);
             self
         }
 
@@ -53,9 +52,7 @@ pub mod api {
                     >,
                 > + 'static,
         {
-            self.api = self
-                .api
-                .bind("/oauth/token".to_owned(), Method::POST, handler);
+            self.api = self.api.bind("/oauth/token", Method::POST, handler);
             self
         }
 
@@ -70,9 +67,7 @@ pub mod api {
                     >,
                 > + 'static,
         {
-            self.api = self
-                .api
-                .bind("/register/request".to_owned(), Method::POST, handler);
+            self.api = self.api.bind("/register/request", Method::POST, handler);
             self
         }
 
@@ -89,7 +84,7 @@ pub mod api {
         {
             self.api = self
                 .api
-                .bind("/register/confirmation".to_owned(), Method::POST, handler);
+                .bind("/register/confirmation", Method::POST, handler);
             self
         }
 
@@ -100,9 +95,7 @@ pub mod api {
             Res: Responder + 'static,
             R: Future<Output = Result<Res, super::paths::session_create::Error>> + 'static,
         {
-            self.api = self
-                .api
-                .bind("/session/create".to_owned(), Method::POST, handler);
+            self.api = self.api.bind("/session/create", Method::POST, handler);
             self
         }
 
@@ -113,9 +106,7 @@ pub mod api {
             Res: Responder + 'static,
             R: Future<Output = Result<Res, super::paths::session_delete::Error>> + 'static,
         {
-            self.api = self
-                .api
-                .bind("/session/delete".to_owned(), Method::POST, handler);
+            self.api = self.api.bind("/session/delete", Method::POST, handler);
             self
         }
 
@@ -130,9 +121,7 @@ pub mod api {
                     >,
                 > + 'static,
         {
-            self.api = self
-                .api
-                .bind("/session/get".to_owned(), Method::POST, handler);
+            self.api = self.api.bind("/session/get", Method::POST, handler);
             self
         }
 
@@ -147,9 +136,7 @@ pub mod api {
                     >,
                 > + 'static,
         {
-            self.api = self
-                .api
-                .bind("/account.edit".to_owned(), Method::POST, handler);
+            self.api = self.api.bind("/account.edit", Method::POST, handler);
             self
         }
 
@@ -164,9 +151,7 @@ pub mod api {
                     >,
                 > + 'static,
         {
-            self.api = self
-                .api
-                .bind("/application.get".to_owned(), Method::POST, handler);
+            self.api = self.api.bind("/application.get", Method::POST, handler);
             self
         }
     }

@@ -1,6 +1,7 @@
 use crate::generated::components::responses::SessionCreateFailedError;
 use crate::generated::components::{request_bodies, responses};
 use crate::generated::paths::session_create::{Error, Response};
+use accesso_app::AddCookieExt;
 use accesso_core::app::session::SessionCreateError;
 use actix_web::{web, HttpRequest, Responder};
 use eyre::WrapErr;
@@ -36,8 +37,7 @@ pub async fn route(
     })
     .respond_to(&req);
 
-    response
-        .add_cookie(&session_config.to_cookie(session_token))
+    AddCookieExt::add_cookie(&mut response, &session_config.to_cookie(session_token))
         .wrap_err("Could not add cookie")?;
 
     Ok(response)
