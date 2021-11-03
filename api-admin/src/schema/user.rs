@@ -67,4 +67,18 @@ impl QueryUser {
         let db = context.data::<Service<dyn Repository>>()?;
         Ok(db.user_get_by_id(user_id).await?.map(Into::into))
     }
+
+    async fn users_search(
+        &self,
+        context: &Context<'_>,
+        query: String,
+    ) -> async_graphql::Result<Vec<User>> {
+        let db = context.data::<Service<dyn Repository>>()?;
+        Ok(db
+            .user_search(query)
+            .await?
+            .into_iter()
+            .map(Into::into)
+            .collect())
+    }
 }

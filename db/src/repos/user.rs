@@ -1,3 +1,5 @@
+use sqlx::types::Uuid;
+
 use accesso_core::contracts::repo::UserRepo;
 use accesso_core::contracts::{
     RegisterUserError, UnexpectedDatabaseError, UserCredentials, UserEditError, UserEditForm,
@@ -8,7 +10,6 @@ use accesso_core::models;
 use crate::entities::User;
 use crate::mappers::{sqlx_error_to_account_edit_error, sqlx_error_to_register_user_error};
 use crate::Database;
-use sqlx::types::Uuid;
 
 #[async_trait]
 impl UserRepo for Database {
@@ -58,7 +59,7 @@ impl UserRepo for Database {
         Ok(Into::into(user))
     }
 
-    #[tracing::instrument(skip(self, creds), fields(creds.email = %creds.email))]
+    #[tracing::instrument(skip(self, creds), fields(creds.email = % creds.email))]
     async fn user_find_by_credentials(
         &self,
         creds: UserCredentials,
@@ -164,5 +165,34 @@ impl UserRepo for Database {
         .await
         .map_err(|e| UnexpectedDatabaseError::SqlxError(e))
         .map(|list| list.into_iter().map(Into::into).collect())?)
+    }
+
+    async fn user_search(
+        &self,
+        query: String,
+    ) -> Result<Vec<models::User>, UnexpectedDatabaseError> {
+        Ok(sqlx::query_as!(
+            User,
+            // language=PostgreSQL
+            r#"
+            SELECT id,
+               email,
+               password_hash,
+               first_name,
+               last_name,
+               canonical_email
+            FROM users
+            WHERE email ILIKE $1
+                OR first_name ILIKE $1
+                OR last_name ILIKE $1
+            "#,
+            format!("%{}%", query),
+        )
+        .fetch_all(&self.pool)
+        .await
+        .map_err(|e| UnexpectedDatabaseError::SqlxError(e))?
+        .into_iter()
+        .map(Into::into)
+        .collect())
     }
 }
