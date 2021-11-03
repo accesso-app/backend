@@ -19,6 +19,11 @@ pub trait AccessTokenRepo {
         &self,
         registration_id: uuid::Uuid,
     ) -> Result<Vec<AccessToken>, UnexpectedDatabaseError>;
+
+    async fn access_tokens_delete_all_for_user(
+        &self,
+        user_id: uuid::Uuid,
+    ) -> Result<u64, UnexpectedDatabaseError>;
 }
 
 #[cfg(feature = "testing")]
@@ -41,6 +46,15 @@ impl AccessTokenRepo for crate::contracts::MockDb {
     ) -> Result<Vec<AccessToken>, UnexpectedDatabaseError> {
         self.access_token
             .access_tokens_list_for_registration(registration_id)
+            .await
+    }
+
+    async fn access_tokens_delete_all_for_user(
+        &self,
+        user_id: uuid::Uuid,
+    ) -> Result<u64, UnexpectedDatabaseError> {
+        self.access_token
+            .access_tokens_delete_all_for_user(user_id)
             .await
     }
 }

@@ -27,6 +27,7 @@ impl CommonQuery {
 
 #[derive(MergedObject, Default)]
 pub struct Mutation(
+    access_token::MutationAccessToken,
     application::MutationApplication,
     register_request::MutationRegisterRequest,
     user::MutationUser,

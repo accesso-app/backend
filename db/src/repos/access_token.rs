@@ -70,4 +70,23 @@ impl AccessTokenRepo for Database {
         .map(Into::into)
         .collect())
     }
+
+    async fn access_tokens_delete_all_for_user(
+        &self,
+        user_id: uuid::Uuid,
+    ) -> Result<u64, UnexpectedDatabaseError> {
+        Ok(sqlx::query!(
+            // language=PostgreSQL
+            r#"
+            DELETE FROM access_tokens
+            USING user_registrations
+            WHERE user_registrations.id = access_tokens.registration_id
+                AND user_registrations.user_id = $1
+            "#,
+            user_id
+        )
+        .execute(&self.pool)
+        .await?
+        .rows_affected())
+    }
 }

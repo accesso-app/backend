@@ -55,3 +55,18 @@ impl QueryAccessToken {
             .collect())
     }
 }
+
+#[derive(Default)]
+pub struct MutationAccessToken;
+
+#[Object]
+impl MutationAccessToken {
+    async fn access_tokens_delete_for_user(
+        &self,
+        context: &Context<'_>,
+        user_id: uuid::Uuid,
+    ) -> async_graphql::Result<u64> {
+        let db = context.data::<Service<dyn Repository>>()?;
+        Ok(db.access_tokens_delete_all_for_user(user_id).await?)
+    }
+}
