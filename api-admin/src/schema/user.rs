@@ -37,6 +37,11 @@ impl User {
         let apps = db.user_registration_list_for_user(self.id).await?;
         Ok(apps.into_iter().map(Into::into).collect())
     }
+
+    async fn access_tokens_count(&self, context: &Context<'_>) -> async_graphql::Result<u64> {
+        let db = context.data::<Service<dyn Repository>>()?;
+        Ok(db.user_access_tokens_count(self.id).await?)
+    }
 }
 
 #[derive(Default)]

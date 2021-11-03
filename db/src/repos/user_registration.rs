@@ -2,6 +2,7 @@ use accesso_core::contracts::repo::UserRegistrationsRepo;
 use accesso_core::contracts::{UnexpectedDatabaseError, UserRegistrationCreateError};
 use accesso_core::models;
 use accesso_core::models::{Application, User};
+use sqlx::types::Uuid;
 
 use crate::entities::UserRegistration;
 use crate::mappers::sqlx_error_to_user_registration_error;
@@ -107,5 +108,25 @@ impl UserRegistrationsRepo for Database {
         .fetch_all(&self.pool)
         .await
         .map(|list| list.into_iter().map(Into::into).collect())?)
+    }
+
+    async fn user_access_tokens_count(
+        &self,
+        user_id: Uuid,
+    ) -> Result<u64, UnexpectedDatabaseError> {
+        Ok(sqlx::query_scalar!(
+            // language=PostgreSQL
+            r#"
+            SELECT COUNT(access_tokens.*)
+            FROM access_tokens
+            INNER JOIN user_registrations
+                ON user_registrations.id = access_tokens.registration_id
+            WHERE user_registrations.user_id = $1
+            "#,
+            user_id
+        )
+        .fetch_one(&self.pool)
+        .await?
+        .unwrap_or_default() as u64)
     }
 }

@@ -47,6 +47,11 @@ pub trait UserRegistrationsRepo {
         &self,
         user_id: uuid::Uuid,
     ) -> Result<Vec<UserRegistration>, UnexpectedDatabaseError>;
+
+    async fn user_access_tokens_count(
+        &self,
+        user_id: uuid::Uuid,
+    ) -> Result<u64, UnexpectedDatabaseError>;
 }
 
 #[cfg(feature = "testing")]
@@ -96,6 +101,15 @@ impl UserRegistrationsRepo for crate::contracts::MockDb {
     ) -> Result<Vec<UserRegistration>, UnexpectedDatabaseError> {
         self.user_registrations
             .user_registration_list_for_user(user_id)
+            .await
+    }
+
+    async fn user_access_tokens_count(
+        &self,
+        user_id: uuid::Uuid,
+    ) -> Result<u64, UnexpectedDatabaseError> {
+        self.user_registrations
+            .user_access_tokens_count(user_id)
             .await
     }
 }
