@@ -375,6 +375,60 @@
       ]
     }
   },
+  "48242fd4af28aea1a9f4047d2dec9f468df5f213768bfc845c3b7f713ae4e198": {
+    "query": "\n            UPDATE users\n            SET first_name = $2, last_name = $3, email = $4, canonical_email = $5\n            WHERE id = $1\n            RETURNING users.*\n            ",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 1,
+          "name": "email",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 2,
+          "name": "password_hash",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 3,
+          "name": "first_name",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 4,
+          "name": "last_name",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 5,
+          "name": "canonical_email",
+          "type_info": "Varchar"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Varchar",
+          "Varchar",
+          "Varchar",
+          "Varchar"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    }
+  },
   "4cde755d037b0b47cfdcba87519619752629a589f2b1173e9f1b0c85319c6bc0": {
     "query": "\n            SELECT users.*\n            FROM users\n            WHERE users.id = $1\n            ",
     "describe": {
@@ -455,8 +509,8 @@
       ]
     }
   },
-  "597f9aa6f92ed1ee2334b904d804c943199bc08745749c72598c784b28c51700": {
-    "query": "\n            UPDATE users\n            SET first_name = $1, last_name = $2\n            WHERE id = $3\n            RETURNING users.*\n            ",
+  "52d84cfd1b8fbb963c5c5e56b2e9b7e6628245d99aa87fd0e6931e6e779d2fcf": {
+    "query": "\n            UPDATE users\n            SET password_hash = $2\n            WHERE users.id = $1\n            RETURNING users.*\n            ",
     "describe": {
       "columns": [
         {
@@ -492,9 +546,8 @@
       ],
       "parameters": {
         "Left": [
-          "Varchar",
-          "Varchar",
-          "Uuid"
+          "Uuid",
+          "Varchar"
         ]
       },
       "nullable": [
@@ -942,6 +995,18 @@
       ]
     }
   },
+  "b249f30bfa0a6e6b69cdf6b72d8c7c1e70435f87561b8986606f7934a5ceeb9d": {
+    "query": "\n            DELETE FROM access_tokens\n            USING user_registrations\n            WHERE user_registrations.id = access_tokens.registration_id\n                AND user_registrations.user_id = $1\n            ",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      },
+      "nullable": []
+    }
+  },
   "b476940cf325ca5181bf12fe8dacf77b013c8e7270db36e6e0eed634234700cb": {
     "query": "\n            SELECT token, scopes, expires_at, registration_id\n            FROM access_tokens\n            WHERE registration_id = $1\n            ",
     "describe": {
@@ -1045,6 +1110,56 @@
       ]
     }
   },
+  "c4b4d65631782f0c5351bc8d850766e0f9b78f36cc85374d3df8e167c388597b": {
+    "query": "\n            SELECT id,\n               email,\n               password_hash,\n               first_name,\n               last_name,\n               canonical_email\n            FROM users\n            WHERE email ILIKE $1\n                OR first_name ILIKE $1\n                OR last_name ILIKE $1\n            ",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 1,
+          "name": "email",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 2,
+          "name": "password_hash",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 3,
+          "name": "first_name",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 4,
+          "name": "last_name",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 5,
+          "name": "canonical_email",
+          "type_info": "Varchar"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    }
+  },
   "caea0cb5c78efd0b48e055ca8059be24b482a53b42ea2b43e845f2bb935d1e3d": {
     "query": "\n            SELECT confirmation_code, email, expires_at\n            FROM registration_requests\n            WHERE email = $1\n            LIMIT $2\n            ",
     "describe": {
@@ -1075,6 +1190,26 @@
         false,
         false,
         false
+      ]
+    }
+  },
+  "cb8a797b2beb05d26a2be8403d8c3e81857397d13bb42d68cda0b2b6abe86adf": {
+    "query": "\n            SELECT COUNT(access_tokens.*)\n            FROM access_tokens\n            INNER JOIN user_registrations\n                ON user_registrations.id = access_tokens.registration_id\n            WHERE user_registrations.user_id = $1\n            ",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "count",
+          "type_info": "Int8"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      },
+      "nullable": [
+        null
       ]
     }
   },
