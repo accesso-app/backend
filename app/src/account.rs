@@ -18,8 +18,9 @@ impl account::Account for App {
             .user_edit_by_id(
                 user_id,
                 UserEditForm {
-                    first_name: form.first_name,
-                    last_name: form.last_name,
+                    first_name: Some(form.first_name),
+                    last_name: Some(form.last_name),
+                    email: None,
                 },
             )
             .await?;

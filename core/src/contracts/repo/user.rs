@@ -30,8 +30,9 @@ pub enum RegisterUserError {
 
 #[derive(Debug, Clone)]
 pub struct UserEditForm {
-    pub first_name: String,
-    pub last_name: String,
+    pub first_name: Option<String>,
+    pub last_name: Option<String>,
+    pub email: Option<String>,
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -41,6 +42,14 @@ pub enum UserEditError {
 
     #[error(transparent)]
     Unexpected(#[from] eyre::Report),
+}
+
+impl From<UnexpectedDatabaseError> for UserEditError {
+    fn from(db: UnexpectedDatabaseError) -> Self {
+        match db {
+            UnexpectedDatabaseError::SqlxError(e) => Self::Unexpected(e.into()),
+        }
+    }
 }
 
 #[cfg_attr(feature = "testing", automock)]

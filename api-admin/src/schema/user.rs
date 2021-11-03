@@ -3,7 +3,7 @@ use async_graphql::*;
 
 use super::user_registration::UserRegistration;
 use accesso_app::Service;
-use accesso_core::contracts::Repository;
+use accesso_core::contracts::{Repository, UserEditForm};
 
 #[derive(SimpleObject, Clone)]
 #[graphql(complex)]
@@ -80,5 +80,39 @@ impl QueryUser {
             .into_iter()
             .map(Into::into)
             .collect())
+    }
+}
+
+#[derive(InputObject)]
+pub struct UserEdit {
+    id: uuid::Uuid,
+    email: Option<String>,
+    first_name: Option<String>,
+    last_name: Option<String>,
+}
+
+#[derive(Default)]
+pub struct MutationUser;
+
+#[Object]
+impl MutationUser {
+    pub async fn user_edit(
+        &self,
+        context: &Context<'_>,
+        user: UserEdit,
+    ) -> async_graphql::Result<Option<User>> {
+        let db = context.data::<Service<dyn Repository>>()?;
+        Ok(Some(
+            db.user_edit_by_id(
+                user.id,
+                UserEditForm {
+                    first_name: user.first_name,
+                    last_name: user.last_name,
+                    email: user.email,
+                },
+            )
+            .await?
+            .into(),
+        ))
     }
 }

@@ -29,6 +29,7 @@ impl CommonQuery {
 pub struct Mutation(
     application::MutationApplication,
     register_request::MutationRegisterRequest,
+    user::MutationUser,
 );
 
 pub type AdminSchema = Schema<Query, Mutation, EmptySubscription>;

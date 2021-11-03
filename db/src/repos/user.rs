@@ -1,5 +1,3 @@
-use sqlx::types::Uuid;
-
 use accesso_core::contracts::repo::UserRepo;
 use accesso_core::contracts::{
     RegisterUserError, UnexpectedDatabaseError, UserCredentials, UserEditError, UserEditForm,
@@ -86,7 +84,7 @@ impl UserRepo for Database {
 
     async fn user_get_by_id(
         &self,
-        user_id: Uuid,
+        user_id: uuid::Uuid,
     ) -> Result<Option<models::User>, UnexpectedDatabaseError> {
         Ok(sqlx::query_as!(
             User,
@@ -124,21 +122,30 @@ impl UserRepo for Database {
 
     async fn user_edit_by_id(
         &self,
-        user_id: Uuid,
+        user_id: uuid::Uuid,
         form: UserEditForm,
     ) -> Result<models::User, UserEditError> {
+        let user = self
+            .user_get_by_id(user_id)
+            .await?
+            .ok_or(UserEditError::UserNotFound)?;
+
         Ok(sqlx::query_as!(
             User,
             // language=PostgreSQL
             r#"
             UPDATE users
-            SET first_name = $1, last_name = $2
-            WHERE id = $3
+            SET first_name = $2, last_name = $3, email = $4, canonical_email = $5
+            WHERE id = $1
             RETURNING users.*
             "#,
-            form.first_name,
-            form.last_name,
-            user_id
+            user_id,
+            form.first_name.unwrap_or(user.first_name),
+            form.last_name.unwrap_or(user.last_name),
+            form.email.clone().unwrap_or(user.email),
+            form.email
+                .map(|email| email.to_lowercase())
+                .unwrap_or(user.canonical_email),
         )
         .fetch_optional(&self.pool)
         .await
