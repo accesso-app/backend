@@ -33,7 +33,7 @@ impl UserRepo for Database {
             canonical_email: form.email.to_lowercase(),
             first_name: form.first_name,
             last_name: form.last_name,
-            password_hash: form.password_hash.trim_end_matches('\u{0}').to_owned(),
+            password_hash: form.password_hash,
         };
 
         sqlx::query!(
@@ -201,5 +201,27 @@ impl UserRepo for Database {
         .into_iter()
         .map(Into::into)
         .collect())
+    }
+
+    async fn user_password_reset(
+        &self,
+        user_id: uuid::Uuid,
+        password_hash: String,
+    ) -> Result<Option<models::User>, UnexpectedDatabaseError> {
+        Ok(sqlx::query_as!(
+            User,
+            // language=PostgreSQL
+            r#"
+            UPDATE users
+            SET password_hash = $2
+            WHERE users.id = $1
+            RETURNING users.*
+            "#,
+            user_id,
+            password_hash.trim_end_matches('\u{0}').to_owned(),
+        )
+        .fetch_optional(&self.pool)
+        .await?
+        .map(Into::into))
     }
 }

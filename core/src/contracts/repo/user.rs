@@ -76,6 +76,12 @@ pub trait UserRepo {
     ) -> Result<User, UserEditError>;
     async fn user_list(&self) -> Result<Vec<User>, UnexpectedDatabaseError>;
     async fn user_search(&self, query: String) -> Result<Vec<User>, UnexpectedDatabaseError>;
+
+    async fn user_password_reset(
+        &self,
+        user_id: uuid::Uuid,
+        new_password: String,
+    ) -> Result<Option<User>, UnexpectedDatabaseError>;
 }
 
 #[cfg(feature = "testing")]
@@ -122,5 +128,13 @@ impl UserRepo for crate::contracts::MockDb {
 
     async fn user_search(&self, query: String) -> Result<Vec<User>, UnexpectedDatabaseError> {
         self.users.user_search(query).await
+    }
+
+    async fn user_password_reset(
+        &self,
+        user_id: uuid::Uuid,
+        new_password: String,
+    ) -> Result<Option<User>, UnexpectedDatabaseError> {
+        self.users.user_password_reset(user_id, new_password).await
     }
 }

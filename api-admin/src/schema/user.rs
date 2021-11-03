@@ -3,7 +3,7 @@ use async_graphql::*;
 
 use super::user_registration::UserRegistration;
 use accesso_app::Service;
-use accesso_core::contracts::{Repository, UserEditForm};
+use accesso_core::contracts::{Repository, SecureGenerator, UserEditForm};
 
 #[derive(SimpleObject, Clone)]
 #[graphql(complex)]
@@ -99,6 +99,12 @@ pub struct UserEdit {
 #[derive(Default)]
 pub struct MutationUser;
 
+#[derive(SimpleObject, Clone)]
+pub struct UserPasswordReset {
+    password: String,
+    user: User,
+}
+
 #[Object]
 impl MutationUser {
     pub async fn user_edit(
@@ -119,5 +125,26 @@ impl MutationUser {
             .await?
             .into(),
         ))
+    }
+
+    pub async fn user_password_reset(
+        &self,
+        context: &Context<'_>,
+        user_id: uuid::Uuid,
+    ) -> async_graphql::Result<Option<UserPasswordReset>> {
+        let db = context.data::<Service<dyn Repository>>()?;
+        let generator = context.data::<Service<dyn SecureGenerator>>()?;
+        let password = generator.generate_token();
+        let password_hash = generator.password_hash(password.clone()).0;
+        let user = db.user_password_reset(user_id, password_hash).await?;
+
+        if let Some(user) = user {
+            Ok(Some(UserPasswordReset {
+                password,
+                user: user.into(),
+            }))
+        } else {
+            Ok(None)
+        }
     }
 }
