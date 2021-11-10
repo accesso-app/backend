@@ -14,6 +14,10 @@ on:
       - "api-admin@*"
       - "api-internal@*"
       - "api-public@*"
+  
+  release:
+    types: # This configuration does not affect the page_build event above
+      - created
 
   workflow_dispatch:
     inputs:
@@ -21,6 +25,7 @@ on:
         description: 'Set "yes" to force rebuild images'
         required: true
         default: 'no'
+
 
 jobs:
   style:
