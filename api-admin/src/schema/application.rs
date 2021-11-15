@@ -1,4 +1,5 @@
 use async_graphql::{ComplexObject, Context, InputObject, Object, SimpleObject};
+use uuid::Uuid;
 
 use accesso_app::Service;
 use accesso_core::contracts::{Repository, SecureGenerator};
@@ -118,6 +119,15 @@ struct ApplicationCreate {
     allowed_registrations: Option<bool>,
 }
 
+#[derive(InputObject)]
+struct ApplicationEdit {
+    id: Uuid,
+    title: Option<String>,
+    redirect_uri: Option<Vec<String>>,
+    is_dev: Option<bool>,
+    allowed_registrations: Option<bool>,
+}
+
 #[Object]
 impl MutationApplication {
     async fn application_create(
@@ -138,6 +148,37 @@ impl MutationApplication {
             .await?;
 
         Ok(app.into())
+    }
+
+    async fn application_edit(
+        &self,
+        context: &Context<'_>,
+        form: ApplicationEdit,
+    ) -> async_graphql::Result<Option<Application>> {
+        let db = context.data::<Service<dyn Repository>>()?;
+        if let Some(app) = db.application_find_by_id(form.id).await? {
+            let allowed_registrations = form.allowed_registrations.unwrap_or(app.allowed_registrations);
+            let is_dev = form.is_dev.unwrap_or(app.is_dev);
+            let redirect_uri = form.redirect_uri.unwrap_or(app.redirect_uri);
+            let title = form.title.unwrap_or(app.title);
+            let app = db
+                .application_edit(form.id, accesso_core::contracts::ApplicationForm {
+                    title,
+                    redirect_uri,
+                    is_dev,
+                    allowed_registrations,
+                    secret_key: app.secret_key,
+                })
+                .await?;
+            if let Some(app) = app {
+                Ok(Some(app.into()))
+            } else {
+                Ok(None)
+            }
+        } else {
+            Ok(None)
+        }
+
     }
 
     async fn application_regenerate_secret(
