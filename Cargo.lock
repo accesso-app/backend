@@ -254,9 +254,9 @@ dependencies = [
 
 [[package]]
 name = "actix-http"
-version = "3.0.0-beta.11"
+version = "3.0.0-beta.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c9b510d35f13987537289f38bf136e7e702a5c87cc28760310cc459544f40afd"
+checksum = "afaeb3d3fcb06b775ac62f05d580aae4afe5a149513333a73f688fdf26c06639"
 dependencies = [
  "actix-codec",
  "actix-rt",
@@ -283,14 +283,12 @@ dependencies = [
  "local-channel",
  "log",
  "mime",
- "once_cell",
  "percent-encoding",
  "pin-project",
  "pin-project-lite",
  "rand",
  "sha-1 0.9.8",
  "smallvec",
- "tokio",
  "zstd",
 ]
 
@@ -333,9 +331,9 @@ dependencies = [
 
 [[package]]
 name = "actix-rt"
-version = "2.3.0"
+version = "2.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ea360596a50aa9af459850737f99293e5cb9114ae831118cb6026b3bbc7583ad"
+checksum = "05c2f80ce8d0c990941c7a7a931f69fd0701b76d521f8d36298edf59cd3fbf1f"
 dependencies = [
  "actix-macros",
  "futures-core",
@@ -344,17 +342,19 @@ dependencies = [
 
 [[package]]
 name = "actix-server"
-version = "2.0.0-beta.6"
+version = "2.0.0-beta.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7367665785765b066ad16e1086d26a087f696bc7c42b6f93004ced6cfcf1eeca"
+checksum = "411dd3296dd317ff5eff50baa13f31923ea40ec855dd7f2d3ed8639948f0195f"
 dependencies = [
  "actix-rt",
  "actix-service",
  "actix-utils",
  "futures-core",
+ "futures-util",
  "log",
  "mio",
  "num_cpus",
+ "socket2",
  "tokio",
 ]
 
@@ -398,7 +398,6 @@ dependencies = [
  "actix-utils",
  "derive_more",
  "futures-core",
- "http",
  "log",
  "tokio-rustls 0.23.1",
  "tokio-util",
@@ -417,9 +416,9 @@ dependencies = [
 
 [[package]]
 name = "actix-web"
-version = "4.0.0-beta.10"
+version = "4.0.0-beta.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e8a4b9d00991d8da308070a5cea7f1bbaa153a91c3fb5567937d99b9f46d601e"
+checksum = "e85aa9bb018d83a0db70f557ba0cde9c6170a5d1de4fede02e377f68c1ac5aa9"
 dependencies = [
  "actix-codec",
  "actix-http",
@@ -566,8 +565,9 @@ dependencies = [
 
 [[package]]
 name = "async-graphql"
-version = "2.10.4"
-source = "git+https://github.com/sergeysova/async-graphql?branch=upgrade-actix-web#5b6c4ee614ba7dafcb22b9c5f21283bccaa02f96"
+version = "3.0.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "28eb129b44133b4a583f4b38048287d9747ba4a282e4e478c6ee46b9ec19ee2e"
 dependencies = [
  "async-graphql-derive",
  "async-graphql-parser",
@@ -583,6 +583,7 @@ dependencies = [
  "indexmap",
  "mime",
  "multer",
+ "num-traits 0.2.14",
  "once_cell",
  "pin-project-lite",
  "regex",
@@ -597,8 +598,9 @@ dependencies = [
 
 [[package]]
 name = "async-graphql-actix-web"
-version = "2.10.4"
-source = "git+https://github.com/sergeysova/async-graphql?branch=upgrade-actix-web#5b6c4ee614ba7dafcb22b9c5f21283bccaa02f96"
+version = "3.0.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "328cb39440dba76c2853939f4728332b1911dc7dc074c7ee5afcb329f8b86772"
 dependencies = [
  "actix",
  "actix-http",
@@ -606,15 +608,18 @@ dependencies = [
  "actix-web-actors",
  "async-channel",
  "async-graphql",
+ "futures-channel",
  "futures-util",
  "serde_json",
  "serde_urlencoded",
+ "thiserror",
 ]
 
 [[package]]
 name = "async-graphql-derive"
-version = "2.10.4"
-source = "git+https://github.com/sergeysova/async-graphql?branch=upgrade-actix-web#5b6c4ee614ba7dafcb22b9c5f21283bccaa02f96"
+version = "3.0.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "95b5c943055498dfbdd6390f8856e791e8e689082a7decc47600246af81d8843"
 dependencies = [
  "Inflector",
  "async-graphql-parser",
@@ -628,8 +633,9 @@ dependencies = [
 
 [[package]]
 name = "async-graphql-parser"
-version = "2.10.4"
-source = "git+https://github.com/sergeysova/async-graphql?branch=upgrade-actix-web#5b6c4ee614ba7dafcb22b9c5f21283bccaa02f96"
+version = "3.0.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a637070071f07804a102b31b7a6f67d7a31bea3c16378351697e131544b54b4a"
 dependencies = [
  "async-graphql-value",
  "pest",
@@ -640,10 +646,12 @@ dependencies = [
 
 [[package]]
 name = "async-graphql-value"
-version = "2.10.4"
-source = "git+https://github.com/sergeysova/async-graphql?branch=upgrade-actix-web#5b6c4ee614ba7dafcb22b9c5f21283bccaa02f96"
+version = "3.0.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "13fb21cc4e13005b9778e3db09e9200efec6969a832ea8fd1ad8594682a2e322"
 dependencies = [
  "bytes",
+ "indexmap",
  "serde 1.0.130",
  "serde_json",
 ]
@@ -1613,6 +1621,7 @@ checksum = "bc633605454125dec4b66843673f01c7df2b89479b32e0ed634e43a91cff62a5"
 dependencies = [
  "autocfg",
  "hashbrown",
+ "serde 1.0.130",
 ]
 
 [[package]]
@@ -3443,9 +3452,9 @@ dependencies = [
 
 [[package]]
 name = "tracing-actix-web"
-version = "0.5.0-beta.1"
+version = "0.5.0-beta.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "42294d195afb0ae79ea237040399179a8b5050b454c210fe4566ed383c6f0c17"
+checksum = "2cac34827e06f78b69523b2fbe5b2dd4dfc75940b2ea5ba37e4fa2a25d4a0edf"
 dependencies = [
  "actix-web",
  "opentelemetry 0.15.0",
