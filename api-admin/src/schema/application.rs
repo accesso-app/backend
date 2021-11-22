@@ -157,18 +157,23 @@ impl MutationApplication {
     ) -> async_graphql::Result<Option<Application>> {
         let db = context.data::<Service<dyn Repository>>()?;
         if let Some(app) = db.application_find_by_id(form.id).await? {
-            let allowed_registrations = form.allowed_registrations.unwrap_or(app.allowed_registrations);
+            let allowed_registrations = form
+                .allowed_registrations
+                .unwrap_or(app.allowed_registrations);
             let is_dev = form.is_dev.unwrap_or(app.is_dev);
             let redirect_uri = form.redirect_uri.unwrap_or(app.redirect_uri);
             let title = form.title.unwrap_or(app.title);
             let app = db
-                .application_edit(form.id, accesso_core::contracts::ApplicationForm {
-                    title,
-                    redirect_uri,
-                    is_dev,
-                    allowed_registrations,
-                    secret_key: app.secret_key,
-                })
+                .application_edit(
+                    form.id,
+                    accesso_core::contracts::ApplicationForm {
+                        title,
+                        redirect_uri,
+                        is_dev,
+                        allowed_registrations,
+                        secret_key: app.secret_key,
+                    },
+                )
                 .await?;
             if let Some(app) = app {
                 Ok(Some(app.into()))
@@ -178,7 +183,6 @@ impl MutationApplication {
         } else {
             Ok(None)
         }
-
     }
 
     async fn application_regenerate_secret(
