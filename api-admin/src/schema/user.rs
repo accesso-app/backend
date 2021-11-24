@@ -1,4 +1,3 @@
-use async_graphql::validators::Email;
 use async_graphql::*;
 
 use super::user_registration::UserRegistration;
@@ -58,7 +57,7 @@ impl QueryUser {
     async fn user_by_email(
         &self,
         context: &Context<'_>,
-        #[graphql(validator(Email))] email: String,
+        #[graphql(validator(email))] email: String,
     ) -> async_graphql::Result<Option<User>> {
         let db = context.data::<Service<dyn Repository>>()?;
         Ok(db.user_get_by_email(email).await?.map(Into::into))

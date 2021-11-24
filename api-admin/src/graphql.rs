@@ -1,7 +1,7 @@
 use actix_web::HttpResponse;
 use async_graphql::http::{graphiql_source, playground_source, GraphQLPlaygroundConfig};
 use async_graphql::Schema;
-use async_graphql_actix_web::{Request, Response};
+use async_graphql_actix_web::{GraphQLRequest, GraphQLResponse, GraphQLSubscription};
 
 use accesso_app::Service;
 use accesso_core::contracts::{Repository, SecureGenerator};
@@ -27,9 +27,9 @@ impl actix_web::ResponseError for Failure {
 
 pub async fn main(
     schema: actix_web::web::Data<AdminSchema>,
-    request: Request,
+    request: GraphQLRequest,
     app: actix_web::web::Data<accesso_app::App>,
-) -> Result<Response, Failure> {
+) -> Result<GraphQLResponse, Failure> {
     let db = app.get::<Service<dyn Repository>>()?.clone();
     let generator = app.get::<Service<dyn SecureGenerator>>()?.clone();
 
@@ -58,5 +58,5 @@ pub async fn subscriptions(
     req: actix_web::HttpRequest,
     payload: actix_web::web::Payload,
 ) -> actix_web::Result<HttpResponse> {
-    async_graphql_actix_web::WSSubscription::start(Schema::clone(&*schema), &req, payload)
+    GraphQLSubscription::new(Schema::clone(&*schema)).start(&req, payload)
 }

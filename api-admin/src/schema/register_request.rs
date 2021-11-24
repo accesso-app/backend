@@ -1,6 +1,5 @@
 use accesso_app::Service;
 use accesso_core::contracts::{Repository, SecureGenerator};
-use async_graphql::validators::Email;
 use async_graphql::{Context, Object, SimpleObject};
 
 #[derive(SimpleObject)]
@@ -37,7 +36,7 @@ impl QueryRequesterRequest {
     pub async fn register_requests_by_email(
         &self,
         context: &Context<'_>,
-        #[graphql(validator(Email))] email: String,
+        #[graphql(validator(email))] email: String,
         #[graphql(default = 100)] count: u16,
     ) -> async_graphql::Result<Vec<RegisterRequest>> {
         let db = context.data::<Service<dyn Repository>>()?;
@@ -73,7 +72,7 @@ impl MutationRegisterRequest {
     pub async fn register_request_create(
         &self,
         context: &Context<'_>,
-        #[graphql(validator(Email))] email: String,
+        #[graphql(validator(email))] email: String,
     ) -> async_graphql::Result<RegisterRequest> {
         let db = context.data::<Service<dyn Repository>>()?;
         let generator = context.data::<Service<dyn SecureGenerator>>()?;
@@ -86,7 +85,7 @@ impl MutationRegisterRequest {
     pub async fn register_request_delete_all_for_email(
         &self,
         context: &Context<'_>,
-        #[graphql(validator(Email))] email: String,
+        #[graphql(validator(email))] email: String,
     ) -> async_graphql::Result<u64> {
         let db = context.data::<Service<dyn Repository>>()?;
         Ok(db.register_requests_delete_all_for_email(email).await?)

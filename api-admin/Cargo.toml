@@ -15,8 +15,8 @@ actix-http = "3.0.0-beta.11"
 actix-router = "0.4.0"
 actix-rt = "2.3.0"
 actix-web = { version = "4.0.0-beta.10", features = ["rustls"] }
-async-graphql = { version = "2.10.4", features = ["uuid", "chrono", "chrono-tz", "url"] }
-async-graphql-actix-web = "2.10.4"
+async-graphql = { version = "3.0.4", features = ["uuid", "chrono", "chrono-tz", "url"] }
+async-graphql-actix-web = "3.0.4"
 chrono = { version = "0.4.19", default-features = false, features = ["serde", "std", "clock"] }
 color-eyre = "0.5.11"
 dotenv = "0.15.0"
