@@ -17,6 +17,7 @@ pub fn sqlx_error_to_save_register_request_error(err: sqlx::Error) -> SaveRegist
         }
     }
 
+    println!("{:#?}", err);
     SaveRegisterRequestError::Unexpected(err.into())
 }
 
@@ -30,10 +31,12 @@ pub fn sqlx_error_to_register_user_error(err: sqlx::Error) -> RegisterUserError 
         }
     }
 
+    println!("{:#?}", err);
     RegisterUserError::Unexpected(err.into())
 }
 
 pub fn sqlx_error_to_account_edit_error(err: sqlx::Error) -> UserEditError {
+    println!("{:#?}", err);
     UserEditError::Unexpected(err.into())
 }
 
@@ -47,6 +50,7 @@ pub fn sqlx_error_to_session_create_error(err: sqlx::Error) -> SessionCreateErro
         }
     }
 
+    println!("{:#?}", err);
     SessionCreateError::Unexpected(err.into())
 }
 
@@ -65,6 +69,7 @@ pub fn sqlx_error_to_user_registration_error(error: sqlx::Error) -> UserRegistra
         }
     }
 
+    println!("{:#?}", error);
     UserRegistrationCreateError::Unexpected(error.into())
 }
 

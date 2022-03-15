@@ -33,7 +33,7 @@ impl UserRepo for Database {
             canonical_email: form.email.to_lowercase(),
             first_name: form.first_name,
             last_name: form.last_name,
-            password_hash: form.password_hash,
+            password_hash: form.password_hash.trim_end_matches('\u{0}').to_owned(),
         };
 
         sqlx::query!(
@@ -165,7 +165,7 @@ impl UserRepo for Database {
                    first_name,
                    last_name,
                    canonical_email
-                FROM users 
+                FROM users
                 "#,
         )
         .fetch_all(&self.pool)
