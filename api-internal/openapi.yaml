@@ -194,6 +194,34 @@ paths:
                       - not_found
         500:
           description: Something went wrong
+
+  "/applications.list":
+    post:
+      operationId: applicationsList
+      tags: [Application]
+      description: List available and installed applications for the user
+      responses:
+        200:
+          description: Applications list
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [installed, available]
+                properties:
+                  installed:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Application"
+                  available:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Application"
+        500:
+          description: Something went wrong
+
+
+
 components:
   responses:
     OAuthAuthorizeDone:
