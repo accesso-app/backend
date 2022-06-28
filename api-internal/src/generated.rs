@@ -154,6 +154,21 @@ pub mod api {
             self.api = self.api.bind("/application.get", Method::POST, handler);
             self
         }
+
+        pub fn bind_applications_list<F, T, R>(mut self, handler: F) -> Self
+        where
+            F: Handler<T, R>,
+            T: FromRequest + 'static,
+            R: Future<
+                    Output = Result<
+                        super::paths::applications_list::Response,
+                        super::paths::applications_list::Error,
+                    >,
+                > + 'static,
+        {
+            self.api = self.api.bind("/applications.list", Method::POST, handler);
+            self
+        }
     }
 }
 
@@ -508,6 +523,12 @@ pub mod components {
         pub struct ApplicationGetFailure {
             #[from]
             pub error: ApplicationGetError,
+        }
+
+        #[derive(Debug, Serialize)]
+        pub struct ApplicationsListSuccess {
+            pub installed: Vec<super::schemas::Application>,
+            pub available: Vec<super::schemas::Application>,
         }
     }
 
@@ -1206,6 +1227,66 @@ pub mod paths {
                 let content_type = match self {
                     Self::BadRequest(_) => Some(ContentType::Json),
                     _ => None,
+                };
+
+                let mut res = &mut HttpResponse::build(self.status_code());
+                if let Some(content_type) = content_type {
+                    res = res.content_type(content_type.to_string());
+
+                    match content_type {
+                        ContentType::Json => res.body(serde_json::to_string(self).unwrap()),
+                        ContentType::FormData => res.body(serde_plain::to_string(self).unwrap()),
+                    }
+                } else {
+                    HttpResponse::build(self.status_code()).finish()
+                }
+            }
+        }
+    }
+
+    pub mod applications_list {
+        use actix_swagger::ContentType;
+        use actix_web::http::StatusCode;
+        use actix_web::{HttpRequest, HttpResponse, Responder, ResponseError};
+        use serde::Serialize;
+
+        use super::responses;
+
+        #[derive(Debug, Serialize)]
+        #[serde(untagged)]
+        pub enum Response {
+            Ok(responses::ApplicationsListSuccess),
+        }
+
+        #[derive(Debug, Serialize, thiserror::Error)]
+        #[serde(untagged)]
+        pub enum Error {
+            #[error(transparent)]
+            InternalServerError(
+                #[from]
+                #[serde(skip)]
+                eyre::Report,
+            ),
+        }
+
+        impl Responder for Response {
+            fn respond_to(self, _: &HttpRequest) -> HttpResponse {
+                match self {
+                    Response::Ok(r) => HttpResponse::build(StatusCode::OK).json(r),
+                }
+            }
+        }
+
+        impl ResponseError for Error {
+            fn status_code(&self) -> StatusCode {
+                match self {
+                    Error::InternalServerError(_) => StatusCode::INTERNAL_SERVER_ERROR,
+                }
+            }
+
+            fn error_response(&self) -> HttpResponse {
+                let content_type = match self {
+                    Self::InternalServerError(_) => Some(ContentType::Json),
                 };
 
                 let mut res = &mut HttpResponse::build(self.status_code());

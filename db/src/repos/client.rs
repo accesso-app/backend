@@ -2,6 +2,8 @@ use accesso_core::contracts::{
     ApplicationCreateError, ApplicationForm, ApplicationRepo, UnexpectedDatabaseError,
 };
 use accesso_core::models;
+use accesso_core::models::Application;
+use uuid::Uuid;
 
 use crate::entities;
 use crate::Database;
@@ -41,6 +43,47 @@ impl ApplicationRepo for Database {
             SELECT id, is_dev, redirect_uri, secret_key, title, allowed_registrations
             FROM clients
             "#,
+        )
+        .fetch_all(&self.pool)
+        .await?
+        .into_iter()
+        .map(|client| client.into())
+        .collect())
+    }
+
+    async fn applications_allowed_to_register(
+        &self,
+    ) -> Result<Vec<Application>, UnexpectedDatabaseError> {
+        Ok(sqlx::query_as!(
+            entities::Client,
+            // language=PostgreSQL
+            r#"
+            SELECT id, is_dev, redirect_uri, secret_key, title, allowed_registrations
+            FROM clients
+            WHERE allowed_registrations = true AND is_dev = false
+            "#
+        )
+        .fetch_all(&self.pool)
+        .await?
+        .into_iter()
+        .map(|client| client.into())
+        .collect())
+    }
+
+    async fn applications_user_registered_in(
+        &self,
+        user_id: Uuid,
+    ) -> Result<Vec<Application>, UnexpectedDatabaseError> {
+        Ok(sqlx::query_as!(
+            entities::Client,
+            // language=PostgreSQL
+            r#"
+            SELECT clients.id, is_dev, redirect_uri, secret_key, title, allowed_registrations
+            FROM clients
+            LEFT JOIN user_registrations ON clients.id = user_registrations.client_id
+            WHERE user_registrations.user_id = $1
+            "#,
+            user_id,
         )
         .fetch_all(&self.pool)
         .await?

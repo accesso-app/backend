@@ -46,6 +46,15 @@ pub trait ApplicationRepo {
 
     async fn application_list(&self) -> Result<Vec<Application>, UnexpectedDatabaseError>;
 
+    async fn applications_allowed_to_register(
+        &self,
+    ) -> Result<Vec<Application>, UnexpectedDatabaseError>;
+
+    async fn applications_user_registered_in(
+        &self,
+        user_id: Uuid,
+    ) -> Result<Vec<Application>, UnexpectedDatabaseError>;
+
     async fn application_create(
         &self,
         application: ApplicationForm,
@@ -70,6 +79,21 @@ impl ApplicationRepo for crate::contracts::MockDb {
 
     async fn application_list(&self) -> Result<Vec<Application>, UnexpectedDatabaseError> {
         self.application.application_list().await
+    }
+
+    async fn applications_allowed_to_register(
+        &self,
+    ) -> Result<Vec<Application>, UnexpectedDatabaseError> {
+        self.application.applications_allowed_to_register().await
+    }
+
+    async fn applications_user_registered_in(
+        &self,
+        user_id: Uuid,
+    ) -> Result<Vec<Application>, UnexpectedDatabaseError> {
+        self.application
+            .applications_user_registered_in(user_id)
+            .await
     }
 
     async fn application_create(
