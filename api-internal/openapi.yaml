@@ -624,3 +624,4 @@ components:
           type: boolean
         avatar:
           type: string
+          nullable: true
