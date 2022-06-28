@@ -31,7 +31,7 @@ sha2 = "0.9.8"
 sodiumoxide = "0.2.7"
 thiserror = "1.0.30"
 time = "0.3.4"
-tokio = "1.13.0"
+tokio = "1.13.1"
 tracing = "0.1.29"
 tracing-actix-web = { version = "0.5.0-beta.1", default-features = false, features = ["emit_event_on_error", "opentelemetry_0_15"] }
 tracing-opentelemetry = "0.16.0"
