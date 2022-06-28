@@ -19,7 +19,7 @@ awc = { version = "3.0.0-beta.10", features = ["rustls"] }
 chrono = { version = "0.4.19", default-features = false, features = ["serde", "std", "clock"] }
 dotenv = "0.15.0"
 futures = "0.3.17"
-tokio = "1.13.0"
+tokio = "1.13.1"
 log = "0.4.14"
 r2d2 = "0.8.9"
 serde = { version = "1.0.130", features = ["derive"] }
