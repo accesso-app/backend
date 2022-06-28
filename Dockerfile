@@ -1,4 +1,4 @@
-ARG rust_ver=1.56
+ARG rust_ver=1.61
 FROM rust:${rust_ver}-slim-bullseye as build
 
 ENV SQLX_OFFLINE=true
