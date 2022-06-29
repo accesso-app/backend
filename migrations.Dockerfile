@@ -12,7 +12,7 @@ RUN seq 1 8 | xargs -I{} mkdir -p /usr/share/man/man{} && \
     update-ca-certificates && \
     apt clean
 
-RUN cargo install sqlx-cli --no-default-features --features postgres
+RUN cargo install sqlx-cli --version 0.5.7 --no-default-features --features postgres
 RUN chmod +x entrypoint.sh
 
 ENTRYPOINT ["/app/entrypoint.sh"]
