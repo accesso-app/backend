@@ -29,21 +29,21 @@ COPY tests/Cargo.toml /app/tests/
 
 WORKDIR /app
 
-RUN mkdir -p db/src/ && touch db/src/lib.rs \
-&& mkdir -p settings/src/ && touch settings/src/lib.rs \
-&& mkdir -p api-admin/src/ && touch api-admin/src/lib.rs \
-&& mkdir -p api-public/src/ && touch api-public/src/lib.rs \
-&& mkdir -p api-internal/src/ && touch api-internal/src/lib.rs \
-&& mkdir -p core/src/ && touch core/src/lib.rs \
-&& mkdir -p app/src/ && touch app/src/lib.rs \
-&& mkdir -p tests/src/ && touch tests/src/lib.rs
+#RUN mkdir -p db/src/ && touch db/src/lib.rs \
+#&& mkdir -p settings/src/ && touch settings/src/lib.rs \
+#&& mkdir -p api-admin/src/ && touch api-admin/src/lib.rs \
+#&& mkdir -p api-public/src/ && touch api-public/src/lib.rs \
+#&& mkdir -p api-internal/src/ && touch api-internal/src/lib.rs \
+#&& mkdir -p core/src/ && touch core/src/lib.rs \
+#&& mkdir -p app/src/ && touch app/src/lib.rs \
+#&& mkdir -p tests/src/ && touch tests/src/lib.rs
 
 ENV SODIUM_USE_PKG_CONFIG=1
 # Build dependencies only.
-RUN cargo build --lib ${rustc_opts}
+#RUN cargo build --lib ${rustc_opts}
 # Remove fingreprints of pre-built empty project sub-crates
 # to rebuild them correctly later.
-RUN rm -rf /app/target/${rustc_mode}/.fingerprint/accesso*
+#RUN rm -rf /app/target/${rustc_mode}/.fingerprint/accesso*
 
 COPY db/ /app/db/
 COPY settings/ /app/settings/
