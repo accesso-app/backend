@@ -4,7 +4,7 @@ export RUST_BACKTRACE := "1"
 
 # Build and run crate api-&
 run API='internal':
-  cargo run --package accesso-api-{{API}} | pino-pretty -t -f
+  cargo run --package accesso-api-{{API}} | pino-pretty -t -f -i 'line,file,target,v,log\.line,log\.file,log\.module_path,log\.target'
 
 # Show env variables
 env:
