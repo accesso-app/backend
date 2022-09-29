@@ -1,0 +1,51 @@
+name: AWS Lambda DEV CI
+
+on:
+  push:
+    branches:
+      - master
+
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v3
+
+      - name: Setup toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      - name: Reuse cache
+        uses: Swatinem/rust-cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-
+
+      - name: Install cargo-lambda
+        uses: jaxxstorm/action-install-gh-release@v1.5.0
+        with: # Grab the latest version
+          repo: cargo-lambda/cargo-lambda
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          tag: v0.11.1
+          platform: linux
+          arch: x86_64
+          cache: enable
+
+      - name: Build lambda function
+        run: cargo lambda build --release --arm64 --package accesso-api-internal
+
+      - name: Deploy lambda function
+        run: cargo lambda deploy --iam-role ${{ secrets.IAM_ROLE }} accesso-api-internal
