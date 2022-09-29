@@ -1,0 +1,45 @@
+{
+  "db": "PostgreSQL",
+  "8bab9da360cc600dfb9d0a41feb72549e1bc893b6fed4e04285ae55b7a8fcbaf": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "is_dev",
+          "ordinal": 1,
+          "type_info": "Bool"
+        },
+        {
+          "name": "redirect_uri",
+          "ordinal": 2,
+          "type_info": "TextArray"
+        },
+        {
+          "name": "title",
+          "ordinal": 3,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "allowed_registrations",
+          "ordinal": 4,
+          "type_info": "Bool"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": []
+      }
+    },
+    "query": "\n        SELECT id, is_dev, redirect_uri, title, allowed_registrations\n        FROM clients\n        "
+  }
+}
