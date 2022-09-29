@@ -12,7 +12,7 @@ on:
       - dev
     tags:
       - "api-admin@*"
-      - "api-internal@*"
+      - "api-internal-old@*"
       - "api-public@*"
 
   release:

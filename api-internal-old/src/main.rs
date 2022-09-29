@@ -15,7 +15,7 @@ mod generated;
 mod routes;
 mod session;
 
-pub static APP_NAME: &str = "accesso-api-internal";
+pub static APP_NAME: &str = "accesso-api-internal-old";
 
 #[actix_rt::main]
 async fn main() -> eyre::Result<()> {
@@ -32,9 +32,9 @@ async fn main() -> eyre::Result<()> {
     let bind_address = settings.server.bind_address();
 
     if settings.debug {
-        tracing::info!("==> api-internal running in DEVELOPMENT MODE");
+        tracing::info!("==> api-internal-old running in DEVELOPMENT MODE");
     } else {
-        tracing::info!("==> PRODUCTION MODE in api-internal");
+        tracing::info!("==> PRODUCTION MODE in api-internal-old");
     }
 
     let settings_clone = settings.clone();

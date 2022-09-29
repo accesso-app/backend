@@ -1,4 +1,4 @@
-ARG rust_ver=1.61
+ARG rust_ver=1.63
 FROM rust:${rust_ver}-slim-bullseye as build
 
 ENV SQLX_OFFLINE=true
@@ -23,20 +23,12 @@ COPY settings/Cargo.toml /app/settings/
 COPY api-admin/Cargo.toml /app/api-admin/
 COPY api-public/Cargo.toml /app/api-public/
 COPY api-internal/Cargo.toml /app/api-internal/
+COPY api-internal-old/Cargo.toml /app/api-internal-old/
 COPY core/Cargo.toml /app/core/
 COPY app/Cargo.toml /app/app/
 COPY tests/Cargo.toml /app/tests/
 
 WORKDIR /app
-
-#RUN mkdir -p db/src/ && touch db/src/lib.rs \
-#&& mkdir -p settings/src/ && touch settings/src/lib.rs \
-#&& mkdir -p api-admin/src/ && touch api-admin/src/lib.rs \
-#&& mkdir -p api-public/src/ && touch api-public/src/lib.rs \
-#&& mkdir -p api-internal/src/ && touch api-internal/src/lib.rs \
-#&& mkdir -p core/src/ && touch core/src/lib.rs \
-#&& mkdir -p app/src/ && touch app/src/lib.rs \
-#&& mkdir -p tests/src/ && touch tests/src/lib.rs
 
 ENV SODIUM_USE_PKG_CONFIG=1
 # Build dependencies only.
@@ -50,6 +42,7 @@ COPY settings/ /app/settings/
 COPY api-admin/ /app/api-admin/
 COPY api-public/ /app/api-public/
 COPY api-internal/ /app/api-internal/
+COPY api-internal-old/ /app/api-internal-old/
 COPY core/ /app/core/
 COPY app/ /app/app/
 COPY tests/ /app/tests/

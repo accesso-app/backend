@@ -2,6 +2,7 @@
 members = [
     "api-admin",
     "api-internal",
+    "api-internal-old",
     "api-public",
     "core",
     "db",

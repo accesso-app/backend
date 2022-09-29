@@ -52,6 +52,10 @@ dependencies = [
 
 [[package]]
 name = "accesso-api-internal"
+version = "0.1.0"
+
+[[package]]
+name = "accesso-api-internal-old"
 version = "0.6.0"
 dependencies = [
  "accesso-app",
