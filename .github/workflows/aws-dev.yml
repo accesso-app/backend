@@ -22,7 +22,7 @@ jobs:
           override: true
 
       - name: Reuse cache
-        uses: Swatinem/rust-cache@v3
+        uses: Swatinem/rust-cache@v2
         with:
           path: |
             ~/.cargo/bin/
