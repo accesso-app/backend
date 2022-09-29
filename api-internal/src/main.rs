@@ -5,9 +5,15 @@ use actix_web::{self, web, App, Error, HttpServer};
 use lambda_web::{is_running_on_lambda, run_actix_on_lambda, LambdaError};
 use serde::{Deserialize, Serialize};
 use time::OffsetDateTime;
+use utoipa::{OpenApi, ToSchema};
+use utoipa_swagger_ui::SwaggerUi;
 use uuid::Uuid;
 
-#[derive(Serialize, Deserialize)]
+#[derive(OpenApi)]
+#[openapi(paths(manual_hello), components(schemas(Pet)))]
+struct ApiDoc;
+
+#[derive(Serialize, Deserialize, ToSchema)]
 struct Pet {
     name: String,
     id: Uuid,
@@ -15,6 +21,14 @@ struct Pet {
     created_at: OffsetDateTime,
 }
 
+#[utoipa::path(
+    get,
+    path = "/pets/{id}",
+    responses(
+        (status = 200, description = "Pet found succesfully", body = Pet),
+        (status = 404, description = "Pet was not found")
+    ),
+)]
 async fn manual_hello() -> Result<Json<Pet>, Error> {
     Ok(Json(Pet {
         name: "Dog".into(),
@@ -25,7 +39,14 @@ async fn manual_hello() -> Result<Json<Pet>, Error> {
 
 #[actix_web::main]
 async fn main() -> Result<(), LambdaError> {
-    let factory = || App::new().route("/hello", web::get().to(manual_hello));
+    let factory = || {
+        App::new()
+            .service(
+                SwaggerUi::new("/swagger-ui/{_:.*}")
+                    .url("/api-doc/openapi.json", ApiDoc::openapi()),
+            )
+            .route("/hello", web::get().to(manual_hello))
+    };
 
     tracing_subscriber::fmt()
         .with_max_level(tracing::Level::INFO)
