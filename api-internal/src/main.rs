@@ -10,7 +10,7 @@ use utoipa_swagger_ui::SwaggerUi;
 use uuid::Uuid;
 
 #[derive(OpenApi)]
-#[openapi(paths(manual_hello), components(schemas(Pet)))]
+#[openapi(paths(pets_get), components(schemas(Pet)))]
 struct ApiDoc;
 
 #[derive(Serialize, Deserialize, ToSchema)]
@@ -21,6 +21,11 @@ struct Pet {
     created_at: OffsetDateTime,
 }
 
+#[derive(Deserialize, ToSchema)]
+struct PetId {
+    pub id: Uuid,
+}
+
 #[utoipa::path(
     get,
     path = "/pets/{id}",
@@ -28,11 +33,14 @@ struct Pet {
         (status = 200, description = "Pet found succesfully", body = Pet),
         (status = 404, description = "Pet was not found")
     ),
+    params(
+        ("id" = String, Path, description = "Pet database id to get Pet for"),
+    ),
 )]
-async fn manual_hello() -> Result<Json<Pet>, Error> {
+async fn pets_get(path: web::Path<PetId>) -> Result<Json<Pet>, Error> {
     Ok(Json(Pet {
         name: "Dog".into(),
-        id: Uuid::new_v4(),
+        id: path.id,
         created_at: OffsetDateTime::now_utc(),
     }))
 }
@@ -45,7 +53,7 @@ async fn main() -> Result<(), LambdaError> {
                 SwaggerUi::new("/swagger-ui/{_:.*}")
                     .url("/api-doc/openapi.json", ApiDoc::openapi()),
             )
-            .route("/hello", web::get().to(manual_hello))
+            .route("/pets/{id}", web::get().to(pets_get))
     };
 
     tracing_subscriber::fmt()
