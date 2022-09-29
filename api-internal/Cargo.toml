@@ -15,7 +15,7 @@ tracing = { version = "0.1", features = ["log"] }
 tracing-subscriber = { version = "0.3", default-features = false, features = ["fmt"] }
 serde = { version = "1.0.145", features = ["derive"] }
 serde_json = "1.0.85"
-sqlx = { version = "0.6.2", default-features = false, features = ["runtime-actix-native-tls", "postgres", "macros", "uuid", "time", "json", "offline", "tls"] }
+sqlx = { version = "0.6.2", default-features = false, features = ["runtime-actix-native-tls", "postgres", "macros", "uuid", "time", "json", "offline"] }
 time = { version = "0.3.14", features = ["serde-human-readable", "serde-well-known", "quickcheck", "macros"] }
 utoipa = { version = "2.2.0", features = ["json", "actix_extras", "time", "uuid"] }
 utoipa-swagger-ui = { version = "2", features = ["actix-web"] }
