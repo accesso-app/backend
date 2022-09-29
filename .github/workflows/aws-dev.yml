@@ -54,4 +54,4 @@ jobs:
 
 
       - name: Deploy lambda function
-        run: cargo lambda deploy --iam-role ${{ secrets.IAM_ROLE }} accesso-api-internal
+        run: cargo lambda deploy --env-var DATABASE_URL=${{ secrets.DATABASE_URL }} --iam-role ${{ secrets.IAM_ROLE }} accesso-api-internal

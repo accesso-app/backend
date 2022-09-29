@@ -50,8 +50,8 @@ async fn main() -> eyre::Result<()> {
             .wrap(
                 middleware::DefaultHeaders::new()
                     // .header("X-Frame-Options", "deny")
-                    .header("X-Content-Type-Options", "nosniff")
-                    .header("X-XSS-Protection", "1; mode=block"),
+                    .add(("X-Content-Type-Options", "nosniff"))
+                    .add(("X-XSS-Protection", "1; mode=block")),
             )
             .wrap(TracingLogger::default())
             .default_service(web::route().to(accesso_app::not_found))

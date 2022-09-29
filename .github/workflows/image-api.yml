@@ -13,7 +13,6 @@ on:
     tags:
       - "api-admin@*"
       - "api-internal@*"
-      - "api-internal-old@*"
       - "api-public@*"
 
   release:
@@ -162,7 +161,7 @@ jobs:
   api-image:
     strategy:
       matrix:
-        api: [admin, internal, internal-old, public]
+        api: [admin, internal, public]
 
     name: api-${{ matrix.api }}
     runs-on: ubuntu-latest

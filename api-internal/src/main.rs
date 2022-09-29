@@ -1,9 +1,13 @@
+use std::env;
 use std::net::Ipv4Addr;
 
+use actix_web::body::BoxBody;
+use actix_web::http::StatusCode;
 use actix_web::web::Json;
-use actix_web::{self, web, App, Error, HttpServer};
+use actix_web::{self, web, App, Error, HttpResponse, HttpServer, ResponseError};
 use lambda_web::{is_running_on_lambda, run_actix_on_lambda, LambdaError};
 use serde::{Deserialize, Serialize};
+use serde_json::json;
 use time::OffsetDateTime;
 use utoipa::{OpenApi, ToSchema};
 use utoipa_swagger_ui::SwaggerUi;
@@ -45,15 +49,104 @@ async fn pets_get(path: web::Path<PetId>) -> Result<Json<Pet>, Error> {
     }))
 }
 
+use sqlx::FromRow;
+
+#[derive(Debug, thiserror::Error)]
+pub enum UnexpectedDatabaseError {
+    #[error("Unexpected database error: {0}")]
+    SqlxError(#[from] sqlx::error::Error),
+}
+
+#[derive(Serialize)]
+struct JsonError {
+    error: String,
+}
+
+impl ResponseError for UnexpectedDatabaseError {
+    fn status_code(&self) -> StatusCode {
+        StatusCode::INTERNAL_SERVER_ERROR
+    }
+
+    fn error_response(&self) -> HttpResponse {
+        match self {
+            UnexpectedDatabaseError::SqlxError(e) => {
+                println!("{:#?}", e)
+            }
+        }
+        HttpResponse::build(self.status_code()).json(JsonError {
+            error: "internal_server_error".to_string(),
+        })
+    }
+}
+
+#[derive(Debug, FromRow, Serialize)]
+pub(crate) struct Client {
+    pub(crate) id: Uuid,
+    // If client is marked as "for developers", some checks will be skipped
+    pub(crate) is_dev: bool,
+    pub(crate) redirect_uri: Vec<String>,
+    pub(crate) title: String,
+    pub(crate) allowed_registrations: bool,
+}
+
+async fn clients(pool: web::Data<Database>) -> Result<Json<Vec<Client>>, Error> {
+    let list: Vec<_> = sqlx::query_as!(
+        Client,
+        // language=PostgreSQL
+        r#"
+        SELECT id, is_dev, redirect_uri, title, allowed_registrations
+        FROM clients
+        "#,
+    )
+    .fetch_all(&pool.pool)
+    .await
+    .map_err(|error| UnexpectedDatabaseError::SqlxError(error))?
+    .into_iter()
+    .collect();
+
+    Ok(Json(list))
+}
+
+use sqlx::postgres::PgPoolOptions;
+
+type DbPool = sqlx::PgPool;
+
+pub struct Database {
+    pub(crate) pool: DbPool,
+}
+
+impl Database {
+    pub fn new(connection_url: String, size: u32) -> Self {
+        let pool = PgPoolOptions::new()
+            .max_connections(size)
+            .connect_lazy_with(connection_url.parse().expect("Bad connection url!"));
+
+        Self { pool }
+    }
+}
+
+impl Clone for Database {
+    fn clone(&self) -> Database {
+        Database {
+            pool: self.pool.clone(),
+        }
+    }
+}
+
 #[actix_web::main]
 async fn main() -> Result<(), LambdaError> {
-    let factory = || {
+    dotenv::dotenv()?;
+    let db = Database::new(env::var("DATABASE_URL")?.to_string(), 2);
+
+    let factory = move || {
         App::new()
+            .app_data(web::Data::new(db.clone()))
             .service(
                 SwaggerUi::new("/swagger-ui/{_:.*}")
                     .url("/api-doc/openapi.json", ApiDoc::openapi()),
             )
             .route("/pets/{id}", web::get().to(pets_get))
+            .route("/clients", web::get().to(clients))
     };
 
     tracing_subscriber::fmt()

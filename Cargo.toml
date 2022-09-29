@@ -1,14 +1,13 @@
 [workspace]
 members = [
-    "api-admin",
+#    "api-admin",
     "api-internal",
-    "api-internal-old",
-    "api-public",
-    "core",
-    "db",
-    "app",
-    "settings",
-    "tests"
+#    "api-public",
+#    "core",
+#    "db",
+#    "app",
+#    "settings",
+#    "tests"
 ]
 
 resolver = "2"

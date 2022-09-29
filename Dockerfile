@@ -23,7 +23,6 @@ COPY settings/Cargo.toml /app/settings/
 COPY api-admin/Cargo.toml /app/api-admin/
 COPY api-public/Cargo.toml /app/api-public/
 COPY api-internal/Cargo.toml /app/api-internal/
-COPY api-internal-old/Cargo.toml /app/api-internal-old/
 COPY core/Cargo.toml /app/core/
 COPY app/Cargo.toml /app/app/
 COPY tests/Cargo.toml /app/tests/
@@ -42,7 +41,6 @@ COPY settings/ /app/settings/
 COPY api-admin/ /app/api-admin/
 COPY api-public/ /app/api-public/
 COPY api-internal/ /app/api-internal/
-COPY api-internal-old/ /app/api-internal-old/
 COPY core/ /app/core/
 COPY app/ /app/app/
 COPY tests/ /app/tests/
