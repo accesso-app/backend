@@ -1,9 +1,26 @@
-use actix_web::{self, web, App, HttpResponse, HttpServer, Responder};
-use lambda_web::{is_running_on_lambda, run_actix_on_lambda, LambdaError};
 use std::net::Ipv4Addr;
 
-async fn manual_hello() -> impl Responder {
-    HttpResponse::Ok().body("Hey there!")
+use actix_web::web::Json;
+use actix_web::{self, web, App, Error, HttpServer};
+use lambda_web::{is_running_on_lambda, run_actix_on_lambda, LambdaError};
+use serde::{Deserialize, Serialize};
+use time::OffsetDateTime;
+use uuid::Uuid;
+
+#[derive(Serialize, Deserialize)]
+struct Pet {
+    name: String,
+    id: Uuid,
+    #[serde(with = "time::serde::iso8601")]
+    created_at: OffsetDateTime,
+}
+
+async fn manual_hello() -> Result<Json<Pet>, Error> {
+    Ok(Json(Pet {
+        name: "Dog".into(),
+        id: Uuid::new_v4(),
+        created_at: OffsetDateTime::now_utc(),
+    }))
 }
 
 #[actix_web::main]
