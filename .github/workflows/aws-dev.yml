@@ -43,6 +43,8 @@ jobs:
         uses: jaxxstorm/action-install-gh-release@v1.5.0
         with:
           repo: cargo-lambda/cargo-lambda
+          arch: x86_64
+          platform: linux
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
