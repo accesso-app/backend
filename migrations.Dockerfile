@@ -1,4 +1,4 @@
-ARG rust_ver=1.54
+ARG rust_ver=1.63
 FROM rust:${rust_ver}-slim
 
 COPY migrations /app/migrations
