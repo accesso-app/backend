@@ -36,8 +36,15 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: ${{ runner.os }}-cargo-
 
+#      - name: Install cargo-lambda
+#        run: cargo install cargo-lambda
+
       - name: Install cargo-lambda
-        run: cargo install cargo-lambda
+        uses: jaxxstorm/action-install-gh-release@v1.5.0
+        with:
+          repo: cargo-lambda/cargo-lambda
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build lambda function
         run: cargo lambda build --release --arm64 --package accesso-api-internal
