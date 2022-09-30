@@ -33,7 +33,7 @@ jobs:
             target/
           key: rustc-${{ steps.toolchain.outputs.rustc_hash }}-cargo-${{ hashFiles('./Cargo.toml') }}
           restore-keys: |
-            rustc-${{ steps.toolchain.outputs.rustc_hash }}-cargo-${{ hashFiles('./Cargo.toml' }}
+            rustc-${{ steps.toolchain.outputs.rustc_hash }}-cargo-${{ hashFiles('./Cargo.toml') }}
             rustc-${{ steps.toolchain.outputs.rustc_hash }}-cargo-
             rustc-
 
