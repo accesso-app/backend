@@ -7,15 +7,9 @@ use actix_web::{self, web, App, Error, HttpResponse, HttpServer, ResponseError};
 use lambda_web::{is_running_on_lambda, run_actix_on_lambda, LambdaError};
 use serde::{Deserialize, Serialize};
 use time::OffsetDateTime;
-use utoipa::{OpenApi, ToSchema};
-use utoipa_swagger_ui::SwaggerUi;
 use uuid::Uuid;
 
-#[derive(OpenApi)]
-#[openapi(paths(pets_get), components(schemas(Pet)))]
-struct ApiDoc;
-
-#[derive(Serialize, Deserialize, ToSchema)]
+#[derive(Serialize, Deserialize)]
 struct Pet {
     name: String,
     id: Uuid,
@@ -23,22 +17,11 @@ struct Pet {
     created_at: OffsetDateTime,
 }
 
-#[derive(Deserialize, ToSchema)]
+#[derive(Deserialize)]
 struct PetId {
     pub id: Uuid,
 }
 
-#[utoipa::path(
-    get,
-    path = "/pets/{id}",
-    responses(
-        (status = 200, description = "Pet found succesfully", body = Pet),
-        (status = 404, description = "Pet was not found")
-    ),
-    params(
-        ("id" = String, Path, description = "Pet database id to get Pet for"),
-    ),
-)]
 async fn pets_get(path: web::Path<PetId>) -> Result<Json<Pet>, Error> {
     Ok(Json(Pet {
         name: "Dog".into(),
@@ -87,7 +70,7 @@ pub(crate) struct Client {
     pub(crate) allowed_registrations: bool,
 }
 
-async fn clients(pool: web::Data<Database>) -> Result<Json<Vec<Client>>, Error> {
+async fn clients(db: web::Data<Database>) -> Result<Json<Vec<Client>>, Error> {
     let list: Vec<_> = sqlx::query_as!(
         Client,
         // language=PostgreSQL
@@ -96,7 +79,7 @@ async fn clients(pool: web::Data<Database>) -> Result<Json<Vec<Client>>, Error> 
         FROM clients
         "#,
     )
-    .fetch_all(&pool.pool)
+    .fetch_all(&db.pool)
     .await
     .map_err(UnexpectedDatabaseError::SqlxError)?
     .into_iter()
@@ -134,15 +117,11 @@ impl Clone for Database {
 #[actix_web::main]
 async fn main() -> Result<(), LambdaError> {
     let _ = dotenv::dotenv();
-    let db = Database::new(env::var("DATABASE_URL")?, 2);
+    let db = Database::new(env::var("DATABASE_URL")?, 1);
 
     let factory = move || {
         App::new()
             .app_data(web::Data::new(db.clone()))
-            .service(
-                SwaggerUi::new("/swagger-ui/{_:.*}")
-                    .url("/api-doc/openapi.json", ApiDoc::openapi()),
-            )
             .route("/pets/{id}", web::get().to(pets_get))
             .route("/clients", web::get().to(clients))
     };
