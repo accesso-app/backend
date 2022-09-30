@@ -97,12 +97,13 @@ pub struct Database {
 }
 
 impl Database {
-    pub fn new(connection_url: String, size: u32) -> Self {
+    pub async fn new(connection_url: String, size: u32) -> Result<Self, sqlx::Error> {
         let pool = PgPoolOptions::new()
             .max_connections(size)
-            .connect_lazy_with(connection_url.parse().expect("Bad connection url!"));
+            .connect_with(connection_url.parse().expect("Bad connection url!"))
+            .await?;
 
-        Self { pool }
+        Ok(Self { pool })
     }
 }
 
@@ -118,7 +119,9 @@ impl Clone for Database {
 async fn main() -> Result<(), LambdaError> {
     let _ = dotenv::dotenv();
     let db_url = env::var("DATABASE_URL")?;
-    let db = Database::new(db_url.clone(), 1);
+    let db = Database::new(db_url.clone(), 1)
+        .await
+        .expect("Failed to create Database");
     println!("DATABASE_URL={}", db_url);
 
     let factory = move || {
