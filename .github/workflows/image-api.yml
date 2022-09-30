@@ -1,23 +1,23 @@
 name: API Docker Image CI
 
 on:
-  pull_request:
-    branches:
-      - master
-      - dev
+#  pull_request:
+#    branches:
+#      - master
+#      - dev
 
-  push:
-    branches:
-      - master
-      - dev
-    tags:
-      - "api-admin@*"
-      - "api-internal@*"
-      - "api-public@*"
+#  push:
+#    branches:
+#      - master
+#      - dev
+#    tags:
+#      - "api-admin@*"
+#      - "api-internal@*"
+#      - "api-public@*"
 
-  release:
-    types: # This configuration does not affect the page_build event above
-      - created
+#  release:
+#    types: # This configuration does not affect the page_build event above
+#      - created
 
   workflow_dispatch:
     inputs:

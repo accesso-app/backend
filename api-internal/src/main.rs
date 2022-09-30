@@ -1,13 +1,11 @@
 use std::env;
 use std::net::Ipv4Addr;
 
-use actix_web::body::BoxBody;
 use actix_web::http::StatusCode;
 use actix_web::web::Json;
 use actix_web::{self, web, App, Error, HttpResponse, HttpServer, ResponseError};
 use lambda_web::{is_running_on_lambda, run_actix_on_lambda, LambdaError};
 use serde::{Deserialize, Serialize};
-use serde_json::json;
 use time::OffsetDateTime;
 use utoipa::{OpenApi, ToSchema};
 use utoipa_swagger_ui::SwaggerUi;
@@ -100,7 +98,7 @@ async fn clients(pool: web::Data<Database>) -> Result<Json<Vec<Client>>, Error> 
     )
     .fetch_all(&pool.pool)
     .await
-    .map_err(|error| UnexpectedDatabaseError::SqlxError(error))?
+    .map_err(UnexpectedDatabaseError::SqlxError)?
     .into_iter()
     .collect();
 
@@ -136,7 +134,7 @@ impl Clone for Database {
 #[actix_web::main]
 async fn main() -> Result<(), LambdaError> {
     let _ = dotenv::dotenv();
-    let db = Database::new(env::var("DATABASE_URL")?.to_string(), 2);
+    let db = Database::new(env::var("DATABASE_URL")?, 2);
 
     let factory = move || {
         App::new()
