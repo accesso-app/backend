@@ -71,6 +71,7 @@ pub(crate) struct Client {
 }
 
 async fn clients(db: web::Data<Database>) -> Result<Json<Vec<Client>>, Error> {
+    println!("Clients request handled");
     let list: Vec<_> = sqlx::query_as!(
         Client,
         // language=PostgreSQL
@@ -84,6 +85,7 @@ async fn clients(db: web::Data<Database>) -> Result<Json<Vec<Client>>, Error> {
     .map_err(UnexpectedDatabaseError::SqlxError)?
     .into_iter()
     .collect();
+    println!("Answer from clients received");
 
     Ok(Json(list))
 }
@@ -125,6 +127,7 @@ async fn main() -> Result<(), LambdaError> {
     println!("DATABASE_URL={}", db_url);
 
     let factory = move || {
+        println!("Factory create");
         App::new()
             .app_data(web::Data::new(db.clone()))
             .route("/pets/{id}", web::get().to(pets_get))
@@ -132,18 +135,22 @@ async fn main() -> Result<(), LambdaError> {
     };
 
     tracing_subscriber::fmt()
-        .with_max_level(tracing::Level::INFO)
+        .with_max_level(tracing::Level::DEBUG)
         // disable printing the name of the module in every log line.
         .with_target(false)
         // disabling time is handy because CloudWatch will add the ingestion time.
         .without_time()
         .init();
+    println!("TracingSubscriber created");
 
     if is_running_on_lambda() {
+        println!("Running on lambda");
         run_actix_on_lambda(factory).await?;
     } else {
+        println!("Creating server on http://0.0.0.0:8080");
         HttpServer::new(factory)
             .bind((Ipv4Addr::UNSPECIFIED, 8080))?
+            .workers(1)
             .run()
             .await?;
     }
