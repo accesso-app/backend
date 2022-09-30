@@ -135,7 +135,7 @@ impl Clone for Database {
 
 #[actix_web::main]
 async fn main() -> Result<(), LambdaError> {
-    dotenv::dotenv()?;
+    let _ = dotenv::dotenv();
     let db = Database::new(env::var("DATABASE_URL")?.to_string(), 2);
 
     let factory = move || {
