@@ -31,7 +31,11 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             target/
-          key: ${{ steps.toolchain.outputs.rustc_hash }}-${{ hashFiles('./Cargo.toml') }}
+          key: rustc-${{ steps.toolchain.outputs.rustc_hash }}-cargo-${{ hashFiles('./Cargo.toml') }}
+          restore-keys: |
+            rustc-${{ steps.toolchain.outputs.rustc_hash }}-cargo-${{ hashFiles('./Cargo.toml' }}
+            rustc-${{ steps.toolchain.outputs.rustc_hash }}-cargo-
+            rustc-
 
       - name: Run cargo check
         uses: actions-rs/cargo@v1
