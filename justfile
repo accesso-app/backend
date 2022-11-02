@@ -20,3 +20,6 @@ integration:
 
 prepare:
     cargo sqlx prepare --merged
+
+lbuild API='internal':
+   cargo lambda build --release -p accesso-api-{{API}}
