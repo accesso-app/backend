@@ -1,11 +1,14 @@
 use std::env;
 use std::net::Ipv4Addr;
 
-use actix_web::http::StatusCode;
-use actix_web::web::Json;
-use actix_web::{self, web, App, Error, HttpResponse, HttpServer, ResponseError};
+use actix_web::{
+    self, get, http::StatusCode, web, web::Json, App, Error, HttpResponse, HttpServer,
+    ResponseError,
+};
 use lambda_web::{is_running_on_lambda, run_actix_on_lambda, LambdaError};
 use serde::{Deserialize, Serialize};
+use sqlx::postgres::PgPoolOptions;
+use sqlx::FromRow;
 use time::OffsetDateTime;
 use uuid::Uuid;
 
@@ -29,8 +32,6 @@ async fn pets_get(path: web::Path<PetId>) -> Result<Json<Pet>, Error> {
         created_at: OffsetDateTime::now_utc(),
     }))
 }
-
-use sqlx::FromRow;
 
 #[derive(Debug, thiserror::Error)]
 pub enum UnexpectedDatabaseError {
@@ -70,6 +71,7 @@ pub(crate) struct Client {
     pub(crate) allowed_registrations: bool,
 }
 
+#[get("/clients")]
 async fn clients(db: web::Data<Database>) -> Result<Json<Vec<Client>>, Error> {
     println!("Clients request handled");
     let list: Vec<_> = sqlx::query_as!(
@@ -89,8 +91,6 @@ async fn clients(db: web::Data<Database>) -> Result<Json<Vec<Client>>, Error> {
 
     Ok(Json(list))
 }
-
-use sqlx::postgres::PgPoolOptions;
 
 type DbPool = sqlx::PgPool;
 
@@ -130,7 +130,7 @@ async fn main() -> Result<(), LambdaError> {
         App::new()
             .app_data(web::Data::new(db.clone()))
             .route("/pets/{id}", web::get().to(pets_get))
-            .route("/clients", web::get().to(clients))
+            .service(clients)
     };
 
     tracing_subscriber::fmt()
