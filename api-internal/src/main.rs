@@ -102,8 +102,7 @@ impl Database {
     pub async fn new(connection_url: String, size: u32) -> Result<Self, sqlx::Error> {
         let pool = PgPoolOptions::new()
             .max_connections(size)
-            .connect_with(connection_url.parse().expect("Bad connection url!"))
-            .await?;
+            .connect_lazy_with(connection_url.parse().expect("Bad connection url!"));
 
         Ok(Self { pool })
     }
