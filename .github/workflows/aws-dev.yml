@@ -46,7 +46,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build lambda function
-        run: cargo lambda build --release --arm64 --package accesso-api-internal
+        run: cargo lambda build --release --package accesso-api-internal
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
