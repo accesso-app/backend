@@ -40,7 +40,7 @@ impl OAuthExchange for App {
                     .await?
                     .ok_or(ExchangeFailed::InvalidClient)?;
 
-                if !authorization_code.is_code_correct(&code) || !authorization_code.is_expired() {
+                if !authorization_code.is_code_correct(&code) || authorization_code.is_expired() {
                     return Err(ExchangeFailed::InvalidGrant);
                 }
                 let client = db
