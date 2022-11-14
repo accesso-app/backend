@@ -55,8 +55,8 @@ impl AuthorizationCode {
 
     pub fn is_expired(&self) -> bool {
         let lifetime = chrono::Duration::minutes(15);
-        let now = chrono::Utc::now();
+        let now = Utc::now();
 
-        (self.created_at + lifetime) > now
+        (self.created_at + lifetime) < now
     }
 }
